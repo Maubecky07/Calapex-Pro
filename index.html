@@ -3,113 +3,331 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wartungsarbeiten | iRacing Kalender</title>
+    <title>Simracing Kalender | Full Version</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: #0b0b0b;
-            color: white;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            overflow: hidden;
-        }
-
-        .maintenance-container {
-            padding: 40px;
-            border: 1px solid #ff7b00;
-            background: #111;
-            border-radius: 12px;
-            box-shadow: 0 0 30px rgba(255, 123, 0, 0.2);
-            max-width: 500px;
-            width: 90%;
-        }
-
-        .icon {
-            font-size: 60px;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: wrench 2.5s infinite ease-in-out;
-        }
-
-        @keyframes wrench {
-            0% { transform: rotate(0deg); }
-            20% { transform: rotate(-15deg); }
-            40% { transform: rotate(15deg); }
-            60% { transform: rotate(-15deg); }
-            100% { transform: rotate(0deg); }
-        }
-
-        h1 {
-            color: #ff7b00;
-            font-size: 32px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px #ff7b00;
-            margin-bottom: 10px;
-        }
-
-        p {
-            color: #ddd;
-            font-size: 18px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-        }
-
-        .status-badge {
-            display: inline-block;
-            background: #dc3545;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 6px;
-            font-weight: bold;
-            font-size: 14px;
-            text-transform: uppercase;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-            70% { box-shadow: 0 0 0 15px rgba(220, 53, 69, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-        }
-
-        .footer {
-            margin-top: 30px;
-            font-size: 12px;
-            color: #555;
-        }
-
-        .race-line {
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, transparent, #ff7b00, transparent);
-            margin-top: 20px;
-        }
+        body{margin:0;font-family:Arial, sans-serif;background:#0b0b0b;color:white;overflow-x:hidden;}
+        header{display:flex;justify-content:space-between;align-items:center;padding:20px;font-size:28px;font-weight:bold;color:#ff7b00;text-shadow:0 0 15px #ff7b00;border-bottom: 1px solid #222;}
+        .infoBox{background:#111;border:1px solid #ff7b00;padding:15px;margin:10px auto;border-radius:8px;max-width:900px;font-size:14px;color:#ddd;text-align:center;}
+        .adminBanner{display:none;background:#dc3545;text-align:center;padding:10px;font-weight:bold;font-size:14px;}
+        .driverBanner{background:#222;color:#ffcc00;text-align:center;padding:10px;margin:10px auto;border-radius:6px;max-width:900px;font-weight:bold;border: 1px solid #333;}
+        .container{width:90%;max-width:900px;margin:auto;padding-bottom: 50px;}
+        .controls{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap: wrap;gap:10px;}
+        button,select,input{padding:10px;border-radius:6px;border:none;background:#222;color:white;border:1px solid #444;}
+        button{background:#ff7b00;color:black;font-weight:bold;cursor:pointer;}
+        .calendar{display:flex;flex-direction:column;gap:15px;}
+        .event{background:#151515;border-left:5px solid #ff7b00;border-radius:6px;padding:15px;position:relative;transition:0.3s;}
+        .date{color:#ff7b00;font-weight:bold;}
+        .title{font-size:20px;margin-top:4px;font-weight:bold;}
+        .badge{position:absolute;right:10px;top:10px;font-size:11px;padding:4px 8px;border-radius:6px;font-weight:bold;}
+        .kommend{background:#198754;} .live{background:#0d6efd;} .beendet{background:#6c757d;} .entfällt{background:#dc3545;}
+        .details{margin-top:10px;font-size:14px;color:#ddd;line-height:1.6;}
+        .stream-link { color: #0d6efd; text-decoration: underline; font-weight: bold; }
+        .countdown{margin-top:6px;font-size:13px;font-weight:bold;color:#ff7b00;}
+        .hamburger{font-size:30px;cursor:pointer;color:#ff7b00;user-select:none;z-index:1001;}
+        .sideMenu{height:100%;width:0;position:fixed;top:0;right:0;background:#111;overflow-x:hidden;transition:0.4s;padding-top:60px;z-index:1000;border-left:2px solid #ff7b00;}
+        .sideMenu div{padding:12px 25px;font-size:18px;color:#ddd;cursor:pointer;border-bottom:1px solid #222;}
+        .sideMenu .closeSide{position:absolute;top:10px;right:20px;font-size:30px;color:#ff7b00;}
+        .driverList{background:#000;height:0;overflow:hidden;transition:height 0.3s ease;}
+        .driverItem{padding-left:45px !important;color:#fff !important;font-size:16px !important;}
+        .formPanel{background:#111;border:2px solid #ff7b00;padding:20px;border-radius:10px;margin-bottom:20px;display:none;}
+        .formPanel input, .formPanel select{width:100%;margin-bottom:8px;box-sizing:border-box;}
+        @keyframes livePulse {0%{box-shadow:0 0 5px #0d6efd;}50%{box-shadow:0 0 20px #0d6efd;}100%{box-shadow:0 0 5px #0d6efd;}}
+        .liveEvent{border:2px solid #0d6efd; animation:livePulse 1.5s infinite;}
     </style>
 </head>
 <body>
 
-<div class="maintenance-container">
-    <div class="icon">🔧</div>
-    <h1>Boxenstopp</h1>
-    <div class="status-badge">Wartungsarbeiten aktiv</div>
-    
-    <p>
-        Wir schrauben gerade am Setup des Kalenders.<br>
-        In Kürze sind wir wieder auf der Strecke für euch da!
-    </p>
+<header>
+    <span>🏁 iRacing Kalender</span>
+    <span class="hamburger" onclick="openMenu()">☰</span>
+</header>
 
-    <div class="race-line"></div>
+<div id="adminBanner" class="adminBanner">⚠ ADMIN MODUS AKTIV</div>
+<div class="infoBox">Wähle einen Fahrer im Menü aus. Passwörter werden sicher via Datenbank geprüft.</div>
+<div id="driverBanner" class="driverBanner">Übersicht: Alle Fahrer</div>
 
-    <div class="footer">
-        🏁 iRacing Kalender Maintenance Mode
+<div class="container">
+    <div class="controls">
+        <select id="monthFilter" onchange="fetchEvents()">
+            <option value="all">Alle Monate</option>
+            <option value="0">Januar</option><option value="1">Februar</option><option value="2">März</option>
+            <option value="3">April</option><option value="4">Mai</option><option value="5">Juni</option>
+            <option value="6">Juli</option><option value="7">August</option><option value="8">September</option>
+            <option value="9">Oktober</option><option value="10">November</option><option value="11">Dezember</option>
+        </select>
+        <div>
+            <button id="adminLoginBtn" onclick="toggleAdmin()" style="display:none;">Admin Login/Logout</button>
+            <button id="newEventBtn" onclick="openEditor()" style="display:none;">+ Neuer Termin</button>
+        </div>
     </div>
+
+    <div id="adminPanel" class="formPanel">
+        <h3 id="formTitle">Termin verwalten</h3>
+        <input id="eventId" type="hidden">
+        <div style="display:flex; gap:5px; margin-bottom:8px;">
+            <input id="date" type="date">
+            <input id="startTime" type="time">
+            <input id="endTime" type="time">
+        </div>
+        <input id="title" placeholder="Event Titel (z.B. GT3 Sprint)">
+        <input id="track" placeholder="Strecke (z.B. Spa-Francorchamps)">
+        <input id="car" placeholder="Fahrzeug (z.B. Porsche 911 GT3 R)">
+        <input id="weather" placeholder="Wetter (z.B. 24°C, Heiter)">
+        <input id="team" placeholder="Team Name">
+        <input id="streamPlatform" placeholder="Stream Plattform (z.B. YouTube)">
+        <input id="streamLink" placeholder="Stream Link (https://...)">
+        <select id="status">
+            <option value="auto">Status: Automatisch</option>
+            <option value="cancelled">Status: ENTFÄLLT</option>
+        </select>
+        <button onclick="saveEvent()" style="width:100%; height:45px; margin-top:10px;">💾 Speichern</button>
+        <button onclick="closeEditor()" style="width:100%; background:#444; margin-top:5px;">Abbrechen</button>
+    </div>
+
+    <div id="calendar" class="calendar"></div>
 </div>
 
+<div id="sideMenu" class="sideMenu">
+    <span class="closeSide" onclick="closeMenu()">×</span>
+    <div style="color:#ff7b00; font-weight:bold; padding:12px 25px; border-bottom:1px solid #333;">MENÜ</div>
+    <div id="teamMenu"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://upbxznmaviomljfejlyw.supabase.co"; 
+const SUPABASE_KEY = "sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ";
+
+const teams = [
+    { name:"M&J Downforce", drivers:[
+        { name:"Maurice Becker" }, { name:"Elia Storsberg" }, { name:"Alexander Wacks" }, { name:"Tobias Effey" }, { name:"Markus Held" }
+    ]},
+    { name:"ZeroApexPoint", drivers:[
+        { name:"Justin Jensen" }, { name:"Benny" }, { name:"Marco Zimmermann" }, { name:"Haupti" }
+    ]}
+];
+
+let db, currentDriver = null, adminMode = false, allEvents = [];
+
+function initApp() {
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    fetchEvents();
+}
+
+function getAuthClient(password) {
+    return window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        global: { headers: { 'x-edit-password': password } }
+    });
+}
+
+// MENÜ LOGIK
+function openMenu(){ document.getElementById("sideMenu").style.width="300px"; renderTeams(); }
+function closeMenu(){ document.getElementById("sideMenu").style.width="0"; }
+
+function renderTeams(){
+    const menu = document.getElementById("teamMenu");
+    menu.innerHTML = "";
+    teams.forEach(team => {
+        let teamDiv = document.createElement("div");
+        teamDiv.innerHTML = "📂 " + team.name;
+        let dList = document.createElement("div");
+        dList.className = "driverList";
+        team.drivers.forEach(driver => {
+            let d = document.createElement("div");
+            d.className = "driverItem"; d.innerHTML = "👤 " + driver.name;
+            d.onclick = (e) => { e.stopPropagation(); selectDriver(driver); };
+            dList.appendChild(d);
+        });
+        teamDiv.onclick = () => {
+            let open = dList.style.height !== "0px" && dList.style.height !== "";
+            dList.style.height = open ? "0px" : dList.scrollHeight + "px";
+        };
+        menu.appendChild(teamDiv); menu.appendChild(dList);
+    });
+}
+
+function selectDriver(driver){
+    currentDriver = driver;
+    adminMode = false;
+    sessionStorage.removeItem("active_pwd");
+    document.getElementById("driverBanner").textContent = "Fahrer: " + driver.name;
+    document.getElementById("adminLoginBtn").style.display = "inline-block";
+    updateAdminUI();
+    closeMenu(); 
+    fetchEvents();
+}
+
+// LOGIN LOGIK
+async function toggleAdmin() {
+    if (adminMode) {
+        adminMode = false;
+        sessionStorage.removeItem("active_pwd");
+        updateAdminUI();
+        renderCalendar();
+        alert("Abgemeldet.");
+        return;
+    }
+    if (!currentDriver) return alert("Wähle erst einen Fahrer!");
+
+    let pwd = prompt(`Passwort für ${currentDriver.name}:`);
+    if (!pwd) return;
+
+    const authDb = getAuthClient(pwd);
+    const { data, error } = await authDb.from('drivers').select('name').eq('name', currentDriver.name).single();
+
+    if (!error && data) {
+        adminMode = true;
+        sessionStorage.setItem("active_pwd", pwd);
+        updateAdminUI();
+        renderCalendar();
+        alert("Erfolgreich eingeloggt!");
+    } else {
+        alert("Passwort falsch!");
+    }
+}
+
+function updateAdminUI() {
+    document.getElementById("adminBanner").style.display = adminMode ? "block" : "none";
+    document.getElementById("newEventBtn").style.display = adminMode ? "inline-block" : "none";
+}
+
+// DATEN HANDLING
+async function fetchEvents(){
+    const { data, error } = await db.from('events').select('*');
+    if(!error) { allEvents = data || []; renderCalendar(); }
+}
+
+function renderCalendar(){
+    const container = document.getElementById("calendar");
+    container.innerHTML = "";
+    const filter = document.getElementById("monthFilter").value;
+    
+    let filtered = allEvents.filter(e => {
+        if(currentDriver && e.driverName !== currentDriver.name) return false;
+        let m = new Date(e.date).getMonth();
+        return filter === "all" || m == filter;
+    });
+
+    filtered.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach(e => {
+        let status = getStatus(e);
+        let div = document.createElement("div");
+        div.className = "event " + (status === "live" ? "liveEvent" : "");
+        
+        let sLink = e.streamLink;
+        let sPlatform = e.streamPlatform || "Link";
+        let streamHtml = sLink ? `<div style="margin-top:10px; border-top:1px dashed #333; padding-top:5px;">🎥 <b>Stream:</b> <a href="${sLink.startsWith('http') ? sLink : 'https://'+sLink}" target="_blank" class="stream-link">${sPlatform}</a></div>` : "";
+
+        div.innerHTML = `
+            <div class="badge ${status}">${status.toUpperCase()}</div>
+            <div class="date">${new Date(e.date).toLocaleDateString('de-DE')} | ${e.startTime} - ${e.endTime}</div>
+            <div class="title">${e.title}</div>
+            ${status === "kommend" ? `<div class="countdown">Startet in: ${countdown(e)}</div>` : ""}
+            <div class="details">
+                🏁 <b>Strecke:</b> ${e.track} | 🏎 <b>Fahrzeug:</b> ${e.car}<br>
+                🌦 <b>Wetter:</b> ${e.weather || '-'} | 👥 <b>Team:</b> ${e.team || '-'}<br>
+                👤 <b>Fahrer:</b> ${e.driverName}
+                ${streamHtml}
+            </div>
+        `;
+
+        if(adminMode && e.driverName === currentDriver.name) {
+            let btnBox = document.createElement("div");
+            btnBox.style = "margin-top:10px; border-top:1px solid #333; padding-top:10px;";
+            
+            let eb = document.createElement("button");
+            eb.innerText = "Bearbeiten"; eb.style = "background:#ffcc00; color:black; font-size:12px; padding:5px 10px;";
+            eb.onclick = () => openEdit(e);
+
+            let dbnt = document.createElement("button");
+            dbnt.innerText = "Löschen"; dbnt.style = "background:#dc3545; color:white; font-size:12px; margin-left:5px; padding:5px 10px;";
+            dbnt.onclick = () => deleteEvent(e.id);
+
+            btnBox.appendChild(eb); btnBox.appendChild(dbnt);
+            div.appendChild(btnBox);
+        }
+        container.appendChild(div);
+    });
+}
+
+// CRUD OPERATIONEN
+async function saveEvent(){
+    let id = document.getElementById("eventId").value;
+    let pwd = sessionStorage.getItem("active_pwd");
+    if(!pwd) return alert("Nicht eingeloggt!");
+
+    const authDb = getAuthClient(pwd);
+    let obj = {
+        date: document.getElementById("date").value, startTime: document.getElementById("startTime").value,
+        endTime: document.getElementById("endTime").value, title: document.getElementById("title").value,
+        track: document.getElementById("track").value, car: document.getElementById("car").value,
+        weather: document.getElementById("weather").value, team: document.getElementById("team").value,
+        streamLink: document.getElementById("streamLink").value, streamPlatform: document.getElementById("streamPlatform").value,
+        status: document.getElementById("status").value, driverName: currentDriver.name,
+        edit_password: pwd 
+    };
+
+    let res = id ? await authDb.from('events').update(obj).eq('id', id).select() 
+                 : await authDb.from('events').insert([obj]).select();
+
+    if(!res.error && res.data && res.data.length > 0) {
+        alert("✅ Gespeichert!"); closeEditor(); fetchEvents();
+    } else {
+        alert("❌ Fehler: Keine Berechtigung für dieses Event!");
+    }
+}
+
+async function deleteEvent(id){ 
+    let pwd = sessionStorage.getItem("active_pwd");
+    if(!pwd || !confirm("Wirklich löschen?")) return;
+    const authDb = getAuthClient(pwd);
+    const { data, error } = await authDb.from('events').delete().eq('id', id).select();
+    if(!error && data && data.length > 0) { fetchEvents(); alert("✅ Gelöscht!"); }
+    else alert("❌ Fehler beim Löschen!");
+}
+
+// HILFSFUNKTIONEN
+function openEditor(){ 
+    document.getElementById("adminPanel").style.display = "block"; 
+    document.getElementById("eventId").value = "";
+    document.querySelectorAll("#adminPanel input").forEach(i => i.value = "");
+    document.getElementById("status").value = "auto";
+}
+
+function openEdit(e){
+    openEditor();
+    document.getElementById("eventId").value = e.id;
+    document.getElementById("date").value = e.date;
+    document.getElementById("startTime").value = e.startTime;
+    document.getElementById("endTime").value = e.endTime;
+    document.getElementById("title").value = e.title;
+    document.getElementById("track").value = e.track;
+    document.getElementById("car").value = e.car;
+    document.getElementById("weather").value = e.weather || "";
+    document.getElementById("team").value = e.team || "";
+    document.getElementById("streamPlatform").value = e.streamPlatform || "";
+    document.getElementById("streamLink").value = e.streamLink || "";
+    document.getElementById("status").value = e.status || "auto";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function closeEditor(){ document.getElementById("adminPanel").style.display = "none"; }
+
+function getStatus(e){
+    if(e.status === "cancelled") return "entfällt";
+    let now = new Date(), start = new Date(e.date + "T" + e.startTime), end = new Date(e.date + "T" + e.endTime);
+    return now > end ? "beendet" : (now >= start ? "live" : "kommend");
+}
+
+function countdown(e){
+    let diff = new Date(e.date + "T" + e.startTime) - new Date();
+    if(diff <= 0) return "";
+    let d = Math.floor(diff/86400000), h = Math.floor((diff%86400000)/3600000), m = Math.floor((diff%3600000)/60000);
+    return `${d}T ${h}h ${m}m`;
+}
+
+window.onload = () => { initApp(); renderTeams(); };
+setInterval(fetchEvents, 60000);
+</script>
 </body>
 </html>
