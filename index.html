@@ -31,8 +31,19 @@
             }
         }
 
-        /* WARTUNGS-BOX (AUSGEBLENDET) */
-        .maintenance-box { display: none; }
+        /* WARTUNGS-BOX (EINGEBLENDET) */
+        .maintenance-box { 
+            background: #2c1a00; 
+            border: 1px solid #ff7b00; 
+            padding: 15px; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            gap: 15px; 
+        }
+        .maintenance-icon { font-size: 24px; }
+        .maintenance-title { color: #ff7b00; font-weight: bold; margin-bottom: 5px; }
+        .maintenance-text { font-size: 14px; }
 
         /* PATCHLOG STYLE */
         .patchlog-container {
@@ -129,7 +140,7 @@
         <div class="maintenance-content">
             <div class="maintenance-title">Geplante Wartungsarbeiten</div>
             <div class="maintenance-text">
-                System-Optimierung & UI-Update, <b>16.04.2026 ab 18:00 Uhr</b>.
+                v1.0.4 Update & Fehlerbehebung, <b>21.04.2026 ab 15:00 Uhr</b>.
             </div>
         </div>
     </div>
@@ -293,7 +304,6 @@ function closePwdModal() { document.getElementById("pwdModal").style.display = "
 
 async function submitPwd() {
     const pwd = document.getElementById("adminPwdInput").value;
-    // Prüft nun in der 'drivers' Tabelle, ob der Name und das Passwort übereinstimmen
     const { data, error } = await db.from('drivers').select('name').eq('name', currentDriver.name).eq('password', pwd).single();
     if (!error && data) {
         adminMode = true; sessionStorage.setItem("active_pwd", pwd);
