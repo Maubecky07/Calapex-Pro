@@ -3,14 +3,10 @@
 <head>
 
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Professional Monitoring Dashboard</title>
 
 <style>
-
 body{
     margin:0;
     padding:20px;
@@ -111,8 +107,7 @@ button:hover{
 
 .dashboard{
     display:grid;
-    grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
+    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
     gap:20px;
 }
 
@@ -154,17 +149,12 @@ button:hover{
     color:#ff4d4d;
 }
 
-.chart-wrapper{
-    position:relative;
-}
-
 canvas{
     width:100%;
     height:150px;
     background:#0d131b;
     border-radius:10px;
 }
-
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -173,11 +163,10 @@ canvas{
 const SUPABASE_URL = "https://upbxznmaviomljfejlyw.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ";
 
-// HIER KORRIGIERT: Holt die createClient-Methode direkt aus dem globalen CDN-Objekt,
-// bevor die lokale 'supabase'-Variable definiert wird. Das verhindert den Typ-Fehler.
-const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+// Instanziierung über ein separates Objekt, um Namenskonflikte zu vermeiden
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
-if (!supabase) {
+if (!supabaseClient) {
     console.error("Supabase SDK konnte nicht geladen werden!");
 }
 </script>
@@ -189,7 +178,6 @@ if (!supabase) {
 <h1>System Monitoring Dashboard</h1>
 
 <div class="topbar">
-
     <div class="topbar-left">
         <div class="district-controls">
             <button onclick="togglePower('101')">Bezirk 101 Ein/Aus</button>
@@ -208,14 +196,9 @@ if (!supabase) {
     </div>
 
     <div class="topbar-right">
-        <div id="totalUsersDisplay" class="total-users-display">
-            Gesamt-Nutzer: 0
-        </div>
-        <div id="liveClock" class="realtime-clock">
-            00.00.0000, 00:00:00
-        </div>
+        <div id="totalUsersDisplay" class="total-users-display">Gesamt-Nutzer: 0</div>
+        <div id="liveClock" class="realtime-clock">00.00.0000, 00:00:00</div>
     </div>
-
 </div>
 
 <div class="district-section" id="section_101">
@@ -252,11 +235,9 @@ if (!supabase) {
 </div>
 
 <script>
-
 // ====================================
 // STARTWERTE UND STRUKTUR FÜR ALLE BEZIRKE
 // ====================================
-
 const districts = {
     "101": createDistrictObject(10000),
     "102": createDistrictObject(22000),
@@ -292,7 +273,6 @@ function createDistrictObject(maxUsersLimit) {
 // ====================================
 // POWER BUTTON (PRO BEZIRK)
 // ====================================
-
 function togglePower(id){
     let db = districts[id];
     db.systemOn = !db.systemOn;
@@ -327,7 +307,6 @@ function updateClockAndTotals() {
     };
     document.getElementById("liveClock").innerText = now.toLocaleString("de-DE", options);
 
-    // Summiere die Nutzer aller Bezirke auf
     let totalUsersSum = 0;
     for (let id in districts) {
         totalUsersSum += districts[id].users;
@@ -338,14 +317,13 @@ function updateClockAndTotals() {
 // ====================================
 // SUPABASE: LADEN UND SPEICHERN
 // ====================================
-
 let dbUpdateCounter = 0;
 
 async function loadFromSupabase() {
-    if (!supabase) return;
+    if (!supabaseClient) return;
     try {
         console.log("Versuche Daten aus Supabase zu laden...");
-        const { data, error } = await supabase.from('districts').select('*');
+        const { data, error } = await supabaseClient.from('districts').select('*');
         
         if (error) {
             console.error("Fehler beim Laden aus Tabelle 'districts':", error);
@@ -363,20 +341,12 @@ async function loadFromSupabase() {
                     districts[idStr].damage = row.damage;
                     districts[idStr].targetUsers = row.users;
                     districts[idStr].targetCpu = row.cpu;
+                    
+                    // Da system_on nicht in der DB existiert, starten wir standardmäßig auf 'true'
+                    districts[idStr].systemOn = true; 
+                    updatePowerUI(idStr);
                 }
             });
-            
-            // Versuche auch den Status aus der Tabelle 'district' zu laden
-            const { data: districtData } = await supabase.from('district').select('*');
-            if (districtData) {
-                districtData.forEach(row => {
-                    let idStr = row.id.toString();
-                    if (districts[idStr] && row.data && typeof row.data.systemOn !== 'undefined') {
-                        districts[idStr].systemOn = row.data.systemOn;
-                        updatePowerUI(idStr);
-                    }
-                });
-            }
             
             updateClockAndTotals();
             console.log("Daten erfolgreich aus Supabase geladen.");
@@ -389,7 +359,7 @@ async function loadFromSupabase() {
 }
 
 async function saveToSupabase() {
-    if (!supabase) return;
+    if (!supabaseClient) return;
     const isoTimestamp = new Date().toISOString();
     console.log("Speichere aktuelle Werte in Supabase...");
 
@@ -403,30 +373,9 @@ async function saveToSupabase() {
         let roundedFan = Math.round(db.fan);
         let roundedDamage = Math.round(db.damage);
 
-        // 1. Speichern in Tabelle 'district'
+        // KORREKTUR: 'system_on' wurde entfernt, da die Spalte im Schema fehlt (Behebt Fehler PGRST204)
         try {
-            await supabase
-                .from('district')
-                .upsert({
-                    id: numId,
-                    district: "Bezirk " + id,
-                    data: {
-                        users: roundedUsers,
-                        cpu: roundedCpu,
-                        temp: roundedTemp,
-                        fan: roundedFan,
-                        damage: roundedDamage,
-                        systemOn: db.systemOn
-                    },
-                    updated_at: isoTimestamp
-                });
-        } catch (error) {
-            console.error("Fehler beim Speichern in Tabelle 'district':", error);
-        }
-
-        // 2. Speichern in Tabelle 'districts'
-        try {
-            await supabase
+            const { error } = await supabaseClient
                 .from('districts')
                 .upsert({
                     id: numId,
@@ -437,8 +386,12 @@ async function saveToSupabase() {
                     damage: roundedDamage,
                     updated_at: isoTimestamp
                 });
+
+            if (error) {
+                console.error("Fehler beim Speichern in Tabelle 'districts' für ID " + id + ":", error);
+            }
         } catch (error) {
-            console.error("Fehler beim Speichern in Tabelle 'districts':", error);
+            console.error("Schwerwiegender Fehler beim Speichern für Bezirk " + id + ":", error);
         }
     }
 }
@@ -446,14 +399,12 @@ async function saveToSupabase() {
 // ====================================
 // UPDATE SYSTEM FOR ALL DISTRICTS
 // ====================================
-
 function updateSystem(){
     updateClockAndTotals();
 
     const now = new Date();
     const timeString = now.toTimeString().split(' ')[0];
     const currentTimestamp = Date.now();
-    
     const currentHour = now.getHours();
 
     for (let id in districts) {
@@ -522,21 +473,13 @@ function updateSystem(){
                 let intenseThreshold = 0.02; 
 
                 if (id === "102" || id === "103") {
-                    if (currentHour >= 12 && currentHour < 18) {
-                        intenseThreshold = 0.05; 
-                    } else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                        intenseThreshold = 0.03; 
-                    } else {
-                        intenseThreshold = 0.008; 
-                    }
+                    if (currentHour >= 12 && currentHour < 18) intenseThreshold = 0.05; 
+                    else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) intenseThreshold = 0.03; 
+                    else intenseThreshold = 0.008; 
                 } else {
-                    if (currentHour >= 12 && currentHour < 18) {
-                        intenseThreshold = 0.05; 
-                    } else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                        intenseThreshold = 0.03; 
-                    } else {
-                        intenseThreshold = 0.008; 
-                    }
+                    if (currentHour >= 12 && currentHour < 18) intenseThreshold = 0.05; 
+                    else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) intenseThreshold = 0.03; 
+                    else intenseThreshold = 0.008; 
                 }
 
                 if (Math.random() < intenseThreshold) { 
@@ -565,11 +508,8 @@ function updateSystem(){
             if (db.transitionProgressTicks < db.transitionDurationTicks) {
                 db.transitionProgressTicks++;
                 let t = db.transitionProgressTicks / db.transitionDurationTicks;
-                if (currentHourState === 1) {
-                    db.transitionFactor = 1.0 - t;
-                } else {
-                    db.transitionFactor = t;
-                }
+                if (currentHourState === 1) db.transitionFactor = 1.0 - t;
+                else db.transitionFactor = t;
             } else {
                 db.transitionFactor = (currentHourState === 1) ? 0.0 : 1.0;
             }
@@ -579,22 +519,14 @@ function updateSystem(){
 
             if (id === "102") {
                 if (currentHour >= 12 && currentHour < 18) {
-                    if (userRand < 0.053) { 
-                        targetTag = 16001 + Math.random() * 5999;
-                    } else if (userRand < 0.053 + 0.044) { 
-                        targetTag = 1000 + Math.random() * 10999;
-                    } else { 
-                        targetTag = 12000 + Math.random() * 4000;
-                    }
+                    if (userRand < 0.053) targetTag = 16001 + Math.random() * 5999;
+                    else if (userRand < 0.053 + 0.044) targetTag = 1000 + Math.random() * 10999;
+                    else targetTag = 12000 + Math.random() * 4000;
                 } 
                 else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                    if (userRand < 0.014) { 
-                        targetTag = 12001 + Math.random() * 9999;
-                    } else if (userRand < 0.014 + 0.042) { 
-                        targetTag = 1000 + Math.random() * 6499;
-                    } else { 
-                        targetTag = 7500 + Math.random() * 4500;
-                    }
+                    if (userRand < 0.014) targetTag = 12001 + Math.random() * 9999;
+                    else if (userRand < 0.014 + 0.042) targetTag = 1000 + Math.random() * 6499;
+                    else targetTag = 7500 + Math.random() * 4500;
                 } 
                 else {
                     let targetNacht = (db.targetUsers < 1500 || db.targetUsers > 3500 || Math.random() < 0.1) ? (1500 + Math.random() * 2000) : db.targetUsers;
@@ -603,22 +535,14 @@ function updateSystem(){
             } 
             else if (id === "103") {
                 if (currentHour >= 12 && currentHour < 18) {
-                    if (userRand < 0.053) { 
-                        targetTag = 14501 + Math.random() * 3499;
-                    } else if (userRand < 0.053 + 0.044) { 
-                        targetTag = 1000 + Math.random() * 9499;
-                    } else { 
-                        targetTag = 10500 + Math.random() * 4000;
-                    }
+                    if (userRand < 0.053) targetTag = 14501 + Math.random() * 3499;
+                    else if (userRand < 0.053 + 0.044) targetTag = 1000 + Math.random() * 9499;
+                    else targetTag = 10500 + Math.random() * 4000;
                 } 
                 else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                    if (userRand < 0.014) { 
-                        targetTag = 10501 + Math.random() * 7499;
-                    } else if (userRand < 0.014 + 0.042) { 
-                        targetTag = 1000 + Math.random() * 5499;
-                    } else { 
-                        targetTag = 6500 + Math.random() * 4000;
-                    }
+                    if (userRand < 0.014) targetTag = 10501 + Math.random() * 7499;
+                    else if (userRand < 0.014 + 0.042) targetTag = 1000 + Math.random() * 5499;
+                    else targetTag = 6500 + Math.random() * 4000;
                 } 
                 else {
                     let targetNacht = (db.targetUsers < 1500 || db.targetUsers > 3500 || Math.random() < 0.1) ? (1500 + Math.random() * 2000) : db.targetUsers;
@@ -823,7 +747,7 @@ function updateSystem(){
         drawChart("damageChart_" + id, db.damageHistory, false, 100);
     }
 
-    // Intervall-Zähler: speichert alle 5 Sekunden in die Cloud
+    // Interval: Alle 5 Sekunden in die Cloud speichern
     dbUpdateCounter++;
     if (dbUpdateCounter >= 5) {
         saveToSupabase();
@@ -860,9 +784,7 @@ function getDamageColor(damageValue) {
 // ====================================
 // CHARTS FUNKTION
 // ====================================
-
 function drawChart(id, data, isUserChart, maxLimitSpec){
-
     const canvas = document.getElementById(id);
     if(!canvas) return;
 
@@ -875,7 +797,6 @@ function drawChart(id, data, isUserChart, maxLimitSpec){
     const chartHeight = canvas.height - paddingBottom;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     ctx.strokeStyle = "rgba(255,255,255,0.08)";
     ctx.lineWidth = 1;
 
@@ -902,7 +823,6 @@ function drawChart(id, data, isUserChart, maxLimitSpec){
     }
 
     if(data.length === 0) return;
-
     ctx.lineWidth = 3;
 
     for(let i = 1; i < data.length; i++){
@@ -978,7 +898,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     // 2. Loop starten (alle 1 Sekunde)
     setInterval(updateSystem, 1000);
 });
-
 </script>
 
 </body>
