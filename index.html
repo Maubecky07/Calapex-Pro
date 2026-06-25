@@ -1,904 +1,832 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calapex | Simracing Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary: #d11212;
+            --primary-glow: rgba(209, 18, 18, 0.6);
+            --bg-dark: #050505;
+            --panel-bg: rgba(20, 20, 20, 0.75);
+            --text-main: #ffffff;
+            --text-muted: #999999;
+        }
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Professional Monitoring Dashboard</title>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Rajdhani', sans-serif;
+        }
 
-<style>
-body{
-    margin:0;
-    padding:20px;
-    background:#0b0f14;
-    font-family:Arial, sans-serif;
-    color:white;
-}
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
 
-h1{
-    margin-bottom:20px;
-}
+        /* HINTERGRUND-LOGO */
+        .bg-layer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png'); 
+            background-size: 85%;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.15;
+            z-index: -2;
+            pointer-events: none;
+        }
 
-.topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:25px;
-    background:#111821;
-    padding:15px 20px;
-    border-radius:12px;
-    border:1px solid #1f2a36;
-    flex-wrap: wrap;
-    gap: 15px;
-}
+        .glow-orb {
+            position: fixed;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, rgba(209,18,18,0.15) 0%, rgba(0,0,0,0) 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            pointer-events: none;
+            animation: pulseGlow 8s infinite alternate;
+        }
 
-.topbar-left{
-    display:flex;
-    align-items:center;
-    gap:20px;
-    flex-wrap: wrap;
-}
+        /* Profil-Anzeige */
+        #profile-badge {
+            display: none; position: fixed; top: 20px; right: 20px; background: rgba(20, 20, 20, 0.85); 
+            border: 1px solid var(--primary); padding: 10px 20px; border-radius: 30px; 
+            backdrop-filter: blur(10px); z-index: 1000; align-items: center; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        #btn-logout { background: transparent; border: 1px solid #aaa; color: #aaa; padding: 4px 12px; border-radius: 15px; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        #btn-logout:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
 
-.topbar-right{
-    display:flex;
-    align-items:center;
-    gap:25px;
-}
+        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
+        .view { display: none; opacity: 0; transform: translateY(30px); }
+        .view.active { display: block; animation: slideUp 0.6s forwards; }
 
-.total-users-display{
-    font-size:18px;
-    font-weight:bold;
-    color:#00ff88;
-}
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(30px); } }
 
-.district-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #161f2b;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #243244;
-}
+        /* Hauptmenü Buttons */
+        .menu-grid { display: flex; flex-direction: column; gap: 25px; max-width: 800px; margin: 50px auto 0; }
+        .menu-btn { background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--primary); padding: 35px 40px; text-align: center; color: white; font-size: 2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; cursor: pointer; border-radius: 12px; transition: all 0.4s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .menu-btn.disabled { opacity: 0.5; cursor: not-allowed; border-left-color: #555; }
+        .menu-btn span { display: block; margin-top: 10px; font-size: 1.1rem; color: #aaa; text-transform: none; font-weight: 500; }
+        .menu-btn:not(.disabled):hover { transform: translateX(10px); box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 25px var(--primary-glow); border-color: var(--primary); color: var(--primary); }
 
-.realtime-clock{
-    font-size:18px;
-    font-weight:bold;
-    color:#9fb3c8;
-    font-family:'Courier New', Courier, monospace;
-}
+        /* Navigation Bar */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+        .back-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: 0.3s; }
+        .back-btn:hover { background: var(--primary); color: white; box-shadow: 0 0 15px var(--primary-glow); }
 
-button{
-    background:#1a2330;
-    color:white;
-    border:none;
-    padding:12px 20px;
-    border-radius:8px;
-    cursor:pointer;
-    font-size:16px;
-}
+        .panel { background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .panel-header { font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; display: inline-block; }
 
-button:hover{
-    background:#243244;
-}
+        /* Event/Team Grid */
+        .event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
+        @media (max-width: 900px) { .event-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .event-grid { grid-template-columns: 1fr; } }
 
-.power-on{
-    color:#00ff88;
-    font-weight:bold;
-}
+        .team-card { background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(15, 15, 15, 0.95)); border: 1px solid rgba(255, 255, 255, 0.05); border-top: 4px solid var(--primary); border-radius: 12px; padding: 25px; transition: 0.4s; position: relative; cursor: pointer; }
+        .team-card:hover { transform: translateY(-8px); border-color: rgba(209, 18, 18, 0.5); box-shadow: 0 12px 25px rgba(0,0,0,0.6), 0 0 20px rgba(209, 18, 18, 0.3); }
+        .team-logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-bottom: 15px; background: #222; border: 1px solid #444; }
+        .team-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 10px; }
+        .team-badge { position: absolute; top: 20px; right: 20px; background: rgba(209, 18, 18, 0.15); color: var(--primary); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(209, 18, 18, 0.3); }
+        
+        /* Formulare */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem;}
+        .form-group input, .form-group select { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; }
+        
+        .form-group input[type="file"] { 
+            padding: 10px; cursor: pointer; background: rgba(209, 18, 18, 0.15); border: 1px solid var(--primary); 
+        }
+        .form-group input[type="file"]::file-selector-button {
+            background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 15px; cursor: pointer; font-weight: bold;
+        }
 
-.power-off{
-    color:#ff4d4d;
-    font-weight:bold;
-}
+        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; text-transform: uppercase; margin-top: 10px; }
+        .btn-submit:hover { background: white; color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
 
-.district-section {
-    margin-bottom: 40px;
-}
+        /* Tabs System */
+        .team-tabs { display: flex; gap: 15px; margin-bottom: 30px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: 0.3s; padding: 10px 20px; border-radius: 8px; flex: 1; text-align: center; min-width: 150px; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 0 15px var(--primary-glow); }
+        .tab-btn:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: slideUp 0.4s forwards; }
 
-.district-title {
-    font-size: 24px;
-    font-weight: bold;
-    color: #00ff88;
-    margin-bottom: 15px;
-    border-bottom: 2px solid #1f2a36;
-    padding-bottom: 5px;
-}
+        /* Sidebar für Fahrerliste (Hamburger Menü) */
+        #member-sidebar {
+            position: fixed; top: 0; right: -100%; width: 350px; max-width: 100vw; height: 100vh;
+            background: rgba(15, 15, 15, 0.98); border-left: 2px solid var(--primary);
+            transition: right 0.4s ease; z-index: 2000; padding: 30px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
+        }
+        #member-sidebar.open { right: 0; }
+        .sidebar-close { float: right; cursor: pointer; color: var(--primary); font-size: 2rem; background: none; border: none; line-height: 1; }
+        .hamburger-btn { background: transparent; border: 1px solid var(--primary); color: white; font-size: 1.2rem; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; text-transform: uppercase; }
+        .hamburger-btn:hover { background: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
 
-.dashboard{
-    display:grid;
-    grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-}
+        #sidebar-member-list { flex: 1; overflow-y: auto; }
 
-.card{
-    background:#111821;
-    border:1px solid #1f2a36;
-    border-radius:14px;
-    padding:20px;
-    box-shadow:0 0 20px rgba(0,0,0,0.4);
-}
+        /* Modal für Beitrittsanfragen */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
-.title{
-    color:#9fb3c8;
-    font-size:18px;
-    margin-bottom:10px;
-}
+        /* Online Widget Unten Links */
+        #online-users-widget {
+            display: none; 
+            position: fixed; 
+            bottom: 20px; 
+            left: 20px; 
+            width: 250px; 
+            max-width: calc(100vw - 40px);
+            background: rgba(10,10,10,0.85); 
+            border: 1px solid var(--primary); 
+            border-radius: 12px; 
+            padding: 15px; 
+            z-index: 900; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            max-height: 35vh; 
+            overflow-y: auto;
+        }
 
-.value{
-    font-size:42px;
-    font-weight:bold;
-    margin-bottom:10px;
-}
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .menu-btn { padding: 25px 20px; font-size: 1.5rem; }
+            .top-nav { flex-direction: column; align-items: stretch; text-align: center; }
+            .back-btn, .hamburger-btn { width: 100%; }
+            #admin-controls { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
+            #online-users-widget { bottom: 10px; left: 10px; max-width: calc(100vw - 20px); }
+            #profile-badge { top: 10px; right: 10px; padding: 5px 10px; }
+            .panel { padding: 20px; }
+        }
 
-.status{
-    font-size:18px;
-    margin-bottom:15px;
-    font-weight:bold;
-}
-
-.normal{
-    color:#00ff88;
-}
-
-.warning{
-    color:#ffd93b;
-}
-
-.danger{
-    color:#ff4d4d;
-}
-
-canvas{
-    width:100%;
-    height:150px;
-    background:#0d131b;
-    border-radius:10px;
-}
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-const SUPABASE_URL = "https://upbxznmaviomljfejlyw.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ";
-
-// Instanziierung über ein separates Objekt, um Namenskonflikte zu vermeiden
-const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
-if (!supabaseClient) {
-    console.error("Supabase SDK konnte nicht geladen werden!");
-}
-</script>
-
+    </style>
 </head>
-
 <body>
 
-<h1>System Monitoring Dashboard</h1>
+    <div class="bg-layer"></div>
+    <div class="glow-orb"></div>
 
-<div class="topbar">
-    <div class="topbar-left">
-        <div class="district-controls">
-            <button onclick="togglePower('101')">Bezirk 101 Ein/Aus</button>
-            <div id="powerState_101" class="power-on">B101 Aktiv</div>
+    <div id="profile-badge">
+        <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
+        <button id="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="online-users-widget">
+        <h3 style="color: white; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+            <span style="display:inline-block; width:10px; height:10px; background:#00ff00; border-radius:50%; box-shadow: 0 0 8px #00ff00;"></span> 
+            Online Fahrer
+        </h3>
+        <div id="online-users-list" style="display: flex; flex-direction: column; gap: 8px;">
+            <span style="color: #aaa; font-size: 0.9rem;">Lade...</span>
+        </div>
+    </div>
+
+    <div id="member-sidebar">
+        <div>
+            <button class="sidebar-close" onclick="toggleMemberSidebar()">×</button>
+            <h2 style="color: white; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Fahrerliste</h2>
         </div>
         
-        <div class="district-controls">
-            <button onclick="togglePower('102')">Bezirk 102 Ein/Aus</button>
-            <div id="powerState_102" class="power-on">B102 Aktiv</div>
+        <div id="sidebar-member-list">
+            </div>
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <button class="btn-submit" style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545;" onclick="leaveCurrentTeam()">
+                🚪 Team verlassen
+            </button>
         </div>
+    </div>
 
-        <div class="district-controls">
-            <button onclick="togglePower('103')">Bezirk 103 Ein/Aus</button>
-            <div id="powerState_103" class="power-on">B103 Aktiv</div>
+    <div id="requests-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Offene Anfragen</h2>
+            <div id="requests-list" style="max-height: 300px; overflow-y: auto;">
+                </div>
+            <button class="btn-submit" style="background: #333; border: 1px solid #555; margin-top: 20px;" onclick="closeRequestsModal()">Schließen</button>
         </div>
     </div>
 
-    <div class="topbar-right">
-        <div id="totalUsersDisplay" class="total-users-display">Gesamt-Nutzer: 0</div>
-        <div id="liveClock" class="realtime-clock">00.00.0000, 00:00:00</div>
-    </div>
-</div>
+    <div class="container">
 
-<div class="district-section" id="section_101">
-    <div class="district-title">Bezirk 101</div>
-    <div class="dashboard">
-        <div class="card"><div class="title">Online Nutzer</div><div class="value" id="users_101">5.000</div><div class="status normal" id="usersStatus_101">Stabil</div><canvas id="usersChart_101"></canvas></div>
-        <div class="card"><div class="title">CPU Usage</div><div class="value" id="cpu_101">40%</div><div class="status normal" id="cpuStatus_101">Normal</div><canvas id="cpuChart_101"></canvas></div>
-        <div class="card"><div class="title">CPU Temperatur</div><div class="value" id="temp_101">45°C</div><div class="status normal" id="tempStatus_101">Normal</div><canvas id="tempChart_101"></canvas></div>
-        <div class="card"><div class="title">Lüftung</div><div class="value" id="fan_101">30%</div><div class="status normal" id="fanStatus_101">Stabil</div><canvas id="fanChart_101"></canvas></div>
-        <div class="card"><div class="title">Systemschaden & Reparatur</div><div class="value" id="damage_101">0%</div><div class="status normal" id="damageStatus_101">System intakt</div><canvas id="damageChart_101"></canvas></div>
-    </div>
-</div>
+        <main id="view-auth" class="view active">
+            <div style="max-width: 500px; margin: 80px auto;">
+                <div id="login-box" class="panel">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="font-size: 2.5rem; text-transform: uppercase; letter-spacing: 3px;">Calapex <span style="color: var(--primary);">Simracing</span></h1>
+                        <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
+                    </div>
+                    <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
+                    <div class="form-group"><input type="text" id="login-lastname" placeholder="Nachname"></div>
+                    <div class="form-group"><input type="password" id="login-password" placeholder="Passwort"></div>
+                    <button class="btn-submit" onclick="loginUser()">Einloggen</button>
+                    <p style="text-align: center; margin-top: 20px; color: #aaa;">Noch kein Account? <a href="#" onclick="toggleAuth('register')" style="color: var(--primary);">Registrieren</a></p>
+                </div>
 
-<div class="district-section" id="section_102">
-    <div class="district-title">Bezirk 102</div>
-    <div class="dashboard">
-        <div class="card"><div class="title">Online Nutzer</div><div class="value" id="users_102">5.000</div><div class="status normal" id="usersStatus_102">Stabil</div><canvas id="usersChart_102"></canvas></div>
-        <div class="card"><div class="title">CPU Usage</div><div class="value" id="cpu_102">40%</div><div class="status normal" id="cpuStatus_102">Normal</div><canvas id="cpuChart_102"></canvas></div>
-        <div class="card"><div class="title">CPU Temperatur</div><div class="value" id="temp_102">45°C</div><div class="status normal" id="tempStatus_102">Normal</div><canvas id="tempChart_102"></canvas></div>
-        <div class="card"><div class="title">Lüftung</div><div class="value" id="fan_102">30%</div><div class="status normal" id="fanStatus_102">Stabil</div><canvas id="fanChart_102"></canvas></div>
-        <div class="card"><div class="title">Systemschaden & Reparatur</div><div class="value" id="damage_102">0%</div><div class="status normal" id="damageStatus_102">System intakt</div><canvas id="damageChart_102"></canvas></div>
-    </div>
-</div>
-
-<div class="district-section" id="section_103">
-    <div class="district-title">Bezirk 103</div>
-    <div class="dashboard">
-        <div class="card"><div class="title">Online Nutzer</div><div class="value" id="users_103">5.000</div><div class="status normal" id="usersStatus_103">Stabil</div><canvas id="usersChart_103"></canvas></div>
-        <div class="card"><div class="title">CPU Usage</div><div class="value" id="cpu_103">40%</div><div class="status normal" id="cpuStatus_103">Normal</div><canvas id="cpuChart_103"></canvas></div>
-        <div class="card"><div class="title">CPU Temperatur</div><div class="value" id="temp_103">45°C</div><div class="status normal" id="tempStatus_103">Normal</div><canvas id="tempChart_103"></canvas></div>
-        <div class="card"><div class="title">Lüftung</div><div class="value" id="fan_103">30%</div><div class="status normal" id="fanStatus_103">Stabil</div><canvas id="fanChart_103"></canvas></div>
-        <div class="card"><div class="title">Systemschaden & Reparatur</div><div class="value" id="damage_103">0%</div><div class="status normal" id="damageStatus_103">System intakt</div><canvas id="damageChart_103"></canvas></div>
-    </div>
-</div>
-
-<script>
-// ====================================
-// STARTWERTE UND STRUKTUR FÜR ALLE BEZIRKE
-// ====================================
-const districts = {
-    "101": createDistrictObject(10000),
-    "102": createDistrictObject(22000),
-    "103": createDistrictObject(18000)
-};
-
-function createDistrictObject(maxUsersLimit) {
-    return {
-        users: 5000,
-        cpu: 40,
-        temp: 45,
-        fan: 30,
-        damage: 0,
-        systemOn: true,
-        usersHistory: [],
-        cpuHistory: [],
-        tempHistory: [],
-        fanHistory: [],
-        damageHistory: [],
-        targetUsers: 5000,
-        targetCpu: 30,
-        userPhase: "calm",
-        phaseDuration: 0,
-        extremeRangeTicks: 0,
-        transitionFactor: 1.0,
-        transitionDurationTicks: 0,
-        transitionProgressTicks: 0,
-        lastHourState: -1,
-        maxUsers: maxUsersLimit
-    };
-}
-
-// ====================================
-// POWER BUTTON (PRO BEZIRK)
-// ====================================
-function togglePower(id){
-    let db = districts[id];
-    db.systemOn = !db.systemOn;
-    updatePowerUI(id);
-}
-
-function updatePowerUI(id) {
-    let db = districts[id];
-    let power = document.getElementById("powerState_" + id);
-
-    if(db.systemOn){
-        power.innerText = "B" + id + " Aktiv";
-        power.className = "power-on";
-    } else {
-        power.innerText = "B" + id + " Aus";
-        power.className = "power-off";
-    }
-}
-
-// ====================================
-// ECHTZEIT UHR FUNKTION & TOTAL USERS
-// ====================================
-function updateClockAndTotals() {
-    const now = new Date();
-    const options = { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        second: '2-digit' 
-    };
-    document.getElementById("liveClock").innerText = now.toLocaleString("de-DE", options);
-
-    let totalUsersSum = 0;
-    for (let id in districts) {
-        totalUsersSum += districts[id].users;
-    }
-    document.getElementById("totalUsersDisplay").innerText = "Gesamt-Nutzer: " + Math.round(totalUsersSum).toLocaleString("de-DE");
-}
-
-// ====================================
-// SUPABASE: LADEN UND SPEICHERN
-// ====================================
-let dbUpdateCounter = 0;
-
-async function loadFromSupabase() {
-    if (!supabaseClient) return;
-    try {
-        console.log("Versuche Daten aus Supabase zu laden...");
-        const { data, error } = await supabaseClient.from('districts').select('*');
+                <div id="register-box" class="panel" style="display: none;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="font-size: 2.5rem; text-transform: uppercase;">Neuer <span style="color: var(--primary);">Fahrer</span></h1>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group"><input type="text" id="reg-firstname" placeholder="Vorname"></div>
+                        <div class="form-group"><input type="text" id="reg-lastname" placeholder="Nachname"></div>
+                    </div>
+                    <div class="form-group"><input type="email" id="reg-email" placeholder="E-Mail Adresse"></div>
+                    <div class="form-group"><input type="password" id="reg-password" placeholder="Passwort"></div>
+                    <button class="btn-submit" onclick="registerUser()">Konto erstellen</button>
+                    <p style="text-align: center; margin-top: 20px; color: #aaa;">Bereits registriert? <a href="#" onclick="toggleAuth('login')" style="color: var(--primary);">Zur Anmeldung</a></p>
+                </div>
+            </div>
+        </main>
         
-        if (error) {
-            console.error("Fehler beim Laden aus Tabelle 'districts':", error);
-            return;
+        <main id="view-home" class="view">
+            <div class="menu-grid">
+                <button class="menu-btn disabled" onclick="return false;">
+                    Ligen <span style="color: #ffcc00; font-weight: bold;">⏳ Coming Soon</span>
+                </button>
+                <button class="menu-btn" onclick="openView('view-teams-main')">
+                    Teams <span>Teams suchen, erstellen & verwalten</span>
+                </button>
+            </div>
+        </main>
+
+        <main id="view-teams-main" class="view">
+            <div class="top-nav">
+                <h2 class="panel-header" style="margin-bottom: 0;">Team Center</h2>
+                <button class="back-btn" onclick="openView('view-home')">◄ Zurück</button>
+            </div>
+
+            <div class="team-tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-my-teams', this)">Deine Teams</button>
+                <button class="tab-btn" onclick="switchTab('tab-create-team', this)">Team Gründen</button>
+                <button class="tab-btn" onclick="switchTab('tab-search-team', this)">Team Suchen</button>
+            </div>
+
+            <div class="panel">
+                <div id="tab-my-teams" class="tab-content active">
+                    <div class="event-grid" id="grid-my-teams">
+                        </div>
+                </div>
+
+                <div id="tab-create-team" class="tab-content">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <div class="form-group">
+                            <label>Team Name</label>
+                            <input type="text" id="create-team-name" placeholder="z.B. Calapex Motorsport">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Teamlogo (vom PC auswählen)</label>
+                            <input type="file" id="create-team-logo" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Haupt-Simulator</label>
+                            <select id="create-team-sim">
+                                <option>iRacing</option>
+                                <option>Assetto Corsa Competizione</option>
+                                <option>rFactor 2</option>
+                                <option>Multi-Sim</option>
+                            </select>
+                        </div>
+                        <button class="btn-submit" onclick="createTeam()">Team gründen & Admin werden</button>
+                    </div>
+                </div>
+
+                <div id="tab-search-team" class="tab-content">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <p style="color: #ccc; margin-bottom: 20px;">Gib die 10-stellige Team-ID ein, um ein Team zu finden und eine Beitrittsanfrage zu senden.</p>
+                        <div class="form-group">
+                            <label>Team ID</label>
+                            <input type="text" id="search-team-code" placeholder="z.B. A1B2C3D4E5" style="text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">
+                        </div>
+                        <button class="btn-submit" onclick="searchTeam()">Team Suchen</button>
+
+                        <div id="search-result-box" style="display:none; margin-top: 30px; padding: 20px; border: 1px solid var(--primary); border-radius: 8px; background: rgba(209,18,18,0.1);">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="view-team-calendar" class="view">
+            <div class="top-nav" style="margin-bottom: 15px;">
+                <button class="back-btn" onclick="openView('view-teams-main')">◄ Zurück</button>
+                <h2 class="panel-header" id="calendar-team-name" style="margin-bottom: 0; border: none; padding: 0;">Team Name</h2>
+                <button class="hamburger-btn" onclick="toggleMemberSidebar()">☰ Fahrerliste</button>
+            </div>
+
+            <div id="admin-controls" style="display: none; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 8px; border: 1px dashed var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <span style="color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Team-ID (Einladungscode)</span><br>
+                    <span id="calendar-team-id" style="font-family: monospace; color: var(--primary); font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;"></span>
+                </div>
+                <button class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; position: relative;" onclick="openRequestsModal()">
+                    Anfragen Verwalten 
+                    <span id="request-count-badge" style="position: absolute; top: -10px; right: -10px; background: white; color: var(--primary); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; border: 2px solid var(--primary);">0</span>
+                </button>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: white; text-transform: uppercase; margin-bottom: 20px; font-size: 1.5rem;">📅 Kalender / Termine</h3>
+                <p style="color: #aaa;">Hier können bald Termine für das Team erstellt und eingesehen werden.</p>
+                <div style="height: 300px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); margin-top: 20px;">
+                    <span style="color: var(--text-muted); font-size: 1.2rem; text-align: center;">Kalender Ansicht coming soon...</span>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script>
+        // ================= SUPABASE CONFIGURATION =================
+        const SUPABASE_URL = 'https://upbxznmaviomljfejlyw.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ';
+        
+        let supabaseClient = null;
+        if (SUPABASE_URL !== 'DEINE_SUPABASE_URL') {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         }
 
-        if (data && data.length > 0) {
-            data.forEach(row => {
-                let idStr = row.id.toString();
-                if (districts[idStr]) {
-                    districts[idStr].users = row.users;
-                    districts[idStr].cpu = row.cpu;
-                    districts[idStr].temp = row.temp;
-                    districts[idStr].fan = row.fan;
-                    districts[idStr].damage = row.damage;
-                    districts[idStr].targetUsers = row.users;
-                    districts[idStr].targetCpu = row.cpu;
-                    
-                    // Da system_on nicht in der DB existiert, starten wir standardmäßig auf 'true'
-                    districts[idStr].systemOn = true; 
-                    updatePowerUI(idStr);
-                }
-            });
+        // --- State ---
+        let activeUser = null;
+        let presenceChannel = null;
+        let currentOpenTeamId = null;
+
+        // --- UI Navigation ---
+        function toggleAuth(mode) {
+            document.getElementById('login-box').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('register-box').style.display = mode === 'register' ? 'block' : 'none';
+        }
+
+        function openView(viewId) {
+            const views = document.querySelectorAll('.view');
+            views.forEach(view => view.classList.remove('active'));
+            setTimeout(() => { document.getElementById(viewId).classList.add('active'); }, 50);
             
-            updateClockAndTotals();
-            console.log("Daten erfolgreich aus Supabase geladen.");
-        } else {
-            console.log("Keine alten Daten gefunden. Verwende Startwerte.");
+            if(viewId === 'view-teams-main') {
+                loadMyTeams();
+            }
+
+            // Steuerung des Online-Widgets (Sichtbarkeit nur auf Hauptseite)
+            const onlineWidget = document.getElementById('online-users-widget');
+            if (onlineWidget && activeUser) {
+                if (viewId === 'view-home') {
+                    onlineWidget.style.display = 'block';
+                } else {
+                    onlineWidget.style.display = 'none';
+                }
+            }
+
+            // Fahrerliste (Sidebar) IMMER schließen, falls man den Kalender verlässt
+            if (viewId !== 'view-team-calendar') {
+                document.getElementById('member-sidebar').classList.remove('open');
+            }
         }
-    } catch (e) {
-        console.error("Fehler im loadFromSupabase Lifecycle:", e);
-    }
-}
 
-async function saveToSupabase() {
-    if (!supabaseClient) return;
-    const isoTimestamp = new Date().toISOString();
-    console.log("Speichere aktuelle Werte in Supabase...");
+        function switchTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            
+            if(tabId === 'tab-search-team') {
+                document.getElementById('search-result-box').style.display = 'none';
+                document.getElementById('search-team-code').value = '';
+            }
+        }
 
-    for (let id in districts) {
-        let db = districts[id];
-        let numId = parseInt(id);
+        function toggleMemberSidebar() {
+            const sidebar = document.getElementById('member-sidebar');
+            sidebar.classList.toggle('open');
+        }
 
-        let roundedUsers = Math.round(db.users);
-        let roundedCpu = Math.round(db.cpu);
-        let roundedTemp = Math.round(db.temp);
-        let roundedFan = Math.round(db.fan);
-        let roundedDamage = Math.round(db.damage);
+        // --- Auth Functions ---
+        async function registerUser() {
+            const fn = document.getElementById('reg-firstname').value.trim();
+            const ln = document.getElementById('reg-lastname').value.trim();
+            const em = document.getElementById('reg-email').value.trim();
+            const pw = document.getElementById('reg-password').value;
 
-        // KORREKTUR: 'system_on' wurde entfernt, da die Spalte im Schema fehlt (Behebt Fehler PGRST204)
-        try {
-            const { error } = await supabaseClient
-                .from('districts')
-                .upsert({
-                    id: numId,
-                    users: roundedUsers,
-                    cpu: roundedCpu,
-                    temp: roundedTemp,
-                    fan: roundedFan,
-                    damage: roundedDamage,
-                    updated_at: isoTimestamp
+            if(!fn || !ln || !em || !pw) return alert("Bitte alle Felder ausfüllen!");
+            if(!supabaseClient) return alert("Demo-Modus: Datenbank nicht verbunden.");
+
+            const { error } = await supabaseClient.from('app_users').insert([{ first_name: fn, last_name: ln, email: em, password: pw }]);
+            if(error) alert("Fehler: " + error.message);
+            else { alert("Erfolgreich registriert!"); toggleAuth('login'); }
+        }
+
+        async function loginUser() {
+            const fn = document.getElementById('login-firstname').value.trim();
+            const ln = document.getElementById('login-lastname').value.trim();
+            const pw = document.getElementById('login-password').value;
+
+            if(!fn || !ln || !pw) return alert("Bitte alle Felder ausfüllen!");
+
+            if(!supabaseClient) { 
+                activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln };
+                processLoginSuccess();
+                return;
+            }
+
+            const { data, error } = await supabaseClient.from('app_users').select('*').eq('first_name', fn).eq('last_name', ln).eq('password', pw).single();
+            if(error || !data) return alert("Falsche Daten!");
+
+            activeUser = data;
+            processLoginSuccess();
+        }
+
+        function processLoginSuccess() {
+            document.getElementById('profile-name').innerText = `${activeUser.first_name} ${activeUser.last_name}`;
+            document.getElementById('profile-badge').style.display = 'flex';
+            document.getElementById('online-users-widget').style.display = 'block'; 
+            openView('view-home');
+            initPresence(); 
+        }
+
+        function logout() {
+            cleanupPresence();
+            activeUser = null;
+            document.getElementById('profile-badge').style.display = 'none';
+            document.getElementById('online-users-widget').style.display = 'none'; 
+            openView('view-auth');
+        }
+
+        // --- Realtime / Presence (Wer ist online?) ---
+        function initPresence() {
+            if (!supabaseClient || !activeUser) return;
+
+            cleanupPresence();
+
+            const safeUserId = activeUser.id ? activeUser.id.toString() : 'user_' + Math.floor(Math.random()*1000);
+            const userName = `${activeUser.first_name} ${activeUser.last_name}`;
+
+            presenceChannel = supabaseClient.channel('online_users', {
+                config: { presence: { key: safeUserId } },
+            });
+
+            presenceChannel.on('presence', { event: 'sync' }, () => {
+                renderOnlineUsers(presenceChannel.presenceState());
+            });
+
+            presenceChannel.subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') await presenceChannel.track({ user_name: userName });
+            });
+        }
+
+        function renderOnlineUsers(state) {
+            const listDiv = document.getElementById('online-users-list');
+            listDiv.innerHTML = '';
+            let count = 0;
+            for (const id in state) {
+                state[id].forEach(user => {
+                    count++;
+                    listDiv.innerHTML += `
+                        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; color: white; display: flex; align-items: center; gap: 8px;">
+                            <span style="display:inline-block; width:8px; height:8px; background:var(--primary); border-radius:50%; box-shadow: 0 0 8px var(--primary-glow);"></span>
+                            ${user.user_name}
+                        </div>`;
                 });
+            }
+            if (count === 0) listDiv.innerHTML = `<span style="color: #aaa; font-size: 0.9rem;">Derzeit niemand online</span>`;
+        }
+
+        function cleanupPresence() {
+            if (presenceChannel) {
+                presenceChannel.untrack();
+                supabaseClient.removeChannel(presenceChannel);
+                presenceChannel = null;
+            }
+        }
+
+        // --- Teams Funktionen ---
+        function generateInviteCode() {
+            return Math.random().toString(36).substring(2, 12).toUpperCase();
+        }
+
+        async function createTeam() {
+            const name = document.getElementById('create-team-name').value.trim();
+            const sim = document.getElementById('create-team-sim').value;
+            const logoInput = document.getElementById('create-team-logo');
+            
+            if(!name) return alert("Team Name ist erforderlich!");
+            let logoUrl = "https://via.placeholder.com/150/222222/FFFFFF?text=Logo"; 
+
+            if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
+                const file = logoInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+                const { error: uploadError } = await supabaseClient.storage.from('team-logos').upload(fileName, file);
+                if (uploadError) return alert("Fehler beim Logo-Upload: " + uploadError.message);
+
+                const { data: publicUrlData } = supabaseClient.storage.from('team-logos').getPublicUrl(fileName);
+                logoUrl = publicUrlData.publicUrl;
+            }
+
+            const code = generateInviteCode();
+            if(!supabaseClient) return alert("Demo: Team erstellt.");
+
+            const { data, error } = await supabaseClient.from('teams').insert([{
+                name: name, logo_url: logoUrl, sim: sim, invite_code: code, admin_id: activeUser.id
+            }]).select();
+
+            if(error) return alert("Fehler beim Erstellen: " + error.message);
+
+            const teamId = data[0].id;
+            const userName = `${activeUser.first_name} ${activeUser.last_name}`;
+            
+            await supabaseClient.from('team_members').insert([{
+                team_id: teamId, user_id: activeUser.id, user_name: userName, role: 'Admin'
+            }]);
+
+            alert(`Team erfolgreich gegründet!\nDein Einladungscode lautet: ${code}`);
+            
+            document.getElementById('create-team-name').value = '';
+            document.getElementById('create-team-logo').value = '';
+            
+            // Direkt in den Kalender springen
+            openTeamCalendar(teamId);
+        }
+
+        async function loadMyTeams() {
+            const container = document.getElementById('grid-my-teams');
+            if(!supabaseClient) { container.innerHTML = `<p>Demo-Modus</p>`; return; }
+
+            container.innerHTML = `<p style="color:#aaa;">Lade Teams...</p>`;
+
+            const { data: memberships, error } = await supabaseClient
+                .from('team_members')
+                .select('role, teams(*)')
+                .eq('user_id', activeUser.id)
+                .neq('role', 'Anfrage');
+
+            if(error) return container.innerHTML = `<p>Fehler beim Laden.</p>`;
+            
+            if(!memberships || memberships.length === 0) {
+                container.innerHTML = `<p style="color:#aaa; grid-column: 1/-1; text-align: center;">Du bist noch in keinem Team.<br>Gründe ein neues oder suche nach einer ID.</p>`;
+                return;
+            }
+
+            let html = '';
+            memberships.forEach(m => {
+                const team = m.teams;
+                html += `
+                    <div class="team-card" onclick="openTeamCalendar('${team.id}')">
+                        <div class="team-badge">${m.role}</div>
+                        ${team.logo_url ? `<img src="${team.logo_url}" class="team-logo" alt="Logo">` : ''}
+                        <div class="team-title">${team.name}</div>
+                        <div style="color: #aaa; font-size: 0.9rem;">🎮 Simulator: ${team.sim}</div>
+                        <div style="margin-top: 15px; color: var(--primary); font-size: 0.9rem; font-weight: bold;">➜ Zum Kalender klicken</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // --- Such & Anfrage Funktionen ---
+        async function searchTeam() {
+            const code = document.getElementById('search-team-code').value.trim().toUpperCase();
+            if(!code) return alert("Bitte Code eingeben.");
+            const resBox = document.getElementById('search-result-box');
+            if(!supabaseClient) return;
+
+            // 1. Team finden
+            const { data: team, error } = await supabaseClient.from('teams').select('*').eq('invite_code', code).single();
+            if(error || !team) {
+                resBox.style.display = 'block';
+                resBox.innerHTML = `<p style="color: var(--primary); font-weight: bold;">Kein Team mit diesem Code gefunden.</p>`;
+                return;
+            }
+
+            // 2. Prüfen, ob der User schon drin ist oder eine Anfrage gestellt hat
+            const { data: existing } = await supabaseClient.from('team_members').select('role').eq('team_id', team.id).eq('user_id', activeUser.id).single();
+            
+            let btnHtml = `<button class="btn-submit" onclick="sendJoinRequest('${team.id}')">Beitrittsanfrage senden</button>`;
+            
+            if(existing) {
+                if(existing.role === 'Anfrage') {
+                    btnHtml = `<div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: #ffcc00; text-align: center; font-weight: bold;">⏳ Deine Anfrage ist ausstehend.</div>`;
+                } else {
+                    btnHtml = `<div style="background: rgba(0,255,0,0.1); padding: 10px; border-radius: 8px; color: #00ff00; text-align: center; font-weight: bold;">✔ Du bist bereits in diesem Team.</div>`;
+                }
+            }
+
+            // Ergebnis anzeigen
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
+                    <img src="${team.logo_url}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #444;">
+                    <div>
+                        <h3 style="color: white; margin: 0; font-size: 1.5rem;">${team.name}</h3>
+                        <p style="color: #aaa; margin: 0; font-size: 0.9rem;">🎮 Simulator: ${team.sim}</p>
+                    </div>
+                </div>
+                ${btnHtml}
+            `;
+        }
+
+        async function sendJoinRequest(teamId) {
+            const userName = `${activeUser.first_name} ${activeUser.last_name}`;
+            const { error } = await supabaseClient.from('team_members').insert([{
+                team_id: teamId, user_id: activeUser.id, user_name: userName, role: 'Anfrage'
+            }]);
+            
+            if(error) {
+                alert("Fehler: " + error.message);
+            } else {
+                alert("Deine Beitrittsanfrage wurde an den Admin gesendet!");
+                searchTeam(); // Box aktualisieren -> "Ausstehend"
+            }
+        }
+
+        // --- Team verlassen (Fix) ---
+        async function leaveCurrentTeam() {
+            if (!confirm("Möchtest du dieses Team wirklich verlassen? \nWenn du wieder eintreten möchtest, musst du eine neue Beitrittsanfrage stellen.")) {
+                return;
+            }
+
+            if (!supabaseClient) return alert("Demo-Modus.");
+
+            // Durch .select() zwingen wir Supabase, uns die betroffenen Zeilen zurückzugeben.
+            // Ist data leer, hat RLS (Row Level Security) das Löschen blockiert!
+            const { data, error } = await supabaseClient.from('team_members')
+                .delete()
+                .eq('team_id', currentOpenTeamId)
+                .eq('user_id', activeUser.id)
+                .select();
 
             if (error) {
-                console.error("Fehler beim Speichern in Tabelle 'districts' für ID " + id + ":", error);
+                return alert("Fehler beim Verlassen des Teams: " + error.message);
             }
-        } catch (error) {
-            console.error("Schwerwiegender Fehler beim Speichern für Bezirk " + id + ":", error);
-        }
-    }
-}
 
-// ====================================
-// UPDATE SYSTEM FOR ALL DISTRICTS
-// ====================================
-function updateSystem(){
-    updateClockAndTotals();
-
-    const now = new Date();
-    const timeString = now.toTimeString().split(' ')[0];
-    const currentTimestamp = Date.now();
-    const currentHour = now.getHours();
-
-    for (let id in districts) {
-        let db = districts[id];
-
-        // ====================================
-        // SYSTEM AUS
-        // ====================================
-        if(!db.systemOn){
-            let diff = 0 - db.users;
-            if (Math.abs(diff) > 45) {
-                db.users += Math.sign(diff) * 45;
+            // ACHTUNG: Prüfung auf RLS Fehler (Löschen silently blockiert)
+            if (data && data.length === 0) {
+                alert("Achtung: Du konntest nicht entfernt werden! Dir fehlen vermutlich die Rechte (Supabase RLS: DELETE-Policy in 'team_members' muss für Nutzer erlaubt sein).");
             } else {
-                db.users = 0;
+                alert("Du hast das Team erfolgreich verlassen.");
             }
-
-            db.cpu += (0 - db.cpu) * 0.25;
-            db.temp += (22 - db.temp) * 0.05;
-            db.fan += (0 - db.fan) * 0.15;
-            db.extremeRangeTicks = 0;
-
-            if(db.damage > 0) {
-                let repairSpeed = 0.2 + (db.damage * 0.02);
-                db.damage -= repairSpeed;
-                if(db.damage < 0) db.damage = 0;
-            }
+            
+            // Sidebar schließen & zurück zur Team-Übersicht navigieren
+            document.getElementById('member-sidebar').classList.remove('open');
+            currentOpenTeamId = null;
+            openView('view-teams-main');
         }
-        // ====================================
-        // SYSTEM AN
-        // ====================================
-        else {
-            let damageChance = 0;
-            let damageAmount = 0;
 
-            if(db.cpu > 80) { damageChance += 0.45; damageAmount += 0.3; }
-            else if(db.cpu > 60) { damageChance += 0.15; damageAmount += 0.1; }
+        // --- Kalender & Admin Management ---
+        async function openTeamCalendar(teamId) {
+            currentOpenTeamId = teamId;
+            
+            const { data: memberData } = await supabaseClient
+                .from('team_members')
+                .select('role, teams(*)')
+                .eq('user_id', activeUser.id)
+                .eq('team_id', teamId)
+                .single();
 
-            if(db.temp > 100) { damageChance += 0.6; damageAmount += 0.5; }
-            else if(db.temp > 90) { damageChance += 0.4; damageAmount += 0.2; }
-            else if(db.temp > 80) { damageChance += 0.15; damageAmount += 0.05; }
+            if(!memberData) return alert("Fehler beim Laden des Teams.");
 
-            if(db.fan > 80) { damageChance += 0.3; damageAmount += 0.15; }
-            else if(db.fan > 55) { damageChance += 0.1; damageAmount += 0.05; }
+            const team = memberData.teams;
+            const myRole = memberData.role;
 
-            if(damageChance > 0 && Math.random() < damageChance) {
-                db.damage += damageAmount * (Math.random() * 1.5);
-            }
-
-            if(db.damage > 100) db.damage = 100;
-
-            // ====================================
-            // NUTZER LOGIK
-            // ====================================
-            if (db.phaseDuration <= 0) {
-                let durationRand = Math.random();
-                let generatedTicks = 0;
-
-                if (durationRand < 0.01) {
-                    generatedTicks = 3600 + Math.floor(Math.random() * 7200);
-                } else if (durationRand < 0.15) {
-                    generatedTicks = 120 + Math.floor(Math.random() * 2580);
-                } else {
-                    generatedTicks = 10 + Math.floor(Math.random() * 80);
-                }
-
-                let intenseThreshold = 0.02; 
-
-                if (id === "102" || id === "103") {
-                    if (currentHour >= 12 && currentHour < 18) intenseThreshold = 0.05; 
-                    else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) intenseThreshold = 0.03; 
-                    else intenseThreshold = 0.008; 
-                } else {
-                    if (currentHour >= 12 && currentHour < 18) intenseThreshold = 0.05; 
-                    else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) intenseThreshold = 0.03; 
-                    else intenseThreshold = 0.008; 
-                }
-
-                if (Math.random() < intenseThreshold) { 
-                    db.userPhase = "intense";
-                    db.phaseDuration = Math.round(generatedTicks * 0.3) + 5; 
-                } else {
-                    db.userPhase = "calm";
-                    db.phaseDuration = generatedTicks; 
-                }
+            document.getElementById('calendar-team-name').innerText = team.name;
+            
+            const adminControls = document.getElementById('admin-controls');
+            if(myRole === 'Admin') {
+                adminControls.style.display = 'flex';
+                document.getElementById('calendar-team-id').innerText = team.invite_code;
+                updateRequestBadge(teamId);
             } else {
-                db.phaseDuration--;
+                adminControls.style.display = 'none';
             }
 
-            let currentHourState = (currentHour >= 23 || currentHour < 6) ? 1 : 0;
+            loadSidebarMembers(teamId);
+            openView('view-team-calendar');
+        }
 
-            if (db.lastHourState !== -1 && currentHourState !== db.lastHourState) {
-                if (currentHourState === 1) {
-                    db.transitionDurationTicks = 300 + Math.floor(Math.random() * 601);
-                } else {
-                    db.transitionDurationTicks = 180 + Math.floor(Math.random() * 541);
-                }
-                db.transitionProgressTicks = 0;
+        async function loadSidebarMembers(teamId) {
+            const { data: members } = await supabaseClient
+                .from('team_members')
+                .select('user_name, role')
+                .eq('team_id', teamId)
+                .neq('role', 'Anfrage')
+                .order('role', { ascending: true }); 
+            
+            let html = '';
+            members.forEach(m => {
+                const color = m.role === 'Admin' ? 'var(--primary)' : '#aaa';
+                html += `
+                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
+                            ${m.user_name.charAt(0)}
+                        </div>
+                        <div>
+                            <div style="color: white; font-size: 1.1rem; font-weight: 500;">${m.user_name}</div>
+                            <div style="color: ${color}; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">${m.role}</div>
+                        </div>
+                    </div>`;
+            });
+            document.getElementById('sidebar-member-list').innerHTML = html;
+        }
+
+        async function updateRequestBadge(teamId) {
+            const { count } = await supabaseClient
+                .from('team_members')
+                .select('*', { count: 'exact', head: true })
+                .eq('team_id', teamId)
+                .eq('role', 'Anfrage');
+            
+            const badge = document.getElementById('request-count-badge');
+            badge.innerText = count || 0;
+            badge.style.display = count > 0 ? 'flex' : 'none';
+        }
+
+        async function openRequestsModal() {
+            document.getElementById('requests-modal').style.display = 'flex';
+            const container = document.getElementById('requests-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade Anfragen...</p>';
+
+            const { data: requests } = await supabaseClient
+                .from('team_members')
+                .select('user_id, user_name')
+                .eq('team_id', currentOpenTeamId)
+                .eq('role', 'Anfrage');
+
+            if(!requests || requests.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; text-align: center; margin-top: 20px;">Keine offenen Beitrittsanfragen.</p>';
+                return;
             }
-            db.lastHourState = currentHourState;
 
-            if (db.transitionProgressTicks < db.transitionDurationTicks) {
-                db.transitionProgressTicks++;
-                let t = db.transitionProgressTicks / db.transitionDurationTicks;
-                if (currentHourState === 1) db.transitionFactor = 1.0 - t;
-                else db.transitionFactor = t;
+            let html = '';
+            requests.forEach(req => {
+                html += `
+                    <div style="display:flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid var(--primary); flex-wrap: wrap; gap: 10px;">
+                        <span style="color:white; font-size: 1.1rem; font-weight: 500;">${req.user_name}</span>
+                        <div style="display: flex; gap: 10px;">
+                            <button onclick="handleRequest('${req.user_id}', 'accept')" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✓ Annehmen</button>
+                            <button onclick="handleRequest('${req.user_id}', 'decline')" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✕ Ablehnen</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function handleRequest(userId, action) {
+            if (!supabaseClient) {
+                alert("Demo-Modus: Keine Datenbankverbindung.");
+                return;
+            }
+
+            let result;
+
+            if(action === 'accept') {
+                result = await supabaseClient.from('team_members')
+                    .update({ role: 'Teammitglied' })
+                    .eq('team_id', currentOpenTeamId)
+                    .eq('user_id', userId)
+                    .select();
+            } else if(action === 'decline') {
+                result = await supabaseClient.from('team_members')
+                    .delete()
+                    .eq('team_id', currentOpenTeamId)
+                    .eq('user_id', userId)
+                    .select();
+            }
+            
+            if (result && result.error) {
+                alert("Fehler bei der Aktion: " + result.error.message);
+                return;
+            }
+
+            // Prüfung auf RLS (Row Level Security) Blockade - wie bei leaveCurrentTeam()
+            if (result && result.data && result.data.length === 0) {
+                alert("Achtung: Die Aktion wurde blockiert! Bitte prüfe deine Supabase RLS-Richtlinien (UPDATE/DELETE für 'team_members').");
             } else {
-                db.transitionFactor = (currentHourState === 1) ? 0.0 : 1.0;
+                alert(action === 'accept' ? "Beitrittsanfrage erfolgreich angenommen!" : "Beitrittsanfrage erfolgreich abgelehnt!");
             }
-
-            let targetTag = db.targetUsers;
-            let userRand = Math.random();
-
-            if (id === "102") {
-                if (currentHour >= 12 && currentHour < 18) {
-                    if (userRand < 0.053) targetTag = 16001 + Math.random() * 5999;
-                    else if (userRand < 0.053 + 0.044) targetTag = 1000 + Math.random() * 10999;
-                    else targetTag = 12000 + Math.random() * 4000;
-                } 
-                else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                    if (userRand < 0.014) targetTag = 12001 + Math.random() * 9999;
-                    else if (userRand < 0.014 + 0.042) targetTag = 1000 + Math.random() * 6499;
-                    else targetTag = 7500 + Math.random() * 4500;
-                } 
-                else {
-                    let targetNacht = (db.targetUsers < 1500 || db.targetUsers > 3500 || Math.random() < 0.1) ? (1500 + Math.random() * 2000) : db.targetUsers;
-                    targetTag = targetNacht;
-                }
-            } 
-            else if (id === "103") {
-                if (currentHour >= 12 && currentHour < 18) {
-                    if (userRand < 0.053) targetTag = 14501 + Math.random() * 3499;
-                    else if (userRand < 0.053 + 0.044) targetTag = 1000 + Math.random() * 9499;
-                    else targetTag = 10500 + Math.random() * 4000;
-                } 
-                else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                    if (userRand < 0.014) targetTag = 10501 + Math.random() * 7499;
-                    else if (userRand < 0.014 + 0.042) targetTag = 1000 + Math.random() * 5499;
-                    else targetTag = 6500 + Math.random() * 4000;
-                } 
-                else {
-                    let targetNacht = (db.targetUsers < 1500 || db.targetUsers > 3500 || Math.random() < 0.1) ? (1500 + Math.random() * 2000) : db.targetUsers;
-                    targetTag = targetNacht;
-                }
-            } 
-            else {
-                if (currentHour >= 12 && currentHour < 18) {
-                    if (userRand < 0.023) { targetTag = 8001 + Math.random() * 1999; } 
-                    else if (userRand < 0.053) { targetTag = 1000 + Math.random() * 3999; } 
-                    else { targetTag = 5000 + Math.random() * 3000; }
-                } 
-                else if ((currentHour >= 18 && currentHour < 23) || (currentHour >= 6 && currentHour < 12)) {
-                    if (userRand < 0.014) { targetTag = 6001 + Math.random() * 3999; } 
-                    else if (userRand < 0.056) { targetTag = 1000 + Math.random() * 2499; } 
-                    else { targetTag = 3500 + Math.random() * 2500; }
-                } 
-                else {
-                    if(userRand < 0.01){ targetTag = 8050 + Math.random() * 1500; }
-                    else if(userRand < 0.03){ targetTag = 6050 + Math.random() * 1900; }
-                    else if(userRand < 0.18){ targetTag = 2000 + Math.random() * 1900; }
-                    else {
-                        if((targetTag > 6000 || targetTag < 4000) && Math.random() < 0.15) {
-                            targetTag = 4200 + Math.random() * 1600;
-                        } else if (targetTag <= 6000 && targetTag >= 4000) {
-                            targetTag += (Math.random() - 0.5) * 8;
-                        }
-                    }
-                }
-            }
-
-            if (currentHour >= 23 || currentHour < 6) {
-                db.targetUsers = targetTag;
-            } else {
-                if (id === "102" || id === "103") {
-                    db.targetUsers = targetTag; 
-                } else {
-                    let targetNacht = (db.targetUsers < 1500 || db.targetUsers > 3500 || Math.random() < 0.1) ? (1500 + Math.random() * 2000) : db.targetUsers;
-                    db.targetUsers = (targetTag * db.transitionFactor) + (targetNacht * (1.0 - db.transitionFactor));
-                }
-            }
-
-            let noiseChange = 0;
-            if (db.userPhase === "intense") {
-                noiseChange = 45 + Math.random() * (210 - 45);
-            } else {
-                noiseChange = 0 + Math.random() * (45 - 0);
-            }
-            let nextStepValue = db.users + (Math.random() > 0.5 ? 1 : -1) * noiseChange;
-            nextStepValue += (db.targetUsers - nextStepValue) * 0.05;
-
-            let activeDiff = nextStepValue - db.users;
-            if (Math.abs(activeDiff) > 45) {
-                db.users += Math.sign(activeDiff) * 45;
-            } else {
-                db.users = nextStepValue;
-            }
-
-            if(db.users < 1) db.users = 1;
-            if(db.users > db.maxUsers) db.users = db.maxUsers;
-            db.targetUsers = db.users; 
-
-            // ====================================
-            // CPU LOGIK
-            // ====================================
-            if (db.users > (db.maxUsers * 0.6) || db.users < (db.maxUsers * 0.4)) {
-                db.extremeRangeTicks++;
-            } else {
-                db.extremeRangeTicks = Math.max(0, db.extremeRangeTicks - 2);
-            }
-
-            db.targetCpu = (db.users / db.maxUsers) * 100;
-            db.targetCpu += (Math.random() - 0.5) * 5;
-
-            if(db.targetCpu < 0) db.targetCpu = 0;
-            if(db.targetCpu > 100) db.targetCpu = 100;
-
-            let cpuLerpFactor = (db.extremeRangeTicks > 5) ? 0.35 : 0.08;
-            db.cpu += (db.targetCpu - db.cpu) * cpuLerpFactor;
-
-            // ====================================
-            // TEMPERATUR
-            // ====================================
-            let targetTemp = 35 + (db.cpu * 0.5);
-            targetTemp -= (db.fan - 20) * 0.05;
-            db.temp += (targetTemp - db.temp) * 0.008;
-            db.temp += (Math.random() - 0.5) * 0.04;
-
-            if(db.temp < 28) db.temp = 28;
-            if(db.temp > 110) db.temp = 110;
-
-            // ====================================
-            // LÜFTER
-            // ====================================
-            let targetFan = 20;
-            if(db.temp > 45){ targetFan += (db.temp - 45) * 1.2; }
-            if(db.temp > 70){ targetFan += (db.temp - 70) * 1.8; }
-            if(db.temp > 90){ targetFan += (db.temp - 90) * 2.5; }
-
-            db.fan += (targetFan - db.fan) * 0.08;
-            if(db.fan < 20) db.fan = 20;
-            if(db.fan > 100) db.fan = 100;
+            
+            openRequestsModal(); 
+            updateRequestBadge(currentOpenTeamId); 
+            loadSidebarMembers(currentOpenTeamId); 
         }
 
-        // ====================================
-        // ANZEIGEN AKTUALISIEREN
-        // ====================================
-        document.getElementById("users_" + id).innerText = Math.round(db.users).toLocaleString("de-DE");
-        document.getElementById("cpu_" + id).innerText = Math.round(db.cpu) + "%";
-        document.getElementById("temp_" + id).innerText = Math.round(db.temp) + "°C";
-        document.getElementById("fan_" + id).innerText = Math.round(db.fan) + "%";
-        document.getElementById("damage_" + id).innerText = Math.round(db.damage) + "%";
-
-        let usersStatus = document.getElementById("usersStatus_" + id);
-        if(!db.systemOn && db.users === 0) {
-            usersStatus.innerText = "Offline";
-            usersStatus.className = "status normal";
-        } else if(!db.systemOn && db.users > 0) {
-            usersStatus.innerText = "Verbindungen werden getrennt...";
-            usersStatus.className = "status warning";
-        } else if(db.users >= 0 && db.users < (db.maxUsers * 0.6)){
-            usersStatus.innerText = (db.users < (db.maxUsers * 0.35)) ? "Wenig aktiv" : "Normal";
-            usersStatus.className = "status normal";
-        } else if(db.users >= (db.maxUsers * 0.6) && db.users < (db.maxUsers * 0.9)){
-            usersStatus.innerText = "Sehr aktiv";
-            usersStatus.className = "status warning";
-        } else if(db.users >= (db.maxUsers * 0.9)){
-            usersStatus.innerText = "Überlastet";
-            usersStatus.className = "status danger";
+        function closeRequestsModal() {
+            document.getElementById('requests-modal').style.display = 'none';
         }
 
-        let cpuStatus = document.getElementById("cpuStatus_" + id);
-        if(db.cpu > 80){
-            cpuStatus.innerText = "Stark ausgelastet";
-            cpuStatus.className = "status danger";
-        }else if(db.cpu > 60){
-            cpuStatus.innerText = "Leicht ausgelastet";
-            cpuStatus.className = "status warning";
-        }else{
-            cpuStatus.innerText = db.systemOn ? "Normal" : "Offline";
-            cpuStatus.className = "status normal";
-        }
-
-        let tempStatus = document.getElementById("tempStatus_" + id);
-        if(db.temp > 100){
-            tempStatus.innerText = "Kritisch";
-            tempStatus.className = "status danger";
-        } else if(db.temp > 90){
-            tempStatus.innerText = "Sehr heiß";
-            tempStatus.className = "status danger";
-        } else if(db.temp > 80){
-            tempStatus.innerText = "Etwas zu heiß";
-            tempStatus.className = "status warning";
-        } else {
-            tempStatus.innerText = db.systemOn ? "Normal" : "Abkühlung";
-            tempStatus.className = "status normal";
-        }
-
-        let fanStatus = document.getElementById("fanStatus_" + id);
-        if(db.fan > 80){
-            fanStatus.innerText = "Maximale Kühlung";
-            fanStatus.className = "status danger";
-        } else if(db.fan > 55){
-            fanStatus.innerText = "Hohe Kühlung";
-            fanStatus.className = "status warning";
-        } else {
-            fanStatus.innerText = db.systemOn ? "Stabil" : "Herunterfahren";
-            fanStatus.className = "status normal";
-        }
-
-        let damageStatus = document.getElementById("damageStatus_" + id);
-        if(db.damage === 0) {
-            damageStatus.innerText = "System intakt";
-            damageStatus.className = "status normal";
-        } else if(!db.systemOn) {
-            damageStatus.innerText = "Reparatur läuft...";
-            damageStatus.className = "status warning";
-        } else {
-            damageStatus.innerText = db.damage > 50 ? "Kritischer Schaden!" : "Schaden vorhanden";
-            damageStatus.className = db.damage > 50 ? "status danger" : "status warning";
-        }
-
-        // VERLAUF SPEICHERN
-        db.usersHistory.push({ value: (db.users / db.maxUsers) * 100, time: timeString, timestamp: currentTimestamp, realValue: db.users });
-        db.cpuHistory.push({ value: db.cpu, time: timeString, timestamp: currentTimestamp });
-        db.tempHistory.push({ value: db.temp, time: timeString, timestamp: currentTimestamp });
-        db.fanHistory.push({ value: db.fan, time: timeString, timestamp: currentTimestamp });
-        db.damageHistory.push({ value: db.damage, time: timeString, timestamp: currentTimestamp });
-
-        const limit = 120000; 
-        while(db.usersHistory.length > 0 && currentTimestamp - db.usersHistory[0].timestamp > limit) db.usersHistory.shift();
-        while(db.cpuHistory.length > 0 && currentTimestamp - db.cpuHistory[0].timestamp > limit) db.cpuHistory.shift();
-        while(db.tempHistory.length > 0 && currentTimestamp - db.tempHistory[0].timestamp > limit) db.tempHistory.shift();
-        while(db.fanHistory.length > 0 && currentTimestamp - db.fanHistory[0].timestamp > limit) db.fanHistory.shift();
-        while(db.damageHistory.length > 0 && currentTimestamp - db.damageHistory[0].timestamp > limit) db.damageHistory.shift();
-
-        // CHARTS ZEICHNEN
-        drawChart("usersChart_" + id, db.usersHistory, true, db.maxUsers);
-        drawChart("cpuChart_" + id, db.cpuHistory, false, 100); 
-        drawChart("tempChart_" + id, db.tempHistory, false, 120);
-        drawChart("fanChart_" + id, db.fanHistory, false, 100);
-        drawChart("damageChart_" + id, db.damageHistory, false, 100);
-    }
-
-    // Interval: Alle 5 Sekunden in die Cloud speichern
-    dbUpdateCounter++;
-    if (dbUpdateCounter >= 5) {
-        saveToSupabase();
-        dbUpdateCounter = 0;
-    }
-}
-
-// ====================================
-// VERLAUFS-FARBBERECHNUNG FÜR SCHADEN
-// ====================================
-function getDamageColor(damageValue) {
-    let r = 0, g = 0, b = 0;
-    
-    if (damageValue <= 50) {
-        let factor = damageValue / 50;
-        r = Math.round(0 + (255 - 0) * factor);
-        g = Math.round(255 + (217 - 255) * factor);
-        b = Math.round(136 + (59 - 136) * factor);
-    } else if (damageValue <= 75) {
-        let factor = (damageValue - 50) / 25;
-        r = 255;
-        g = Math.round(217 + (120 - 217) * factor);
-        b = Math.round(59 + (0 - 59) * factor);
-    } else {
-        let factor = (damageValue - 75) / 25;
-        r = 255;
-        g = Math.round(120 + (77 - 120) * factor);
-        b = Math.round(0 + (77 - 0) * factor);
-    }
-    
-    return `rgb(${r}, ${g}, ${b})`;
-}
-
-// ====================================
-// CHARTS FUNKTION
-// ====================================
-function drawChart(id, data, isUserChart, maxLimitSpec){
-    const canvas = document.getElementById(id);
-    if(!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-
-    const paddingBottom = 25; 
-    const chartHeight = canvas.height - paddingBottom;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.strokeStyle = "rgba(255,255,255,0.08)";
-    ctx.lineWidth = 1;
-
-    for(let i = 0; i <= 5; i++){
-        let y = i * (chartHeight / 5);
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-
-        ctx.fillStyle = "rgba(255,255,255,0.5)";
-        ctx.font = "11px Arial";
-
-        let percentVal = 120 - (i * 24);
-        let labelText = percentVal;
-
-        if(isUserChart) { 
-            labelText = Math.round((percentVal / 100) * maxLimitSpec).toLocaleString("de-DE"); 
-        } else if (maxLimitSpec !== 120) {
-            labelText = Math.round((percentVal / 120) * maxLimitSpec);
-        }
-
-        ctx.fillText(labelText, 5, y - 4);
-    }
-
-    if(data.length === 0) return;
-    ctx.lineWidth = 3;
-
-    for(let i = 1; i < data.length; i++){
-        let value = data[i].value;
-
-        if(isUserChart) {
-            let actualUserVal = data[i].realValue;
-            if(actualUserVal >= (maxLimitSpec * 0.9)) ctx.strokeStyle = "#ff4d4d";
-            else if(actualUserVal >= (maxLimitSpec * 0.6) && actualUserVal < (maxLimitSpec * 0.9)) ctx.strokeStyle = "#ffd93b";
-            else ctx.strokeStyle = "#00ff88"; 
-        } else if(id.startsWith("cpuChart_")) {
-            if(value > 80){ ctx.strokeStyle = "#ff4d4d"; }
-            else if(value > 60){ ctx.strokeStyle = "#ffd93b"; }
-            else{ ctx.strokeStyle = "#00ff88"; }
-        } else if(id.startsWith("damageChart_")) {
-            ctx.strokeStyle = getDamageColor(value);
-        } else {
-            if(value > 90){ ctx.strokeStyle = "#ff4d4d"; }
-            else if(value > 80){ ctx.strokeStyle = "#ffd93b"; }
-            else{ ctx.strokeStyle = "#00ff88"; }
-        }
-
-        let x1 = (i - 1) * (canvas.width / (data.length - 1 || 1));
-        let y1 = chartHeight - (data[i - 1].value / 120) * chartHeight;
-        let x2 = i * (canvas.width / (data.length - 1 || 1));
-        let y2 = chartHeight - (data[i].value / 120) * chartHeight;
-
-        ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
-        ctx.stroke();
-
-        ctx.fillStyle = ctx.strokeStyle;
-        ctx.beginPath();
-        ctx.arc(x2, y2, 2, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    ctx.fillStyle = "rgba(255,255,255,0.4)";
-    ctx.font = "10px Arial";
-    ctx.textAlign = "center";
-
-    let step = Math.max(1, Math.floor(data.length / 5));
-    for(let i = 0; i < data.length; i += step) {
-        let x = i * (canvas.width / (data.length - 1 || 1));
-        if (x < 20) ctx.textAlign = "left";
-        else if (x > canvas.width - 20) ctx.textAlign = "right";
-        else ctx.textAlign = "center";
-
-        ctx.fillText(data[i].time, x, canvas.height - 6);
-    }
-
-    let latestDisplay = "";
-    if(isUserChart) {
-        latestDisplay = Math.round(data[data.length - 1].realValue).toLocaleString("de-DE");
-    } else {
-        latestDisplay = Math.round(data[data.length - 1].value) + "%";
-    }
-
-    ctx.fillStyle = "white";
-    ctx.font = "bold 14px Arial";
-    ctx.textAlign = "right";
-    ctx.fillText(latestDisplay, canvas.width - 15, 20);
-}
-
-// ====================================
-// LIFECYCLE INITIALISIERUNG
-// ====================================
-document.addEventListener("DOMContentLoaded", async () => {
-    updateClockAndTotals();
-    // 1. Letzte Werte aus Supabase laden
-    await loadFromSupabase();
-    // 2. Loop starten (alle 1 Sekunde)
-    setInterval(updateSystem, 1000);
-});
-</script>
-
+    </script>
 </body>
 </html>
