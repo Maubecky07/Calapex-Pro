@@ -112,7 +112,7 @@
             background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 15px; cursor: pointer; font-weight: bold;
         }
 
-        .form-group input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
         .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; text-transform: uppercase; margin-top: 10px; }
         .btn-submit:hover { background: white; color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
 
@@ -138,7 +138,7 @@
 
         #sidebar-member-list { flex: 1; overflow-y: auto; }
 
-        /* Modal für Beitrittsanfragen */
+        /* Modals (Popups) */
         .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
         .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
 
@@ -215,6 +215,59 @@
             <div id="requests-list" style="max-height: 300px; overflow-y: auto;">
                 </div>
             <button class="btn-submit" style="background: #333; border: 1px solid #555; margin-top: 20px;" onclick="closeRequestsModal()">Schließen</button>
+        </div>
+    </div>
+
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h2 id="event-modal-title" style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Termin erstellen</h2>
+
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Event Name</label>
+                    <input type="text" id="ev-name" placeholder="z.B. Nürburgring 24h Training">
+                </div>
+                <div class="form-group">
+                    <label>Event Typ</label>
+                    <select id="ev-type">
+                        <option value="Training">Training</option>
+                        <option value="Qualifying">Qualifying</option>
+                        <option value="Rennen">Rennen</option>
+                        <option value="Liga-Event">Liga-Event</option>
+                        <option value="Sonstiges">Sonstiges</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Datum</label><input type="date" id="ev-date"></div>
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="ev-status">
+                        <option value="Findet statt">Findet statt</option>
+                        <option value="Unklar">Unklar</option>
+                        <option value="Entfällt">Entfällt</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Startzeit</label><input type="time" id="ev-start"></div>
+                <div class="form-group"><label>Endzeit</label><input type="time" id="ev-end"></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Simulator</label><input type="text" id="ev-sim" placeholder="z.B. iRacing"></div>
+                <div class="form-group"><label>Fahrzeug</label><input type="text" id="ev-car" placeholder="z.B. Porsche 911 GT3 R"></div>
+            </div>
+
+            <div class="form-group"><label>Strecke</label><input type="text" id="ev-track" placeholder="z.B. Nordschleife"></div>
+            <div class="form-group"><label>Stream Link(s)</label><input type="text" id="ev-streams" placeholder="z.B. twitch.tv/deinkanal"></div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveEvent()">Speichern</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeEventModal()">Abbrechen</button>
+            </div>
         </div>
     </div>
 
@@ -327,7 +380,7 @@
                 <button class="hamburger-btn" onclick="toggleMemberSidebar()">☰ Fahrerliste</button>
             </div>
 
-            <div id="admin-controls" style="display: none; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 8px; border: 1px dashed var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div id="admin-controls" style="display: none; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 8px; border: 1px dashed var(--primary); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                 <div>
                     <span style="color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Team-ID (Einladungscode)</span><br>
                     <span id="calendar-team-id" style="font-family: monospace; color: var(--primary); font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;"></span>
@@ -339,11 +392,13 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: white; text-transform: uppercase; margin-bottom: 20px; font-size: 1.5rem;">📅 Kalender / Termine</h3>
-                <p style="color: #aaa;">Hier können bald Termine für das Team erstellt und eingesehen werden.</p>
-                <div style="height: 300px; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.3); margin-top: 20px;">
-                    <span style="color: var(--text-muted); font-size: 1.2rem; text-align: center;">Kalender Ansicht coming soon...</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
+                    <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
                 </div>
+                
+                <div id="team-events-list" style="display: flex; flex-direction: column; gap: 15px;">
+                    </div>
             </div>
         </main>
 
@@ -363,6 +418,8 @@
         let activeUser = null;
         let presenceChannel = null;
         let currentOpenTeamId = null;
+        let currentTeamEvents = []; 
+        let currentEditEventId = null; 
 
         // --- UI Navigation ---
         function toggleAuth(mode) {
@@ -557,7 +614,6 @@
             document.getElementById('create-team-name').value = '';
             document.getElementById('create-team-logo').value = '';
             
-            // Direkt in den Kalender springen
             openTeamCalendar(teamId);
         }
 
@@ -603,7 +659,6 @@
             const resBox = document.getElementById('search-result-box');
             if(!supabaseClient) return;
 
-            // 1. Team finden
             const { data: team, error } = await supabaseClient.from('teams').select('*').eq('invite_code', code).single();
             if(error || !team) {
                 resBox.style.display = 'block';
@@ -611,7 +666,6 @@
                 return;
             }
 
-            // 2. Prüfen, ob der User schon drin ist oder eine Anfrage gestellt hat
             const { data: existing } = await supabaseClient.from('team_members').select('role').eq('team_id', team.id).eq('user_id', activeUser.id).single();
             
             let btnHtml = `<button class="btn-submit" onclick="sendJoinRequest('${team.id}')">Beitrittsanfrage senden</button>`;
@@ -624,7 +678,6 @@
                 }
             }
 
-            // Ergebnis anzeigen
             resBox.style.display = 'block';
             resBox.innerHTML = `
                 <div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;">
@@ -648,20 +701,16 @@
                 alert("Fehler: " + error.message);
             } else {
                 alert("Deine Beitrittsanfrage wurde an den Admin gesendet!");
-                searchTeam(); // Box aktualisieren -> "Ausstehend"
+                searchTeam(); 
             }
         }
 
-        // --- Team verlassen (Fix) ---
         async function leaveCurrentTeam() {
             if (!confirm("Möchtest du dieses Team wirklich verlassen? \nWenn du wieder eintreten möchtest, musst du eine neue Beitrittsanfrage stellen.")) {
                 return;
             }
-
             if (!supabaseClient) return alert("Demo-Modus.");
 
-            // Durch .select() zwingen wir Supabase, uns die betroffenen Zeilen zurückzugeben.
-            // Ist data leer, hat RLS (Row Level Security) das Löschen blockiert!
             const { data, error } = await supabaseClient.from('team_members')
                 .delete()
                 .eq('team_id', currentOpenTeamId)
@@ -672,20 +721,18 @@
                 return alert("Fehler beim Verlassen des Teams: " + error.message);
             }
 
-            // ACHTUNG: Prüfung auf RLS Fehler (Löschen silently blockiert)
             if (data && data.length === 0) {
                 alert("Achtung: Du konntest nicht entfernt werden! Dir fehlen vermutlich die Rechte (Supabase RLS: DELETE-Policy in 'team_members' muss für Nutzer erlaubt sein).");
             } else {
                 alert("Du hast das Team erfolgreich verlassen.");
             }
             
-            // Sidebar schließen & zurück zur Team-Übersicht navigieren
             document.getElementById('member-sidebar').classList.remove('open');
             currentOpenTeamId = null;
             openView('view-teams-main');
         }
 
-        // --- Kalender & Admin Management ---
+        // --- Team View Aufbau ---
         async function openTeamCalendar(teamId) {
             currentOpenTeamId = teamId;
             
@@ -713,6 +760,8 @@
             }
 
             loadSidebarMembers(teamId);
+            loadTeamEvents(); 
+            
             openView('view-team-calendar');
         }
 
@@ -785,37 +834,21 @@
         }
 
         async function handleRequest(userId, action) {
-            if (!supabaseClient) {
-                alert("Demo-Modus: Keine Datenbankverbindung.");
-                return;
-            }
+            if (!supabaseClient) return;
 
             let result;
-
             if(action === 'accept') {
-                result = await supabaseClient.from('team_members')
-                    .update({ role: 'Teammitglied' })
-                    .eq('team_id', currentOpenTeamId)
-                    .eq('user_id', userId)
-                    .select();
+                result = await supabaseClient.from('team_members').update({ role: 'Teammitglied' }).eq('team_id', currentOpenTeamId).eq('user_id', userId).select();
             } else if(action === 'decline') {
-                result = await supabaseClient.from('team_members')
-                    .delete()
-                    .eq('team_id', currentOpenTeamId)
-                    .eq('user_id', userId)
-                    .select();
+                result = await supabaseClient.from('team_members').delete().eq('team_id', currentOpenTeamId).eq('user_id', userId).select();
             }
             
-            if (result && result.error) {
-                alert("Fehler bei der Aktion: " + result.error.message);
-                return;
-            }
+            if (result && result.error) return alert("Fehler bei der Aktion: " + result.error.message);
 
-            // Prüfung auf RLS (Row Level Security) Blockade - wie bei leaveCurrentTeam()
             if (result && result.data && result.data.length === 0) {
-                alert("Achtung: Die Aktion wurde blockiert! Bitte prüfe deine Supabase RLS-Richtlinien (UPDATE/DELETE für 'team_members').");
+                alert("Achtung: Aktion durch RLS blockiert!");
             } else {
-                alert(action === 'accept' ? "Beitrittsanfrage erfolgreich angenommen!" : "Beitrittsanfrage erfolgreich abgelehnt!");
+                alert(action === 'accept' ? "Anfrage angenommen!" : "Anfrage abgelehnt!");
             }
             
             openRequestsModal(); 
@@ -825,6 +858,171 @@
 
         function closeRequestsModal() {
             document.getElementById('requests-modal').style.display = 'none';
+        }
+
+        // ================= EVENT / KALENDER FUNKTIONEN =================
+
+        async function loadTeamEvents() {
+            const container = document.getElementById('team-events-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade Termine...</p>';
+
+            if (!supabaseClient) return;
+
+            const { data: events, error } = await supabaseClient
+                .from('events')
+                .select('*')
+                .eq('team_id', currentOpenTeamId)
+                .order('date', { ascending: true })
+                .order('time_start', { ascending: true });
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary);">Fehler beim Laden der Termine: ${error.message}</p>`;
+                return;
+            }
+
+            currentTeamEvents = events || []; 
+
+            if (currentTeamEvents.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Noch keine Termine vorhanden.</p>';
+                return;
+            }
+
+            let html = '';
+            currentTeamEvents.forEach(ev => {
+                let statusColor = '#28a745'; // Findet statt (Grün)
+                if (ev.status === 'Unklar') statusColor = '#ffcc00'; // Gelb
+                if (ev.status === 'Entfällt') statusColor = '#dc3545'; // Rot
+
+                html += `
+                    <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${statusColor}; padding: 20px; border-radius: 8px; transition: 0.3s;">
+                        <div style="display:flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                            <div style="flex: 1; min-width: 250px;">
+                                <h4 style="color: white; font-size: 1.4rem; margin-bottom: 8px; text-transform: uppercase;">
+                                    <span style="color: var(--primary); margin-right: 8px;">[${ev.event_type || 'Event'}]</span>${ev.name}
+                                </h4>
+                                <div style="color: #bbb; font-size: 1rem; line-height: 1.6;">
+                                    📅 <strong>Datum:</strong> ${ev.date ? ev.date : 'Nicht festgelegt'} <br>
+                                    🕒 <strong>Zeit:</strong> ${ev.time_start || '?'} Uhr - ${ev.time_end || '?'} Uhr <br>
+                                    🎮 <strong>Simulation:</strong> ${ev.simulator || '-'} <br>
+                                    🏎️ <strong>Fahrzeug:</strong> ${ev.car || '-'} <br>
+                                    🏁 <strong>Strecke:</strong> ${ev.track || '-'}
+                                </div>
+                                ${ev.streams ? `
+                                <div style="margin-top: 10px;">
+                                    <a href="${ev.streams.startsWith('http') ? ev.streams : 'https://' + ev.streams}" target="_blank" style="display: inline-block; background: rgba(209,18,18,0.2); color: var(--primary); padding: 5px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px solid var(--primary); font-size: 0.9rem;">
+                                        📺 Stream ansehen
+                                    </a>
+                                </div>` : ''}
+                                <div style="color: #666; font-size: 0.85rem; margin-top: 15px;">
+                                    Erstellt von: ${ev.creator_name || 'Unbekannt'}
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
+                                <span style="background: ${statusColor}15; color: ${statusColor}; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; border: 1px solid ${statusColor}; text-transform: uppercase;">
+                                    ${ev.status}
+                                </span>
+                                <div style="display:flex; gap: 8px; margin-top: auto;">
+                                    <button onclick="showEventModal('${ev.id}')" style="background: rgba(255,255,255,0.1); border:1px solid #aaa; color:#fff; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s;">✏️ Bearbeiten</button>
+                                    <button onclick="deleteEvent('${ev.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s;">🗑️ Löschen</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function showEventModal(eventId = null) {
+            document.getElementById('event-modal').style.display = 'flex';
+            
+            if (eventId) {
+                // Bearbeiten-Modus
+                document.getElementById('event-modal-title').innerText = "Termin bearbeiten";
+                currentEditEventId = eventId;
+                
+                const ev = currentTeamEvents.find(e => e.id === eventId);
+                if(ev) {
+                    document.getElementById('ev-name').value = ev.name || '';
+                    document.getElementById('ev-type').value = ev.event_type || 'Training';
+                    document.getElementById('ev-date').value = ev.date || '';
+                    document.getElementById('ev-status').value = ev.status || 'Findet statt';
+                    document.getElementById('ev-start').value = ev.time_start || '';
+                    document.getElementById('ev-end').value = ev.time_end || '';
+                    document.getElementById('ev-sim').value = ev.simulator || '';
+                    document.getElementById('ev-car').value = ev.car || '';
+                    document.getElementById('ev-track').value = ev.track || '';
+                    document.getElementById('ev-streams').value = ev.streams || '';
+                }
+            } else {
+                // Erstellen-Modus
+                document.getElementById('event-modal-title').innerText = "Neuen Termin erstellen";
+                currentEditEventId = null;
+                
+                document.getElementById('ev-name').value = '';
+                document.getElementById('ev-type').value = 'Training';
+                document.getElementById('ev-date').value = '';
+                document.getElementById('ev-status').value = 'Findet statt';
+                document.getElementById('ev-start').value = '';
+                document.getElementById('ev-end').value = '';
+                document.getElementById('ev-sim').value = '';
+                document.getElementById('ev-car').value = '';
+                document.getElementById('ev-track').value = '';
+                document.getElementById('ev-streams').value = '';
+            }
+        }
+
+        function closeEventModal() {
+            document.getElementById('event-modal').style.display = 'none';
+            currentEditEventId = null;
+        }
+
+        async function saveEvent() {
+            if (!supabaseClient) return alert("Demo-Modus");
+
+            const payload = {
+                team_id: currentOpenTeamId,
+                name: document.getElementById('ev-name').value.trim(),
+                event_type: document.getElementById('ev-type').value,
+                date: document.getElementById('ev-date').value || null,
+                status: document.getElementById('ev-status').value,
+                time_start: document.getElementById('ev-start').value || null,
+                time_end: document.getElementById('ev-end').value || null,
+                simulator: document.getElementById('ev-sim').value.trim(),
+                car: document.getElementById('ev-car').value.trim(),
+                track: document.getElementById('ev-track').value.trim(),
+                streams: document.getElementById('ev-streams').value.trim(),
+            };
+
+            if (!payload.name) return alert("Bitte gib dem Event mindestens einen Namen!");
+
+            if (currentEditEventId) {
+                // Termin updaten
+                const { error } = await supabaseClient.from('events').update(payload).eq('id', currentEditEventId);
+                if (error) alert("Fehler beim Aktualisieren: " + error.message);
+            } else {
+                // Neuen Termin anlegen
+                payload.creator_name = `${activeUser.first_name} ${activeUser.last_name}`;
+                const { error } = await supabaseClient.from('events').insert([payload]);
+                if (error) alert("Fehler beim Erstellen: " + error.message);
+            }
+
+            closeEventModal();
+            loadTeamEvents(); 
+        }
+
+        async function deleteEvent(id) {
+            if(!confirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?")) return;
+            if (!supabaseClient) return;
+
+            const { error } = await supabaseClient.from('events').delete().eq('id', id);
+            
+            if (error) {
+                alert("Fehler beim Löschen: " + error.message);
+            } else {
+                loadTeamEvents(); 
+            }
         }
 
     </script>
