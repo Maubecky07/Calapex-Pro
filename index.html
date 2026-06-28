@@ -313,6 +313,14 @@
             100% { opacity: 1; }
         }
 
+        /* Chat Styles */
+        .chat-container { display: flex; flex-direction: column; height: 60vh; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .chat-message { background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 8px; border-left: 3px solid var(--primary); align-self: flex-start; max-width: 80%; }
+        .chat-message.own { background: rgba(209, 18, 18, 0.15); border-left: none; border-right: 3px solid var(--primary); align-self: flex-end; }
+        .chat-input-area { display: flex; padding: 15px; background: rgba(20,20,20,0.8); border-top: 1px solid rgba(255,255,255,0.1); gap: 10px; }
+        .chat-input-area input { flex: 1; }
+
         /* Mobile Adjustments */
         @media (max-width: 768px) {
             .menu-btn { padding: 25px 20px; font-size: 1.5rem; }
@@ -448,7 +456,7 @@
         <h3 onclick="toggleOnlineWidget()" style="cursor: pointer; user-select: none; color: white; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 5px; display: flex; align-items: center; justify-content: space-between;">
             <span style="display: flex; align-items: center; gap: 8px;">
                 <span style="display:inline-block; width:10px; height:10px; background:#00ff00; border-radius:50%; box-shadow: 0 0 8px #00ff00;"></span> 
-                Online Fahrer
+                <span id="online-status-counts">Online Fahrer</span>
             </span>
             <span id="online-widget-icon" style="font-size: 0.9rem;">▼</span>
         </h3>
@@ -678,6 +686,22 @@
                 <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadPatchlog()">
                     🛠️ Patchlog <span style="margin-top: 5px; font-size: 0.95rem;">System-Updates & Fixes</span>
                 </button>
+            </div>
+
+            <!-- GLOBAL CHAT EMBEDDED -->
+            <div style="max-width: 800px; margin: 50px auto 0;">
+                <h2 class="panel-header" style="margin-bottom: 15px; border-bottom-color: #17a2b8; font-size: 1.8rem;">Globaler Chat <span style="color: #17a2b8; font-size: 1rem; vertical-align: middle; margin-left: 10px;">💬 Pre-Release</span></h2>
+                <div class="panel" style="padding: 0;">
+                    <div class="chat-container">
+                        <div id="global-chat-messages" class="chat-messages">
+                            <!-- Nachrichten werden hier generiert -->
+                        </div>
+                        <div class="chat-input-area">
+                            <input type="text" id="global-chat-input" class="form-group" style="margin:0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; width: 100%;" placeholder="Nachricht eingeben..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; background: #17a2b8;" onclick="sendGlobalChatMessage()">Senden</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Versionsnummer und Beta Indikator -->
@@ -919,6 +943,10 @@
             if(viewId === 'view-teams-main') {
                 loadMyTeams();
             }
+            
+            if(viewId === 'view-home' && activeUser) {
+                loadGlobalChat(); // Lade Chat neu, wenn man ins Hauptmenü zurückkehrt
+            }
 
             const onlineWidget = document.getElementById('online-users-widget');
             if (onlineWidget && activeUser) {
@@ -1026,6 +1054,7 @@
             document.getElementById('profile-badge').style.display = 'flex';
             document.getElementById('online-users-widget').style.display = 'block'; 
             openView('view-home');
+            loadGlobalChat();
             initPresence(); 
             initDataSubscriptions();
         }
@@ -1105,6 +1134,13 @@
                         }
                     }
                 })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_global_chat' }, payload => {
+                    appendChatMessage(payload.new);
+                    // Nur nach unten scrollen, wenn das Home-Menü gerade auch offen ist
+                    if (document.getElementById('view-home').classList.contains('active')) {
+                        scrollToChatBottom();
+                    }
+                })
                 .subscribe();
         }
 
@@ -1178,12 +1214,16 @@
             if (!presenceChannel || !activeUser) return;
             const userName = `${activeUser.first_name} ${activeUser.last_name}`;
             await presenceChannel.track({ user_name: userName, status: newStatus });
+            // Direkte Ausführung für das eigene Widget (obwohl sync das in der Regel sofort nachholt)
+            renderOnlineUsers(presenceChannel.presenceState());
         }
 
         function renderOnlineUsers(state) {
             const listDiv = document.getElementById('online-users-list');
             listDiv.innerHTML = '';
             let count = 0;
+            let onlineCount = 0;
+            let awayCount = 0;
             
             for (const id in state) {
                 const connections = state[id];
@@ -1202,6 +1242,12 @@
                     }
                 }
                 
+                if (finalStatus === 'online') {
+                    onlineCount++;
+                } else {
+                    awayCount++;
+                }
+                
                 const isAway = finalStatus === 'away';
                 const dotColor = isAway ? '#ffcc00' : '#00ff00';
                 const glowColor = isAway ? 'rgba(255, 204, 0, 0.6)' : 'rgba(0, 255, 0, 0.6)';
@@ -1214,6 +1260,15 @@
                     </div>`;
             }
             
+            const titleSpan = document.getElementById('online-status-counts');
+            if(titleSpan) {
+                if(count === 0) {
+                    titleSpan.innerText = 'Online Fahrer';
+                } else {
+                    titleSpan.innerHTML = `<span style="color:#00ff00;">${onlineCount} Online</span> | <span style="color:#ffcc00;">${awayCount} Abwesend</span>`;
+                }
+            }
+
             if (count === 0) listDiv.innerHTML = `<span style="color: #aaa; font-size: 0.9rem;">Derzeit niemand online</span>`;
         }
 
@@ -1222,6 +1277,106 @@
                 presenceChannel.untrack();
                 supabaseClient.removeChannel(presenceChannel);
                 presenceChannel = null;
+            }
+        }
+
+        // ================= GLOBAL CHAT FUNKTIONEN =================
+
+        async function loadGlobalChat() {
+            const container = document.getElementById('global-chat-messages');
+            container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Lade Nachrichten...</p>';
+
+            if (!supabaseClient) {
+                container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Demo-Modus: Keine Datenbankverbindung.</p>';
+                return;
+            }
+
+            const { data, error } = await supabaseClient
+                .from('app_global_chat')
+                .select('*')
+                .order('created_at', { ascending: true })
+                .limit(100);
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary); padding: 20px;">Fehler (Tabelle fehlt?): ${error.message}</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            if (!data || data.length === 0) {
+                container.innerHTML = '<p id="no-msg-hint" style="color:#aaa; text-align:center; padding: 20px;">Noch keine Nachrichten. Sei der Erste!</p>';
+            } else {
+                data.forEach(msg => appendChatMessage(msg));
+            }
+            
+            scrollToChatBottom();
+        }
+
+        function appendChatMessage(msg) {
+            const container = document.getElementById('global-chat-messages');
+            
+            // Neu: Duplikate durch Live-Sync & lokales Einfügen verhindern
+            if (msg.id && document.getElementById('chat-msg-' + msg.id)) return; 
+
+            const noMsgHint = document.getElementById('no-msg-hint');
+            if (noMsgHint) noMsgHint.remove();
+
+            const isOwn = activeUser && msg.user_id === activeUser.id;
+            const time = new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute:'2-digit' });
+
+            const div = document.createElement('div');
+            div.className = `chat-message ${isOwn ? 'own' : ''}`;
+            if (msg.id) div.id = 'chat-msg-' + msg.id;
+
+            div.innerHTML = `
+                <div style="font-size: 0.85rem; color: ${isOwn ? '#ffaaaa' : '#aaa'}; margin-bottom: 5px; font-weight: bold;">
+                    ${msg.user_name} <span style="font-weight: normal; color: #777; margin-left: 5px;">${time}</span>
+                </div>
+                <div style="color: white; line-height: 1.4; word-break: break-word; font-size: 1.05rem;">${msg.message}</div>
+            `;
+            container.appendChild(div);
+        }
+
+        function scrollToChatBottom() {
+            const container = document.getElementById('global-chat-messages');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendGlobalChatMessage() {
+            const input = document.getElementById('global-chat-input');
+            const text = input.value.trim();
+            
+            if (!text || !activeUser) return;
+
+            input.value = ''; // Sofort leeren fürs gute UX-Gefühl
+
+            if (!supabaseClient) {
+                showToast("Demo-Modus: Chat funktioniert ohne Datenbank nur lokal.", "info");
+                appendChatMessage({
+                    id: 'demo-' + Date.now(),
+                    user_id: activeUser.id,
+                    user_name: `${activeUser.first_name} ${activeUser.last_name}`,
+                    message: text,
+                    created_at: new Date().toISOString()
+                });
+                scrollToChatBottom();
+                return;
+            }
+
+            const payload = {
+                user_id: activeUser.id,
+                user_name: `${activeUser.first_name} ${activeUser.last_name}`,
+                message: text
+            };
+
+            const { data, error } = await supabaseClient.from('app_global_chat').insert([payload]).select();
+            
+            if (error) {
+                showToast("Fehler beim Senden: " + error.message, "error");
+            } else if (data && data.length > 0) {
+                // Sofort lokal anzeigen
+                appendChatMessage(data[0]);
+                scrollToChatBottom();
             }
         }
 
