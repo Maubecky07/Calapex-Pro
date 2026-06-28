@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calapex | Simracing Management</title>
+    <link rel="icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" type="image/png">
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -30,33 +31,99 @@
             min-height: 100vh;
         }
 
-        /* HINTERGRUND-LOGO */
-        .bg-layer {
+        /* NEUES HINTERGRUND-DESIGN MIT KLAREN EFFEKTEN & MOBILE FIX */
+        
+        .background-wrapper {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background-image: url('https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png'); 
-            background-size: 85%;
-            background-position: center;
-            background-repeat: no-repeat;
-            opacity: 0.15;
-            z-index: -2;
+            right: 0;
+            bottom: 0;
+            z-index: -10;
             pointer-events: none;
+            overflow: hidden;
         }
 
-        .glow-orb {
-            position: fixed;
-            width: 50vw;
-            height: 50vw;
-            background: radial-gradient(circle, rgba(209,18,18,0.15) 0%, rgba(0,0,0,0) 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: -1;
-            pointer-events: none;
-            animation: pulseGlow 8s infinite alternate;
+        /* 1. Farbverlauf im Hintergrund */
+        .bg-gradient {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #000000, #140101, #000000, #2a0303);
+            background-size: 300% 300%;
+            animation: gradientShift 12s ease infinite;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 2. Bewegendes Raster (Grid) */
+        .bg-pattern {
+            position: absolute; 
+            top: -100px; left: -100px; 
+            width: calc(100% + 200px); height: calc(100% + 200px);
+            background-image: 
+                linear-gradient(rgba(209, 18, 18, 0.25) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(209, 18, 18, 0.25) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridDrift 3s linear infinite;
+            /* Weicher Übergang/Sichtbarkeit auf die Mitte fokussiert */
+            mask-image: radial-gradient(circle at center, black 30%, transparent 90%);
+            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 90%);
+        }
+        @keyframes gridDrift {
+            0% { transform: translate(0px, 0px); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        /* 3. Logo mit Floating & Glow-Effekt (NEUE URL) */
+        .bg-logo {
+            position: absolute; top: 50%; left: 50%;
+            width: 70%; max-width: 900px; height: 70%;
+            background-image: url('https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: logoFloatPulse 6s ease-in-out infinite;
+        }
+        @keyframes logoFloatPulse {
+            0% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 0.15; 
+                filter: drop-shadow(0 0 15px rgba(209, 18, 18, 0.4)); 
+            }
+            50% { 
+                transform: translate(-50%, calc(-50% - 20px)) scale(1.03); 
+                opacity: 0.4; 
+                filter: drop-shadow(0 0 40px rgba(209, 18, 18, 0.9)); 
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 0.15; 
+                filter: drop-shadow(0 0 15px rgba(209, 18, 18, 0.4)); 
+            }
+        }
+
+        /* Custom Notifications (Toasts) */
+        #toast-container {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 9999; display: flex; flex-direction: column; gap: 10px; 
+            pointer-events: none; width: 90%; max-width: 400px;
+        }
+        .toast {
+            background: rgba(20, 20, 20, 0.95); border-left: 4px solid var(--primary);
+            color: white; padding: 15px 25px; border-radius: 8px; font-weight: 500;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8); font-size: 1.1rem;
+            animation: fadeInDown 0.3s ease forwards;
+            white-space: pre-wrap;
+        }
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeOutUp {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-20px); }
         }
 
         /* Profil-Anzeige */
@@ -73,6 +140,25 @@
         .view.active { display: block; animation: slideUp 0.6s forwards; }
 
         @keyframes slideUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(30px); } }
+
+        /* LANDING PAGE STYLES & SCROLL ANIMATIONS */
+        .landing-hero { text-align: center; margin-bottom: 60px; margin-top: 40px; }
+        .landing-hero h1 { font-size: 3.5rem; color: white; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 20px rgba(209, 18, 18, 0.5); }
+        .landing-hero p { font-size: 1.3rem; color: #ccc; max-width: 800px; margin: 0 auto 40px auto; line-height: 1.6; }
+        .auth-buttons-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+
+        .landing-section { max-width: 1000px; margin: 0 auto 50px auto; padding: 40px; background: var(--panel-bg); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .landing-section h2 { color: var(--primary); font-size: 2.5rem; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid rgba(209, 18, 18, 0.3); padding-bottom: 10px; }
+        .landing-section p { font-size: 1.2rem; color: #ddd; line-height: 1.8; margin-bottom: 20px; }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
+        .feature-card { background: rgba(0,0,0,0.6); padding: 25px; border-radius: 12px; border-top: 4px solid var(--primary); transition: transform 0.3s, box-shadow 0.3s; }
+        .feature-card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.6), 0 0 15px rgba(209, 18, 18, 0.3); }
+        .feature-card h3 { font-size: 1.6rem; margin-bottom: 15px; color: white; }
+        .feature-card p { font-size: 1.05rem; color: #aaa; line-height: 1.5; }
+
+        .reveal { opacity: 0; transform: translateY(60px); transition: all 0.8s ease-out; }
+        .reveal.active { opacity: 1; transform: translateY(0); }
 
         /* Hauptmenü Buttons */
         .menu-grid { display: flex; flex-direction: column; gap: 25px; max-width: 800px; margin: 50px auto 0; }
@@ -94,6 +180,12 @@
         @media (max-width: 900px) { .event-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 600px) { .event-grid { grid-template-columns: 1fr; } }
 
+        /* 4-Spalten Raster für den Kalender */
+        .team-events-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        @media (max-width: 1200px) { .team-events-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 900px) { .team-events-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .team-events-grid { grid-template-columns: 1fr; } }
+
         .team-card { background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(15, 15, 15, 0.95)); border: 1px solid rgba(255, 255, 255, 0.05); border-top: 4px solid var(--primary); border-radius: 12px; padding: 25px; transition: 0.4s; position: relative; cursor: pointer; }
         .team-card:hover { transform: translateY(-8px); border-color: rgba(209, 18, 18, 0.5); box-shadow: 0 12px 25px rgba(0,0,0,0.6), 0 0 20px rgba(209, 18, 18, 0.3); }
         .team-logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-bottom: 15px; background: #222; border: 1px solid #444; }
@@ -103,7 +195,8 @@
         /* Formulare */
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem;}
-        .form-group input, .form-group select { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; font-family: inherit; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
         
         .form-group input[type="file"] { 
             padding: 10px; cursor: pointer; background: rgba(209, 18, 18, 0.15); border: 1px solid var(--primary); 
@@ -112,7 +205,12 @@
             background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 15px; cursor: pointer; font-weight: bold;
         }
 
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+        
+        .custom-checkbox-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .custom-checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary); }
+        .custom-checkbox-container label { margin-bottom: 0; color: white; font-size: 1.1rem; cursor: pointer; }
+
         .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; text-transform: uppercase; margin-top: 10px; }
         .btn-submit:hover { background: white; color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
 
@@ -138,9 +236,32 @@
 
         #sidebar-member-list { flex: 1; overflow-y: auto; }
 
+        .member-item {
+            margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); 
+            display: flex; align-items: center; gap: 10px; transition: 0.2s; border-radius: 8px; padding-inline: 5px;
+        }
+        .member-item.admin-hover:hover { background: rgba(255,255,255,0.05); cursor: context-menu; }
+
+        /* Kontextmenü (Rechtsklick) */
+        .context-menu {
+            display: none; position: fixed; z-index: 4000; background: rgba(15,15,15,0.98); 
+            border: 1px solid var(--primary); border-radius: 8px; padding: 5px 0; 
+            box-shadow: 0 5px 20px rgba(0,0,0,0.9); backdrop-filter: blur(10px); min-width: 180px;
+        }
+        .context-menu div {
+            padding: 10px 20px; color: white; cursor: pointer; font-size: 1.1rem; transition: 0.2s;
+        }
+        .context-menu div:hover { background: rgba(209,18,18,0.2); color: var(--primary); }
+        .context-menu hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0; }
+
         /* Modals (Popups) */
         .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); width: 90%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+
+        /* Custom Bestätigungs Modal */
+        .confirm-box { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); max-width: 400px; width: 90%; }
+        .confirm-msg { color: white; font-size: 1.2rem; margin-bottom: 25px; line-height: 1.4; white-space: pre-wrap;}
+        .confirm-btns { display: flex; gap: 15px; justify-content: center; }
 
         /* Online Widget Unten Links */
         #online-users-widget {
@@ -156,8 +277,40 @@
             padding: 15px; 
             z-index: 900; 
             box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+        }
+        
+        #online-users-list {
             max-height: 35vh; 
             overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .collapsed-list {
+            display: none !important;
+        }
+
+        /* LIVE & CANCELLED Event Styles */
+        .event-canceled {
+            opacity: 0.5;
+            filter: grayscale(80%);
+        }
+        .event-canceled-text {
+            text-decoration: line-through;
+        }
+        .live-glow {
+            border-color: #ff0000 !important;
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important;
+            animation: cardPulse 2s infinite;
+        }
+        @keyframes cardPulse {
+            0% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); }
+            100% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); }
+        }
+        @keyframes textPulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         /* Mobile Adjustments */
@@ -167,16 +320,124 @@
             .back-btn, .hamburger-btn { width: 100%; }
             #admin-controls { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
             #online-users-widget { bottom: 10px; left: 10px; max-width: calc(100vw - 20px); }
-            #profile-badge { top: 10px; right: 10px; padding: 5px 10px; }
+            #profile-badge { position: absolute; top: 10px; right: 10px; padding: 5px 10px; }
             .panel { padding: 20px; }
+            
+            /* Mobile Fixes für die Startseite */
+            .landing-section { padding: 25px 20px; }
+            .landing-hero h1 { font-size: 2.5rem; }
+            .landing-hero p { font-size: 1.1rem; }
+            .feature-grid { grid-template-columns: 1fr; gap: 20px; }
         }
 
     </style>
 </head>
 <body>
 
-    <div class="bg-layer"></div>
-    <div class="glow-orb"></div>
+    <!-- NEUE HINTERGRUND STRUKTUR (Fix für Mobile Safari) -->
+    <div class="background-wrapper">
+        <div class="bg-gradient"></div>
+        <div class="bg-pattern"></div>
+        <div class="bg-logo"></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="custom-confirm" class="modal-overlay">
+        <div class="confirm-box">
+            <div id="confirm-msg-text" class="confirm-msg">Bist du sicher?</div>
+            <div class="confirm-btns">
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeCustomConfirm(false)">Abbrechen</button>
+                <button class="btn-submit" style="background: var(--primary);" onclick="closeCustomConfirm(true)">Bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- News Modal -->
+    <div id="news-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">News erstellen</h2>
+            <div class="form-group">
+                <label>Titel</label>
+                <input type="text" id="news-title" placeholder="Titel der Ankündigung...">
+            </div>
+            <div class="form-group">
+                <label>Inhalt</label>
+                <textarea id="news-content" placeholder="Was gibt's Neues?..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveNews()">Posten</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeNewsModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patchlog Modal -->
+    <div id="patchlog-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Version</label>
+                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.2">
+                </div>
+                <div class="form-group">
+                    <label>Typ</label>
+                    <select id="patchlog-type">
+                        <option value="NEU">NEU</option>
+                        <option value="ÄNDERUNG">ÄNDERUNG</option>
+                        <option value="FIX">FIX</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Titel</label>
+                <input type="text" id="patchlog-title" placeholder="Kurze Beschreibung...">
+            </div>
+            <div class="form-group">
+                <label>Inhalt</label>
+                <textarea id="patchlog-content" placeholder="Details zum Update oder Fix..."></textarea>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="savePatchlog()">Eintragen</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closePatchlogModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Team Modal -->
+    <div id="edit-team-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
+            <div class="form-group">
+                <label>Team Name</label>
+                <input type="text" id="edit-team-name" placeholder="Team Name">
+            </div>
+            <div class="form-group">
+                <label>Neues Teamlogo (optional)</label>
+                <input type="file" id="edit-team-logo" accept="image/*">
+            </div>
+            <div class="form-group">
+                <label>Haupt-Simulator</label>
+                <select id="edit-team-sim">
+                    <option>iRacing</option>
+                    <option>Assetto Corsa Competizione</option>
+                    <option>rFactor 2</option>
+                    <option>Multi-Sim</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveTeamEdit()">Speichern</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeEditTeamModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu" class="context-menu">
+        <!-- Generiert durch JS basierend auf Berechtigungen -->
+    </div>
 
     <div id="profile-badge">
         <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
@@ -184,9 +445,12 @@
     </div>
 
     <div id="online-users-widget">
-        <h3 style="color: white; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 5px; display: flex; align-items: center; gap: 8px;">
-            <span style="display:inline-block; width:10px; height:10px; background:#00ff00; border-radius:50%; box-shadow: 0 0 8px #00ff00;"></span> 
-            Online Fahrer
+        <h3 onclick="toggleOnlineWidget()" style="cursor: pointer; user-select: none; color: white; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 5px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 8px;">
+                <span style="display:inline-block; width:10px; height:10px; background:#00ff00; border-radius:50%; box-shadow: 0 0 8px #00ff00;"></span> 
+                Online Fahrer
+            </span>
+            <span id="online-widget-icon" style="font-size: 0.9rem;">▼</span>
         </h3>
         <div id="online-users-list" style="display: flex; flex-direction: column; gap: 8px;">
             <span style="color: #aaa; font-size: 0.9rem;">Lade...</span>
@@ -197,6 +461,7 @@
         <div>
             <button class="sidebar-close" onclick="toggleMemberSidebar()">×</button>
             <h2 style="color: white; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Fahrerliste</h2>
+            <p style="font-size: 0.8rem; color: #aaa; margin-top: -10px; margin-bottom: 15px;" id="sidebar-admin-hint">Rechtsklick auf Fahrer für Aktionen</p>
         </div>
         
         <div id="sidebar-member-list">
@@ -210,7 +475,7 @@
     </div>
 
     <div id="requests-modal" class="modal-overlay">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 600px;">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Offene Anfragen</h2>
             <div id="requests-list" style="max-height: 300px; overflow-y: auto;">
                 </div>
@@ -239,11 +504,25 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group"><label>Datum</label><input type="date" id="ev-date"></div>
-                <div class="form-group">
-                    <label>Status</label>
-                    <select id="ev-status">
+            <div id="date-inputs-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                <div class="form-group"><label id="ev-date-label">Datum</label><input type="date" id="ev-date"></div>
+                <div class="form-group" id="end-date-group" style="display: none;"><label>Enddatum</label><input type="date" id="ev-date-end"></div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="custom-checkbox-container">
+                        <input type="checkbox" id="ev-all-day" onchange="toggleTimeInputs()">
+                        <label for="ev-all-day">Ganztägig</label>
+                    </div>
+                    <div class="custom-checkbox-container">
+                        <input type="checkbox" id="ev-multi-day" onchange="toggleDateInputs()">
+                        <label for="ev-multi-day">Mehrtägig</label>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                    <label style="display: inline-block; margin-right: 10px;">Status</label>
+                    <select id="ev-status" style="display: inline-block; width: auto; padding: 8px;">
                         <option value="Findet statt">Findet statt</option>
                         <option value="Unklar">Unklar</option>
                         <option value="Entfällt">Entfällt</option>
@@ -251,7 +530,7 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div id="time-inputs-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group"><label>Startzeit</label><input type="time" id="ev-start"></div>
                 <div class="form-group"><label>Endzeit</label><input type="time" id="ev-end"></div>
             </div>
@@ -262,7 +541,11 @@
             </div>
 
             <div class="form-group"><label>Strecke</label><input type="text" id="ev-track" placeholder="z.B. Nordschleife"></div>
-            <div class="form-group"><label>Stream Link(s)</label><input type="text" id="ev-streams" placeholder="z.B. twitch.tv/deinkanal"></div>
+            <div class="form-group">
+                <label>Stream Link(s)</label>
+                <div id="streams-container"></div>
+                <button type="button" onclick="addStreamInput()" style="background: rgba(255,255,255,0.1); border: 1px dashed #aaa; color: #ccc; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%; margin-top: 5px;">+ Weiteren Stream hinzufügen</button>
+            </div>
 
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-submit" onclick="saveEvent()">Speichern</button>
@@ -273,11 +556,79 @@
 
     <div class="container">
 
-        <main id="view-auth" class="view active">
-            <div style="max-width: 500px; margin: 80px auto;">
+        <!-- ================= NEUE STARTSEITE (LANDING PAGE) ================= -->
+        <main id="view-landing" class="view active" style="position: relative;">
+            <div class="landing-hero reveal">
+                <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
+                <h1>Das Simracing-Portal</h1>
+                <p>
+                    Willkommen bei Calapex, der ultimativen Management-Plattform für Simracing-Enthusiasten, Teams und Organisatoren. 
+                    Ob iRacing, Assetto Corsa Competizione oder rFactor 2 – wir bringen Struktur in deine virtuelle Rennfahrer-Karriere.
+                </p>
+                <div class="auth-buttons-container">
+                    <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem;" onclick="openAuthView('login')">Log-In</button>
+                    <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 2px solid var(--primary); color: white;" onclick="openAuthView('register')">Registrieren</button>
+                </div>
+            </div>
+
+            <div class="landing-section reveal">
+                <h2>Was ist Calapex?</h2>
+                <p>
+                    Calapex ist mehr als nur ein gewöhnlicher Kalender. Es ist das zentrale Werkzeug für Simracing-Teams, um sich optimal auf anstehende Rennen vorzubereiten. 
+                    Viele Teams verlieren schnell den Überblick in unzähligen Discord-Kanälen, Chat-Gruppen und unübersichtlichen Tabellen. Genau hier setzt Calapex an und bündelt alle wichtigen Informationen an einem zentralen Ort. 
+                </p>
+                <p>
+                    Verwalte dein Fahrer-Lineup, behalte den Überblick über alle Termine und teile wichtige Ressourcen wie Twitch-Stream-Links, Setups oder Strecken-Notizen mit wenigen Klicks. Egal ob du ein kleines privates Team mit drei Freunden bist oder eine große professionelle E-Sports-Organisation mit mehreren Kadern leitest – unsere Plattform passt sich dynamisch deinen Bedürfnissen an.
+                </p>
+            </div>
+
+            <div class="landing-section reveal">
+                <h2>Deine Vorteile</h2>
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>👥 Team Management</h3>
+                        <p>Gründe ein Team, verteile Einladungscodes und vergebe individuelle Rollen (wie Admin, Manager oder Mitglied). So weiß jeder genau, welche Befugnisse und Aufgaben er hat.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📅 Interaktiver Kalender</h3>
+                        <p>Plane Trainings, Qualifyings und Liga-Rennen kinderleicht. Der Kalender zeigt alle Events deines Teams inklusive präzisem Live-Countdown und Echtzeit-Status.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📺 Streams & Medien</h3>
+                        <p>Hinterlege Links zu Twitch, YouTube oder Kick direkt im Event. Deine Community, Beobachter und Teamkollegen verpassen so nie wieder ein wichtiges Rennen.</p>
+                    </div>
+                    <div class="feature-card">
+                        <h3>⚡ Echtzeit-Updates</h3>
+                        <p>Alle Änderungen im Kalender oder im Team-Roster werden dank unserer Live-Datenbank sofort bei allen eingeloggten Mitgliedern synchronisiert. Kein lästiges Neuladen der Seite erforderlich!</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="landing-section reveal" style="text-align: center; margin-bottom: 80px;">
+                <h2 style="border: none;">Bereit für die Pole Position?</h2>
+                <p style="margin-bottom: 30px;">Registriere dich noch heute kostenlos und bring die Organisation deines Rennteams auf das nächste Level!</p>
+                <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
+            </div>
+            
+            <!-- Versionsnummer und Beta Indikator -->
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
+                Calapex Beta | v3.1.2
+            </div>
+        </main>
+        <!-- ================= ENDE STARTSEITE ================= -->
+
+
+        <!-- ANMELDUNG / REGISTRIERUNG -->
+        <main id="view-auth" class="view">
+            <div style="max-width: 500px; margin: 60px auto;">
+                
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button class="back-btn" onclick="openView('view-landing')" style="font-size: 0.9rem; padding: 8px 15px;">◄ Zurück zur Info-Seite</button>
+                </div>
+
                 <div id="login-box" class="panel">
                     <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="font-size: 2.5rem; text-transform: uppercase; letter-spacing: 3px;">Calapex <span style="color: var(--primary);">Simracing</span></h1>
+                        <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
                         <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
                     </div>
                     <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
@@ -289,7 +640,8 @@
 
                 <div id="register-box" class="panel" style="display: none;">
                     <div style="text-align: center; margin-bottom: 30px;">
-                        <h1 style="font-size: 2.5rem; text-transform: uppercase;">Neuer <span style="color: var(--primary);">Fahrer</span></h1>
+                        <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
+                        <p style="color: var(--text-muted); margin-top: 5px;">Neues Konto erstellen</p>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="form-group"><input type="text" id="reg-firstname" placeholder="Vorname"></div>
@@ -301,9 +653,14 @@
                     <p style="text-align: center; margin-top: 20px; color: #aaa;">Bereits registriert? <a href="#" onclick="toggleAuth('login')" style="color: var(--primary);">Zur Anmeldung</a></p>
                 </div>
             </div>
+            
+            <!-- Versionsnummer und Beta Indikator -->
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
+                Calapex Beta | v3.1.2
+            </div>
         </main>
         
-        <main id="view-home" class="view">
+        <main id="view-home" class="view" style="position: relative;">
             <div class="menu-grid">
                 <button class="menu-btn disabled" onclick="return false;">
                     Ligen <span style="color: #ffcc00; font-weight: bold;">⏳ Coming Soon</span>
@@ -311,6 +668,53 @@
                 <button class="menu-btn" onclick="openView('view-teams-main')">
                     Teams <span>Teams suchen, erstellen & verwalten</span>
                 </button>
+            </div>
+
+            <!-- Separated News & Patchlog Buttons -->
+            <div style="max-width: 800px; margin: 50px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
+                <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadNews()">
+                    📰 News <span style="margin-top: 5px; font-size: 0.95rem;">Updates & Ankündigungen</span>
+                </button>
+                <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadPatchlog()">
+                    🛠️ Patchlog <span style="margin-top: 5px; font-size: 0.95rem;">System-Updates & Fixes</span>
+                </button>
+            </div>
+
+            <!-- Versionsnummer und Beta Indikator -->
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
+                Calapex Beta | v3.1.2
+            </div>
+        </main>
+
+        <main id="view-news" class="view">
+            <div class="top-nav">
+                <h2 class="panel-header" style="margin-bottom: 0;">News & Updates</h2>
+                <button class="back-btn" onclick="openView('view-home')">◄ Zurück</button>
+            </div>
+
+            <div id="dev-news-controls" style="display: none; margin-bottom: 20px; text-align: right;">
+                <button class="btn-submit" style="width: auto;" onclick="showNewsModal()">+ Neuer Post</button>
+            </div>
+
+            <div class="panel">
+                <div id="news-list" style="display: flex; flex-direction: column; gap: 20px;">
+                    </div>
+            </div>
+        </main>
+
+        <main id="view-patchlog" class="view">
+            <div class="top-nav">
+                <h2 class="panel-header" style="margin-bottom: 0;">Patchlog</h2>
+                <button class="back-btn" onclick="openView('view-home')">◄ Zurück</button>
+            </div>
+
+            <div id="dev-patchlog-controls" style="display: none; margin-bottom: 20px; text-align: right;">
+                <button class="btn-submit" style="width: auto;" onclick="showPatchlogModal()">+ Neuer Eintrag</button>
+            </div>
+
+            <div class="panel">
+                <div id="patchlog-list" style="display: flex; flex-direction: column;">
+                </div>
             </div>
         </main>
 
@@ -359,10 +763,10 @@
 
                 <div id="tab-search-team" class="tab-content">
                     <div style="max-width: 600px; margin: 0 auto;">
-                        <p style="color: #ccc; margin-bottom: 20px;">Gib die 10-stellige Team-ID ein, um ein Team zu finden und eine Beitrittsanfrage zu senden.</p>
+                        <p style="color: #ccc; margin-bottom: 20px;">Gib die 5-stellige Team-ID ein, um ein Team zu finden und eine Beitrittsanfrage zu senden.</p>
                         <div class="form-group">
                             <label>Team ID</label>
-                            <input type="text" id="search-team-code" placeholder="z.B. A1B2C3D4E5" style="text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">
+                            <input type="text" id="search-team-code" placeholder="z.B. A1B2C" style="text-transform: uppercase; letter-spacing: 2px; font-weight: bold;">
                         </div>
                         <button class="btn-submit" onclick="searchTeam()">Team Suchen</button>
 
@@ -381,23 +785,28 @@
             </div>
 
             <div id="admin-controls" style="display: none; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 8px; border: 1px dashed var(--primary); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-                <div>
+                <div id="team-id-container">
                     <span style="color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Team-ID (Einladungscode)</span><br>
                     <span id="calendar-team-id" style="font-family: monospace; color: var(--primary); font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;"></span>
                 </div>
-                <button class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; position: relative;" onclick="openRequestsModal()">
-                    Anfragen Verwalten 
-                    <span id="request-count-badge" style="position: absolute; top: -10px; right: -10px; background: white; color: var(--primary); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; border: 2px solid var(--primary);">0</span>
-                </button>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button id="btn-edit-team" class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; background: #555; border: 1px solid #777;" onclick="openEditTeamModal()">
+                        ⚙️ Team bearbeiten
+                    </button>
+                    <button id="btn-manage-requests" class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; position: relative;" onclick="openRequestsModal()">
+                        Anfragen Verwalten 
+                        <span id="request-count-badge" style="position: absolute; top: -10px; right: -10px; background: white; color: var(--primary); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; border: 2px solid var(--primary);">0</span>
+                    </button>
+                </div>
             </div>
 
             <div class="panel">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                     <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
-                    <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
+                    <button id="btn-new-event" class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
                 </div>
                 
-                <div id="team-events-list" style="display: flex; flex-direction: column; gap: 15px;">
+                <div id="team-events-list" class="team-events-grid">
                     </div>
             </div>
         </main>
@@ -417,9 +826,74 @@
         // --- State ---
         let activeUser = null;
         let presenceChannel = null;
+        let dataSubscriptionChannel = null; 
         let currentOpenTeamId = null;
+        let currentTeamData = null; // Speichert aktuelle Team-Infos ab (fürs Bearbeiten)
+        let currentMyRole = null; 
         let currentTeamEvents = []; 
         let currentEditEventId = null; 
+        let contextTargetUserId = null; 
+        let contextTargetUserName = null; 
+
+        // Idle Tracking State
+        let idleTimeout = null;
+        let isIdle = false;
+        let eventTickerInterval = null; 
+
+        // --- Developer Check ---
+        function isDeveloper() {
+            return activeUser && activeUser.is_developer === true;
+        }
+
+        // --- Scroll Animation (Reveal) ---
+        function reveal() {
+            var reveals = document.querySelectorAll(".reveal");
+            for (var i = 0; i < reveals.length; i++) {
+                var windowHeight = window.innerHeight;
+                var elementTop = reveals[i].getBoundingClientRect().top;
+                var elementVisible = 100;
+                // Check against 0 avoids activating elements inside hidden views
+                if (elementTop < windowHeight - elementVisible && elementTop !== 0) {
+                    reveals[i].classList.add("active");
+                }
+            }
+        }
+        window.addEventListener("scroll", reveal);
+        document.addEventListener("DOMContentLoaded", () => reveal());
+
+        // --- Custom Notifications ---
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            
+            if (type === 'error') toast.style.borderLeftColor = '#dc3545';
+            else if (type === 'success') toast.style.borderLeftColor = '#28a745';
+            else toast.style.borderLeftColor = 'var(--primary)';
+
+            toast.innerText = msg;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'fadeOutUp 0.3s ease forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        let pendingConfirmCallback = null;
+        function customConfirm(msg, callback) {
+            document.getElementById('confirm-msg-text').innerText = msg;
+            document.getElementById('custom-confirm').style.display = 'flex';
+            pendingConfirmCallback = callback;
+        }
+
+        function closeCustomConfirm(result) {
+            document.getElementById('custom-confirm').style.display = 'none';
+            if (result && pendingConfirmCallback) {
+                pendingConfirmCallback();
+            }
+            pendingConfirmCallback = null;
+        }
 
         // --- UI Navigation ---
         function toggleAuth(mode) {
@@ -427,16 +901,25 @@
             document.getElementById('register-box').style.display = mode === 'register' ? 'block' : 'none';
         }
 
+        function openAuthView(mode) {
+            openView('view-auth');
+            toggleAuth(mode);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
         function openView(viewId) {
             const views = document.querySelectorAll('.view');
             views.forEach(view => view.classList.remove('active'));
-            setTimeout(() => { document.getElementById(viewId).classList.add('active'); }, 50);
+            
+            setTimeout(() => { 
+                document.getElementById(viewId).classList.add('active'); 
+                reveal(); // Trigger animations in new view
+            }, 50);
             
             if(viewId === 'view-teams-main') {
                 loadMyTeams();
             }
 
-            // Steuerung des Online-Widgets (Sichtbarkeit nur auf Hauptseite)
             const onlineWidget = document.getElementById('online-users-widget');
             if (onlineWidget && activeUser) {
                 if (viewId === 'view-home') {
@@ -446,9 +929,9 @@
                 }
             }
 
-            // Fahrerliste (Sidebar) IMMER schließen, falls man den Kalender verlässt
             if (viewId !== 'view-team-calendar') {
                 document.getElementById('member-sidebar').classList.remove('open');
+                if (eventTickerInterval) clearInterval(eventTickerInterval); 
             }
         }
 
@@ -470,6 +953,23 @@
             sidebar.classList.toggle('open');
         }
 
+        function toggleOnlineWidget() {
+            const list = document.getElementById('online-users-list');
+            const icon = document.getElementById('online-widget-icon');
+            list.classList.toggle('collapsed-list');
+            if(list.classList.contains('collapsed-list')) {
+                icon.innerText = '▲';
+            } else {
+                icon.innerText = '▼';
+            }
+        }
+
+        document.addEventListener('click', (e) => {
+            if(e.button !== 2) { 
+                document.getElementById('context-menu').style.display = 'none';
+            }
+        });
+
         // --- Auth Functions ---
         async function registerUser() {
             const fn = document.getElementById('reg-firstname').value.trim();
@@ -477,12 +977,22 @@
             const em = document.getElementById('reg-email').value.trim();
             const pw = document.getElementById('reg-password').value;
 
-            if(!fn || !ln || !em || !pw) return alert("Bitte alle Felder ausfüllen!");
-            if(!supabaseClient) return alert("Demo-Modus: Datenbank nicht verbunden.");
+            if(!fn || !ln || !em || !pw) {
+                showToast("Bitte alle Felder ausfüllen!", "error");
+                return;
+            }
+            if(!supabaseClient) {
+                showToast("Demo-Modus: Datenbank nicht verbunden.", "error");
+                return;
+            }
 
             const { error } = await supabaseClient.from('app_users').insert([{ first_name: fn, last_name: ln, email: em, password: pw }]);
-            if(error) alert("Fehler: " + error.message);
-            else { alert("Erfolgreich registriert!"); toggleAuth('login'); }
+            if (error) {
+                showToast("Fehler: " + error.message, "error");
+            } else {
+                showToast("Erfolgreich registriert!", "success");
+                toggleAuth('login');
+            }
         }
 
         async function loginUser() {
@@ -490,16 +1000,22 @@
             const ln = document.getElementById('login-lastname').value.trim();
             const pw = document.getElementById('login-password').value;
 
-            if(!fn || !ln || !pw) return alert("Bitte alle Felder ausfüllen!");
+            if(!fn || !ln || !pw) {
+                showToast("Bitte alle Felder ausfüllen!", "error");
+                return;
+            }
 
             if(!supabaseClient) { 
-                activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln };
+                activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln, email: 'demo@beispiel.de', is_developer: true };
                 processLoginSuccess();
                 return;
             }
 
             const { data, error } = await supabaseClient.from('app_users').select('*').eq('first_name', fn).eq('last_name', ln).eq('password', pw).single();
-            if(error || !data) return alert("Falsche Daten!");
+            if(error || !data) {
+                showToast("Falsche Daten!", "error");
+                return;
+            }
 
             activeUser = data;
             processLoginSuccess();
@@ -511,20 +1027,97 @@
             document.getElementById('online-users-widget').style.display = 'block'; 
             openView('view-home');
             initPresence(); 
+            initDataSubscriptions();
         }
 
         function logout() {
             cleanupPresence();
+            cleanupDataSubscriptions();
+            stopIdleTracking();
             activeUser = null;
             document.getElementById('profile-badge').style.display = 'none';
             document.getElementById('online-users-widget').style.display = 'none'; 
-            openView('view-auth');
+            if (eventTickerInterval) clearInterval(eventTickerInterval);
+            
+            // Bringt uns nun auf die Landing-Page statt zum Login zurück
+            openView('view-landing'); 
         }
 
-        // --- Realtime / Presence (Wer ist online?) ---
+        // --- Realtime Live Aktualisierung der Datenbank ---
+        function initDataSubscriptions() {
+            if (!supabaseClient) return;
+            if (dataSubscriptionChannel) return; 
+
+            dataSubscriptionChannel = supabaseClient.channel('db-live-updates')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
+                    if (currentOpenTeamId) {
+                        const affectedTeamId = payload.new ? payload.new.team_id : (payload.old ? payload.old.team_id : null);
+                        if(affectedTeamId === currentOpenTeamId) {
+                            loadTeamEvents();
+                        }
+                    }
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, payload => {
+                    const affectedTeamId = payload.new ? payload.new.team_id : (payload.old ? payload.old.team_id : null);
+                    const affectedUserId = payload.new ? payload.new.user_id : (payload.old ? payload.old.user_id : null);
+
+                    if (currentOpenTeamId && affectedTeamId === currentOpenTeamId) {
+                        if (affectedUserId === activeUser.id) {
+                            if (payload.eventType === 'DELETE') {
+                                showToast("Du wurdest vom Admin aus dem Team entfernt.", "error");
+                                document.getElementById('member-sidebar').classList.remove('open');
+                                currentOpenTeamId = null;
+                                openView('view-teams-main');
+                                return;
+                            } else if (payload.new && payload.new.role) {
+                                currentMyRole = payload.new.role;
+                                const adminControls = document.getElementById('admin-controls');
+                                const btnEditTeam = document.getElementById('btn-edit-team');
+                                
+                                if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
+                                    adminControls.style.display = 'flex';
+                                    document.getElementById('sidebar-admin-hint').style.display = 'block';
+                                    if(currentMyRole === 'Admin') btnEditTeam.style.display = 'inline-block';
+                                    else btnEditTeam.style.display = 'none';
+                                } else {
+                                    adminControls.style.display = 'none';
+                                    document.getElementById('sidebar-admin-hint').style.display = 'none';
+                                }
+                                
+                                document.getElementById('btn-new-event').style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
+                                loadTeamEvents(); // Neuladen wegen Event-Rechten
+                            }
+                        }
+
+                        loadSidebarMembers(currentOpenTeamId);
+                        updateRequestBadge(currentOpenTeamId);
+                        if (document.getElementById('requests-modal').style.display === 'flex') {
+                            openRequestsModal();
+                        }
+                    }
+
+                    if (document.getElementById('view-teams-main').classList.contains('active')) {
+                        if (affectedUserId === activeUser.id) {
+                            loadMyTeams();
+                            if (document.getElementById('search-result-box').style.display === 'block') {
+                                searchTeam();
+                            }
+                        }
+                    }
+                })
+                .subscribe();
+        }
+
+        function cleanupDataSubscriptions() {
+            if (dataSubscriptionChannel && supabaseClient) {
+                supabaseClient.removeChannel(dataSubscriptionChannel);
+                dataSubscriptionChannel = null;
+            }
+        }
+
+        // --- Realtime / Presence & Idle Tracking ---
         function initPresence() {
             if (!supabaseClient || !activeUser) return;
-
             cleanupPresence();
 
             const safeUserId = activeUser.id ? activeUser.id.toString() : 'user_' + Math.floor(Math.random()*1000);
@@ -539,21 +1132,73 @@
             });
 
             presenceChannel.subscribe(async (status) => {
-                if (status === 'SUBSCRIBED') await presenceChannel.track({ user_name: userName });
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ user_name: userName, status: 'online' });
+                    startIdleTracking();
+                }
             });
+        }
+
+        function startIdleTracking() {
+            stopIdleTracking();
+            window.addEventListener('mousemove', resetIdleTimer);
+            window.addEventListener('keydown', resetIdleTimer);
+            window.addEventListener('touchstart', resetIdleTimer);
+            window.addEventListener('scroll', resetIdleTimer);
+            resetIdleTimer();
+        }
+
+        function stopIdleTracking() {
+            clearTimeout(idleTimeout);
+            window.removeEventListener('mousemove', resetIdleTimer);
+            window.removeEventListener('keydown', resetIdleTimer);
+            window.removeEventListener('touchstart', resetIdleTimer);
+            window.removeEventListener('scroll', resetIdleTimer);
+        }
+
+        function resetIdleTimer() {
+            if (isIdle) {
+                isIdle = false;
+                updatePresenceStatus('online');
+            }
+            clearTimeout(idleTimeout);
+            idleTimeout = setTimeout(() => {
+                isIdle = true;
+                updatePresenceStatus('away');
+            }, 600000);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && activeUser && presenceChannel) {
+                resetIdleTimer();
+            }
+        });
+
+        async function updatePresenceStatus(newStatus) {
+            if (!presenceChannel || !activeUser) return;
+            const userName = `${activeUser.first_name} ${activeUser.last_name}`;
+            await presenceChannel.track({ user_name: userName, status: newStatus });
         }
 
         function renderOnlineUsers(state) {
             const listDiv = document.getElementById('online-users-list');
             listDiv.innerHTML = '';
             let count = 0;
+            
             for (const id in state) {
                 state[id].forEach(user => {
                     count++;
+                    const status = user.status || 'online';
+                    const isAway = status === 'away';
+                    
+                    const dotColor = isAway ? '#ffcc00' : '#00ff00';
+                    const glowColor = isAway ? 'rgba(255, 204, 0, 0.6)' : 'rgba(0, 255, 0, 0.6)';
+                    const statusText = isAway ? '<span style="color: #ffcc00; font-size: 0.8rem; margin-left: 5px;">(Abwesend)</span>' : '';
+                    
                     listDiv.innerHTML += `
                         <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; color: white; display: flex; align-items: center; gap: 8px;">
-                            <span style="display:inline-block; width:8px; height:8px; background:var(--primary); border-radius:50%; box-shadow: 0 0 8px var(--primary-glow);"></span>
-                            ${user.user_name}
+                            <span style="display:inline-block; width:8px; height:8px; background:${dotColor}; border-radius:50%; box-shadow: 0 0 8px ${glowColor}; flex-shrink: 0;"></span>
+                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.user_name}</span> ${statusText}
                         </div>`;
                 });
             }
@@ -568,9 +1213,262 @@
             }
         }
 
-        // --- Teams Funktionen ---
+        // ================= NEWS FUNKTIONEN =================
+
+        async function loadNews() {
+            openView('view-news');
+            const container = document.getElementById('news-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade News...</p>';
+
+            if (isDeveloper()) {
+                document.getElementById('dev-news-controls').style.display = 'block';
+            } else {
+                document.getElementById('dev-news-controls').style.display = 'none';
+            }
+
+            if (!supabaseClient) {
+                container.innerHTML = '<p style="color:#aaa;">Demo-Modus: Keine Datenbankverbindung.</p>';
+                return;
+            }
+
+            const { data: news, error } = await supabaseClient
+                .from('app_news')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary);">Fehler (Tabelle 'app_news' existiert vielleicht nicht?): ${error.message}</p>`;
+                return;
+            }
+
+            if (!news || news.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Es gibt noch keine Neuigkeiten.</p>';
+                return;
+            }
+
+            let html = '';
+            news.forEach(n => {
+                const date = new Date(n.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                html += `
+                    <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <h3 style="color: white; margin: 0; font-size: 1.5rem; text-transform: uppercase;">${n.title}</h3>
+                            <span style="color: #888; font-size: 0.85rem; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 5px;">📅 ${date} | 👤 ${n.author_name}</span>
+                        </div>
+                        <div style="color: #ccc; line-height: 1.6; white-space: pre-wrap; font-size: 1.05rem;">${n.content}</div>
+                        ${isDeveloper() ? `
+                        <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; text-align: right;">
+                            <button onclick="deleteNews('${n.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 8px 15px; border-radius: 5px; transition: 0.2s; font-size: 0.9rem; font-weight: bold;">🗑️ Post löschen</button>
+                        </div>` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function showNewsModal() {
+            document.getElementById('news-title').value = '';
+            document.getElementById('news-content').value = '';
+            document.getElementById('news-modal').style.display = 'flex';
+        }
+
+        function closeNewsModal() {
+            document.getElementById('news-modal').style.display = 'none';
+        }
+
+        async function saveNews() {
+            const title = document.getElementById('news-title').value.trim();
+            const content = document.getElementById('news-content').value.trim();
+
+            if (!title || !content) {
+                showToast("Titel und Inhalt dürfen nicht leer sein!", "error");
+                return;
+            }
+
+            if (!supabaseClient) {
+                showToast("Demo-Modus", "info");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('app_news').insert([{
+                title: title,
+                content: content,
+                author_name: `${activeUser.first_name} ${activeUser.last_name}`
+            }]);
+
+            if (error) {
+                showToast("Fehler beim Posten: " + error.message, "error");
+            } else {
+                showToast("News erfolgreich gepostet!", "success");
+                closeNewsModal();
+                loadNews();
+            }
+        }
+
+        function deleteNews(id) {
+            customConfirm("Möchtest du diese Ankündigung wirklich löschen?", async () => {
+                if (!supabaseClient) return;
+                const { error } = await supabaseClient.from('app_news').delete().eq('id', id);
+                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
+                else { 
+                    showToast("News gelöscht.", "success"); 
+                    loadNews(); 
+                }
+            });
+        }
+
+        // ================= PATCHLOG FUNKTIONEN =================
+        
+        async function loadPatchlog() {
+            openView('view-patchlog');
+            const container = document.getElementById('patchlog-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade Patchlog...</p>';
+
+            if (isDeveloper()) {
+                document.getElementById('dev-patchlog-controls').style.display = 'block';
+            } else {
+                document.getElementById('dev-patchlog-controls').style.display = 'none';
+            }
+
+            if (!supabaseClient) {
+                container.innerHTML = '<p style="color:#aaa;">Demo-Modus: Keine Datenbankverbindung.</p>';
+                return;
+            }
+
+            const { data: logs, error } = await supabaseClient
+                .from('app_patchlog')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary);">Fehler (Tabelle 'app_patchlog' existiert vielleicht nicht?): ${error.message}</p>`;
+                return;
+            }
+
+            if (!logs || logs.length === 0) {
+                container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Es gibt noch keine Patchlog-Einträge.</p>';
+                return;
+            }
+
+            // Patchlog nach Versionen gruppieren
+            const versionOrder = [];
+            const groupedLogs = {};
+
+            logs.forEach(l => {
+                const v = l.version || 'Sonstige';
+                if (!groupedLogs[v]) {
+                    groupedLogs[v] = [];
+                    versionOrder.push(v);
+                }
+                groupedLogs[v].push(l);
+            });
+
+            let html = '';
+            
+            // Schleife durch alle gesammelten Versionen (chronologisch anhand der neusten Einträge)
+            versionOrder.forEach(version => {
+                const entries = groupedLogs[version];
+
+                html += `
+                <div style="margin-bottom: 40px;">
+                    <h3 style="color: var(--primary); font-size: 1.8rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">
+                        Update ${version}
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                `;
+
+                entries.forEach(l => {
+                    const date = new Date(l.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    
+                    let typeColor = '#ccc';
+                    if(l.type === 'NEU') typeColor = '#28a745';
+                    if(l.type === 'ÄNDERUNG') typeColor = '#ffcc00';
+                    if(l.type === 'FIX') typeColor = '#dc3545';
+
+                    html += `
+                        <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${typeColor}; padding: 15px; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                                <h4 style="color: white; margin: 0; font-size: 1.2rem;">
+                                    <span style="color: ${typeColor}; margin-right: 10px; border: 1px solid ${typeColor}; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">${l.type}</span>
+                                    ${l.title}
+                                </h4>
+                                <span style="color: #888; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 5px;">📅 ${date}</span>
+                            </div>
+                            <div style="color: #ccc; line-height: 1.5; white-space: pre-wrap; font-size: 1rem;">${l.content}</div>
+                            ${isDeveloper() ? `
+                            <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; text-align: right;">
+                                <button onclick="deletePatchlog('${l.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s; font-size: 0.85rem; font-weight: bold;">🗑️ Löschen</button>
+                            </div>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function showPatchlogModal() {
+            document.getElementById('patchlog-version').value = '';
+            document.getElementById('patchlog-type').value = 'NEU';
+            document.getElementById('patchlog-title').value = '';
+            document.getElementById('patchlog-content').value = '';
+            document.getElementById('patchlog-modal').style.display = 'flex';
+        }
+
+        function closePatchlogModal() {
+            document.getElementById('patchlog-modal').style.display = 'none';
+        }
+
+        async function savePatchlog() {
+            const version = document.getElementById('patchlog-version').value.trim();
+            const type = document.getElementById('patchlog-type').value;
+            const title = document.getElementById('patchlog-title').value.trim();
+            const content = document.getElementById('patchlog-content').value.trim();
+
+            if (!title || !content || !version) {
+                showToast("Version, Titel und Inhalt dürfen nicht leer sein!", "error");
+                return;
+            }
+
+            if (!supabaseClient) {
+                showToast("Demo-Modus", "info");
+                return;
+            }
+
+            const { error } = await supabaseClient.from('app_patchlog').insert([{
+                version: version,
+                type: type,
+                title: title,
+                content: content,
+                author_id: activeUser.id
+            }]);
+
+            if (error) {
+                showToast("Fehler beim Speichern: " + error.message, "error");
+            } else {
+                showToast("Patchlog erfolgreich gespeichert!", "success");
+                closePatchlogModal();
+                loadPatchlog();
+            }
+        }
+
+        function deletePatchlog(id) {
+            customConfirm("Möchtest du diesen Patchlog-Eintrag wirklich löschen?", async () => {
+                if (!supabaseClient) return;
+                const { error } = await supabaseClient.from('app_patchlog').delete().eq('id', id);
+                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
+                else { 
+                    showToast("Eintrag gelöscht.", "success"); 
+                    loadPatchlog(); 
+                }
+            });
+        }
+
+        // ================= TEAM MANAGEMENT =================
         function generateInviteCode() {
-            return Math.random().toString(36).substring(2, 12).toUpperCase();
+            return Math.random().toString(36).substring(2, 7).toUpperCase();
         }
 
         async function createTeam() {
@@ -578,7 +1476,11 @@
             const sim = document.getElementById('create-team-sim').value;
             const logoInput = document.getElementById('create-team-logo');
             
-            if(!name) return alert("Team Name ist erforderlich!");
+            if(!name) {
+                showToast("Team Name ist erforderlich!", "error");
+                return;
+            }
+            
             let logoUrl = "https://via.placeholder.com/150/222222/FFFFFF?text=Logo"; 
 
             if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
@@ -587,20 +1489,29 @@
                 const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
 
                 const { error: uploadError } = await supabaseClient.storage.from('team-logos').upload(fileName, file);
-                if (uploadError) return alert("Fehler beim Logo-Upload: " + uploadError.message);
+                if (uploadError) {
+                    showToast("Fehler beim Logo-Upload: " + uploadError.message, "error");
+                    return;
+                }
 
                 const { data: publicUrlData } = supabaseClient.storage.from('team-logos').getPublicUrl(fileName);
                 logoUrl = publicUrlData.publicUrl;
             }
 
             const code = generateInviteCode();
-            if(!supabaseClient) return alert("Demo: Team erstellt.");
+            if(!supabaseClient) {
+                showToast("Demo: Team erstellt.", "info");
+                return;
+            }
 
             const { data, error } = await supabaseClient.from('teams').insert([{
                 name: name, logo_url: logoUrl, sim: sim, invite_code: code, admin_id: activeUser.id
             }]).select();
 
-            if(error) return alert("Fehler beim Erstellen: " + error.message);
+            if(error) {
+                showToast("Fehler beim Erstellen: " + error.message, "error");
+                return;
+            }
 
             const teamId = data[0].id;
             const userName = `${activeUser.first_name} ${activeUser.last_name}`;
@@ -609,12 +1520,77 @@
                 team_id: teamId, user_id: activeUser.id, user_name: userName, role: 'Admin'
             }]);
 
-            alert(`Team erfolgreich gegründet!\nDein Einladungscode lautet: ${code}`);
+            showToast(`Team erfolgreich gegründet!\nDein Einladungscode lautet: ${code}`, "success");
             
             document.getElementById('create-team-name').value = '';
             document.getElementById('create-team-logo').value = '';
             
             openTeamCalendar(teamId);
+        }
+        
+        // --- Admin: Team Editieren ---
+        function openEditTeamModal() {
+            if(!currentTeamData) return;
+            document.getElementById('edit-team-name').value = currentTeamData.name;
+            document.getElementById('edit-team-sim').value = currentTeamData.sim;
+            document.getElementById('edit-team-logo').value = '';
+            document.getElementById('edit-team-modal').style.display = 'flex';
+        }
+
+        function closeEditTeamModal() {
+            document.getElementById('edit-team-modal').style.display = 'none';
+        }
+
+        async function saveTeamEdit() {
+            const name = document.getElementById('edit-team-name').value.trim();
+            const sim = document.getElementById('edit-team-sim').value;
+            const logoInput = document.getElementById('edit-team-logo');
+
+            if(!name) {
+                showToast("Team Name ist erforderlich!", "error");
+                return;
+            }
+
+            let logoUrl = currentTeamData.logo_url; // Altes Logo behalten, falls kein neues gewählt wurde
+
+            if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
+                const file = logoInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+
+                const { error: uploadError } = await supabaseClient.storage.from('team-logos').upload(fileName, file);
+                if (uploadError) {
+                    showToast("Fehler beim Logo-Upload: " + uploadError.message, "error");
+                    return;
+                }
+
+                const { data: publicUrlData } = supabaseClient.storage.from('team-logos').getPublicUrl(fileName);
+                logoUrl = publicUrlData.publicUrl;
+            }
+
+            if(!supabaseClient) {
+                showToast("Demo: Team gespeichert.", "info");
+                closeEditTeamModal();
+                return;
+            }
+
+            const { error } = await supabaseClient.from('teams').update({
+                name: name, sim: sim, logo_url: logoUrl
+            }).eq('id', currentOpenTeamId);
+
+            if(error) {
+                showToast("Fehler beim Speichern: " + error.message, "error");
+                return;
+            }
+
+            showToast("Team erfolgreich aktualisiert!", "success");
+            closeEditTeamModal();
+            
+            // UI Updaten
+            currentTeamData.name = name;
+            currentTeamData.sim = sim;
+            currentTeamData.logo_url = logoUrl;
+            document.getElementById('calendar-team-name').innerText = name;
         }
 
         async function loadMyTeams() {
@@ -652,10 +1628,12 @@
             container.innerHTML = html;
         }
 
-        // --- Such & Anfrage Funktionen ---
         async function searchTeam() {
             const code = document.getElementById('search-team-code').value.trim().toUpperCase();
-            if(!code) return alert("Bitte Code eingeben.");
+            if(!code) {
+                showToast("Bitte Code eingeben.", "error");
+                return;
+            }
             const resBox = document.getElementById('search-result-box');
             if(!supabaseClient) return;
 
@@ -698,38 +1676,36 @@
             }]);
             
             if(error) {
-                alert("Fehler: " + error.message);
+                showToast("Fehler: " + error.message, "error");
             } else {
-                alert("Deine Beitrittsanfrage wurde an den Admin gesendet!");
+                showToast("Deine Beitrittsanfrage wurde an den Admin gesendet!", "success");
                 searchTeam(); 
             }
         }
 
-        async function leaveCurrentTeam() {
-            if (!confirm("Möchtest du dieses Team wirklich verlassen? \nWenn du wieder eintreten möchtest, musst du eine neue Beitrittsanfrage stellen.")) {
-                return;
-            }
-            if (!supabaseClient) return alert("Demo-Modus.");
+        function leaveCurrentTeam() {
+            customConfirm("Möchtest du dieses Team wirklich verlassen?\nWenn du wieder eintreten möchtest, musst du eine neue Beitrittsanfrage stellen.", async () => {
+                if (!supabaseClient) {
+                    showToast("Demo-Modus.", "info");
+                    return;
+                }
 
-            const { data, error } = await supabaseClient.from('team_members')
-                .delete()
-                .eq('team_id', currentOpenTeamId)
-                .eq('user_id', activeUser.id)
-                .select();
+                const { data, error } = await supabaseClient.from('team_members')
+                    .delete()
+                    .eq('team_id', currentOpenTeamId)
+                    .eq('user_id', activeUser.id)
+                    .select();
 
-            if (error) {
-                return alert("Fehler beim Verlassen des Teams: " + error.message);
-            }
+                if (error) {
+                    showToast("Fehler beim Verlassen des Teams: " + error.message, "error");
+                    return;
+                }
 
-            if (data && data.length === 0) {
-                alert("Achtung: Du konntest nicht entfernt werden! Dir fehlen vermutlich die Rechte (Supabase RLS: DELETE-Policy in 'team_members' muss für Nutzer erlaubt sein).");
-            } else {
-                alert("Du hast das Team erfolgreich verlassen.");
-            }
-            
-            document.getElementById('member-sidebar').classList.remove('open');
-            currentOpenTeamId = null;
-            openView('view-teams-main');
+                showToast("Du hast das Team erfolgreich verlassen.", "success");
+                document.getElementById('member-sidebar').classList.remove('open');
+                currentOpenTeamId = null;
+                openView('view-teams-main');
+            });
         }
 
         // --- Team View Aufbau ---
@@ -743,20 +1719,37 @@
                 .eq('team_id', teamId)
                 .single();
 
-            if(!memberData) return alert("Fehler beim Laden des Teams.");
+            if(!memberData) {
+                showToast("Fehler beim Laden des Teams.", "error");
+                return;
+            }
 
-            const team = memberData.teams;
-            const myRole = memberData.role;
+            currentTeamData = memberData.teams;
+            currentMyRole = memberData.role; 
 
-            document.getElementById('calendar-team-name').innerText = team.name;
+            document.getElementById('calendar-team-name').innerText = currentTeamData.name;
             
             const adminControls = document.getElementById('admin-controls');
-            if(myRole === 'Admin') {
+            const btnEditTeam = document.getElementById('btn-edit-team');
+            const btnNewEvent = document.getElementById('btn-new-event');
+            
+            // "Neuer Termin" ist für alle sichtbar, AUSSER Community
+            btnNewEvent.style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
+
+            if(currentMyRole === 'Admin' || currentMyRole === 'Manager') {
                 adminControls.style.display = 'flex';
-                document.getElementById('calendar-team-id').innerText = team.invite_code;
+                document.getElementById('calendar-team-id').innerText = currentTeamData.invite_code;
+                document.getElementById('sidebar-admin-hint').style.display = 'block';
                 updateRequestBadge(teamId);
+                
+                if (currentMyRole === 'Admin') {
+                    btnEditTeam.style.display = 'inline-block';
+                } else {
+                    btnEditTeam.style.display = 'none'; // Manager darf Team nicht bearbeiten
+                }
             } else {
                 adminControls.style.display = 'none';
+                document.getElementById('sidebar-admin-hint').style.display = 'none';
             }
 
             loadSidebarMembers(teamId);
@@ -765,19 +1758,119 @@
             openView('view-team-calendar');
         }
 
+        // --- Admin Rechteverwaltung & Kontextmenü Funktionen ---
+        function showContextMenu(e, userId, userName, role) {
+            e.preventDefault();
+            contextTargetUserId = userId;
+            contextTargetUserName = userName;
+            
+            const menu = document.getElementById('context-menu');
+            
+            // Dynamisch Menü-Inhalt anhand der eigenen Rolle erzeugen
+            let html = `
+                <div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;" id="context-user-name-display">Aktion für: ${userName}</div>
+                <hr>
+            `;
+
+            if (currentMyRole === 'Admin') {
+                html += `<div onclick="updateMemberRole('Admin')">👑 Admin</div>`;
+            }
+            
+            // Manager dürfen Rollen verteilen, aber niemanden zum Admin machen
+            html += `
+                <div onclick="updateMemberRole('Manager')">🛠️ Manager</div>
+                <div onclick="updateMemberRole('Mitglied')">👤 Mitglied</div>
+                <div onclick="updateMemberRole('Community')">👋 Community</div>
+                <hr style="border-color:#555;">
+                <div style="color:#dc3545;" onclick="kickTargetMember()">🚫 Aus Team entfernen</div>
+            `;
+
+            menu.innerHTML = html;
+            menu.style.display = 'block';
+            
+            let x = e.clientX;
+            let y = e.clientY;
+            
+            if (x + 200 > window.innerWidth) x -= 200;
+            if (y + 250 > window.innerHeight) y -= 250;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+        }
+
+        async function updateMemberRole(newRole) {
+            document.getElementById('context-menu').style.display = 'none';
+            if (!supabaseClient) return;
+            
+            const { data, error } = await supabaseClient.from('team_members')
+                .update({ role: newRole })
+                .eq('team_id', currentOpenTeamId)
+                .eq('user_id', contextTargetUserId)
+                .select();
+                
+            if (error) {
+                showToast("Fehler beim Aktualisieren der Rolle: " + error.message, "error");
+            } else if (data && data.length === 0) {
+                showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
+            } else {
+                loadSidebarMembers(currentOpenTeamId);
+                showToast(`Rolle erfolgreich auf ${newRole} geändert.`, "success");
+            }
+        }
+
+        function kickTargetMember() {
+            document.getElementById('context-menu').style.display = 'none';
+            customConfirm(`Möchtest du ${contextTargetUserName} wirklich aus dem Team entfernen?`, async () => {
+                if (!supabaseClient) return;
+                
+                const { data, error } = await supabaseClient.from('team_members')
+                    .delete()
+                    .eq('team_id', currentOpenTeamId)
+                    .eq('user_id', contextTargetUserId)
+                    .select();
+                    
+                if (error) {
+                    showToast("Fehler beim Entfernen: " + error.message, "error");
+                } else if (data && data.length === 0) {
+                    showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
+                } else {
+                    loadSidebarMembers(currentOpenTeamId);
+                    showToast("Mitglied erfolgreich entfernt.", "success");
+                }
+            });
+        }
+
         async function loadSidebarMembers(teamId) {
             const { data: members } = await supabaseClient
                 .from('team_members')
-                .select('user_name, role')
+                .select('user_id, user_name, role')
                 .eq('team_id', teamId)
                 .neq('role', 'Anfrage')
                 .order('role', { ascending: true }); 
             
             let html = '';
             members.forEach(m => {
-                const color = m.role === 'Admin' ? 'var(--primary)' : '#aaa';
+                let color = '#aaa';
+                if(m.role === 'Admin') color = 'var(--primary)';
+                if(m.role === 'Manager') color = '#ffcc00';
+                if(m.role === 'Mitglied') color = '#28a745';
+                if(m.role === 'Community') color = '#17a2b8';
+
+                // Rechtekontrolle für das Kontext-Menü
+                const isSelf = m.user_id === activeUser.id;
+                const targetIsAdmin = m.role === 'Admin';
+                let canManageUser = false;
+                
+                if (currentMyRole === 'Admin' && !isSelf) canManageUser = true;
+                if (currentMyRole === 'Manager' && !isSelf && !targetIsAdmin) canManageUser = true;
+
+                const isAdminHoverClass = canManageUser ? 'admin-hover' : '';
+                const contextAttr = canManageUser 
+                    ? `oncontextmenu="showContextMenu(event, '${m.user_id}', '${m.user_name}', '${m.role}')"` 
+                    : '';
+
                 html += `
-                    <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px;">
+                    <div class="member-item ${isAdminHoverClass}" ${contextAttr}>
                         <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">
                             ${m.user_name.charAt(0)}
                         </div>
@@ -785,6 +1878,7 @@
                             <div style="color: white; font-size: 1.1rem; font-weight: 500;">${m.user_name}</div>
                             <div style="color: ${color}; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">${m.role}</div>
                         </div>
+                        ${canManageUser ? '<div style="margin-left: auto; color: #555; font-size: 0.8rem;">⚙️</div>' : ''}
                     </div>`;
             });
             document.getElementById('sidebar-member-list').innerHTML = html;
@@ -823,7 +1917,13 @@
                 html += `
                     <div style="display:flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid var(--primary); flex-wrap: wrap; gap: 10px;">
                         <span style="color:white; font-size: 1.1rem; font-weight: 500;">${req.user_name}</span>
-                        <div style="display: flex; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <select id="role-select-${req.user_id}" style="padding: 8px; border-radius: 5px; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none;">
+                                <option value="Mitglied">Mitglied</option>
+                                <option value="Manager">Manager</option>
+                                <option value="Admin">Admin</option>
+                                <option value="Community">Community</option>
+                            </select>
                             <button onclick="handleRequest('${req.user_id}', 'accept')" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✓ Annehmen</button>
                             <button onclick="handleRequest('${req.user_id}', 'decline')" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✕ Ablehnen</button>
                         </div>
@@ -838,22 +1938,24 @@
 
             let result;
             if(action === 'accept') {
-                result = await supabaseClient.from('team_members').update({ role: 'Teammitglied' }).eq('team_id', currentOpenTeamId).eq('user_id', userId).select();
+                const roleSelect = document.getElementById(`role-select-${userId}`);
+                const selectedRole = roleSelect ? roleSelect.value : 'Mitglied';
+                result = await supabaseClient.from('team_members').update({ role: selectedRole }).eq('team_id', currentOpenTeamId).eq('user_id', userId).select();
             } else if(action === 'decline') {
                 result = await supabaseClient.from('team_members').delete().eq('team_id', currentOpenTeamId).eq('user_id', userId).select();
             }
             
-            if (result && result.error) return alert("Fehler bei der Aktion: " + result.error.message);
-
-            if (result && result.data && result.data.length === 0) {
-                alert("Achtung: Aktion durch RLS blockiert!");
-            } else {
-                alert(action === 'accept' ? "Anfrage angenommen!" : "Anfrage abgelehnt!");
+            if (result && result.error) {
+                showToast("Fehler bei der Aktion: " + result.error.message, "error");
+                return;
+            } else if (result && result.data && result.data.length === 0) {
+                showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
+                return;
             }
-            
-            openRequestsModal(); 
-            updateRequestBadge(currentOpenTeamId); 
-            loadSidebarMembers(currentOpenTeamId); 
+
+            openRequestsModal();
+            updateRequestBadge(currentOpenTeamId);
+            loadSidebarMembers(currentOpenTeamId);
         }
 
         function closeRequestsModal() {
@@ -861,6 +1963,50 @@
         }
 
         // ================= EVENT / KALENDER FUNKTIONEN =================
+
+        function addStreamInput(platform = 'Twitch', url = '') {
+            const container = document.getElementById('streams-container');
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.gap = '10px';
+            row.style.marginBottom = '10px';
+            row.className = 'stream-input-row';
+            
+            row.innerHTML = `
+                <select class="stream-platform" style="padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem; width: 120px;">
+                    <option value="Twitch" ${platform==='Twitch'?'selected':''}>Twitch</option>
+                    <option value="YouTube" ${platform==='YouTube'?'selected':''}>YouTube</option>
+                    <option value="Kick" ${platform==='Kick'?'selected':''}>Kick</option>
+                    <option value="Andere" ${platform==='Andere'?'selected':''}>Andere</option>
+                </select>
+                <input type="text" class="stream-url" placeholder="z.B. twitch.tv/deinkanal" value="${url}" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem;">
+                <button type="button" onclick="this.parentElement.remove()" style="background: transparent; border: 1px solid #dc3545; color: #dc3545; padding: 0 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2rem;">×</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function toggleTimeInputs() {
+            const isAllDay = document.getElementById('ev-all-day').checked;
+            document.getElementById('time-inputs-container').style.display = isAllDay ? 'none' : 'grid';
+        }
+
+        function toggleDateInputs() {
+            const isMultiDay = document.getElementById('ev-multi-day').checked;
+            const grid = document.getElementById('date-inputs-grid');
+            const endGroup = document.getElementById('end-date-group');
+            const dateLabel = document.getElementById('ev-date-label');
+
+            if (isMultiDay) {
+                grid.style.gridTemplateColumns = '1fr 1fr';
+                endGroup.style.display = 'block';
+                dateLabel.innerText = 'Startdatum';
+            } else {
+                grid.style.gridTemplateColumns = '1fr';
+                endGroup.style.display = 'none';
+                dateLabel.innerText = 'Datum';
+                document.getElementById('ev-date-end').value = '';
+            }
+        }
 
         async function loadTeamEvents() {
             const container = document.getElementById('team-events-list');
@@ -883,62 +2029,224 @@
             currentTeamEvents = events || []; 
 
             if (currentTeamEvents.length === 0) {
-                container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Noch keine Termine vorhanden.</p>';
+                container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; grid-column: 1/-1;">Noch keine Termine vorhanden.</p>';
                 return;
             }
 
             let html = '';
             currentTeamEvents.forEach(ev => {
-                let statusColor = '#28a745'; // Findet statt (Grün)
-                if (ev.status === 'Unklar') statusColor = '#ffcc00'; // Gelb
-                if (ev.status === 'Entfällt') statusColor = '#dc3545'; // Rot
+                let statusColor = '#28a745'; 
+                if (ev.status === 'Unklar') statusColor = '#ffcc00'; 
+                if (ev.status === 'Entfällt') statusColor = '#dc3545'; 
+
+                let dateDisplay = ev.date ? formatDateGerman(ev.date) : 'Nicht festgelegt';
+                if (ev.date && ev.date_end && ev.date !== ev.date_end) {
+                    dateDisplay = `${formatDateGerman(ev.date)} bis ${formatDateGerman(ev.date_end)}`;
+                }
+
+                let timeDisplay = ev.is_all_day ? 'Ganztägig' : `${ev.time_start || '?'} Uhr - ${ev.time_end || '?'} Uhr`;
+
+                // Rechtekontrolle für das Bearbeiten / Löschen von Events
+                let canEdit = false;
+                let canDelete = false;
+
+                if (currentMyRole === 'Admin') {
+                    canEdit = true;
+                    canDelete = true;
+                } else if (currentMyRole === 'Manager') {
+                    canEdit = true;
+                    canDelete = (ev.creator_id === activeUser.id);
+                } else if (currentMyRole === 'Mitglied') {
+                    canEdit = (ev.creator_id === activeUser.id);
+                    canDelete = (ev.creator_id === activeUser.id);
+                } else if (currentMyRole === 'Community') {
+                    canEdit = false;
+                    canDelete = false;
+                }
+
+                let actionsHtml = '';
+
+                if (canEdit || canDelete) {
+                    actionsHtml = `<div style="display:flex; gap: 8px; margin-top: 15px;">`;
+                    if (canEdit) {
+                        actionsHtml += `<button onclick="showEventModal('${ev.id}')" style="background: rgba(255,255,255,0.1); border:1px solid #aaa; color:#fff; cursor:pointer; padding: 6px; border-radius: 5px; transition: 0.2s; flex: 1; font-size: 0.85rem;">✏️ Bearbeiten</button>`;
+                    }
+                    if (canDelete) {
+                        actionsHtml += `<button onclick="deleteEvent('${ev.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px; border-radius: 5px; transition: 0.2s; flex: 1; font-size: 0.85rem;">🗑️ Löschen</button>`;
+                    }
+                    actionsHtml += `</div>`;
+                }
+
+                let streamsHtml = '';
+                if (ev.streams) {
+                    let streamsData = [];
+                    try {
+                        streamsData = JSON.parse(ev.streams);
+                    } catch(e) {
+                        streamsData = [{platform: 'Stream', url: ev.streams}];
+                    }
+                    
+                    if (streamsData.length > 0) {
+                        streamsHtml = '<div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">';
+                        streamsData.forEach(s => {
+                            let url = s.url.startsWith('http') ? s.url : 'https://' + s.url;
+                            let icon = '📺';
+                            let color = 'var(--primary)';
+                            let bg = 'rgba(209,18,18,0.2)';
+                            
+                            if (s.platform === 'Twitch') { icon = '🟪'; color = '#a970ff'; bg = 'rgba(169,112,255,0.15)'; }
+                            else if (s.platform === 'YouTube') { icon = '🟥'; color = '#ff0000'; bg = 'rgba(255,0,0,0.15)'; }
+                            else if (s.platform === 'Kick') { icon = '🟩'; color = '#53fc18'; bg = 'rgba(83,252,24,0.15)'; }
+                            
+                            streamsHtml += `
+                                <a href="${url}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: ${bg}; color: ${color}; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px solid ${color}; font-size: 0.85rem; transition: 0.2s;">
+                                    ${icon} ${s.platform} ansehen
+                                </a>
+                            `;
+                        });
+                        streamsHtml += '</div>';
+                    }
+                }
 
                 html += `
-                    <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${statusColor}; padding: 20px; border-radius: 8px; transition: 0.3s;">
-                        <div style="display:flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
-                            <div style="flex: 1; min-width: 250px;">
-                                <h4 style="color: white; font-size: 1.4rem; margin-bottom: 8px; text-transform: uppercase;">
-                                    <span style="color: var(--primary); margin-right: 8px;">[${ev.event_type || 'Event'}]</span>${ev.name}
-                                </h4>
-                                <div style="color: #bbb; font-size: 1rem; line-height: 1.6;">
-                                    📅 <strong>Datum:</strong> ${ev.date ? ev.date : 'Nicht festgelegt'} <br>
-                                    🕒 <strong>Zeit:</strong> ${ev.time_start || '?'} Uhr - ${ev.time_end || '?'} Uhr <br>
-                                    🎮 <strong>Simulation:</strong> ${ev.simulator || '-'} <br>
-                                    🏎️ <strong>Fahrzeug:</strong> ${ev.car || '-'} <br>
-                                    🏁 <strong>Strecke:</strong> ${ev.track || '-'}
-                                </div>
-                                ${ev.streams ? `
-                                <div style="margin-top: 10px;">
-                                    <a href="${ev.streams.startsWith('http') ? ev.streams : 'https://' + ev.streams}" target="_blank" style="display: inline-block; background: rgba(209,18,18,0.2); color: var(--primary); padding: 5px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px solid var(--primary); font-size: 0.9rem;">
-                                        📺 Stream ansehen
-                                    </a>
-                                </div>` : ''}
-                                <div style="color: #666; font-size: 0.85rem; margin-top: 15px;">
-                                    Erstellt von: ${ev.creator_name || 'Unbekannt'}
-                                </div>
-                            </div>
-                            
-                            <div style="display: flex; gap: 10px; flex-direction: column; align-items: flex-end;">
-                                <span style="background: ${statusColor}15; color: ${statusColor}; padding: 6px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; border: 1px solid ${statusColor}; text-transform: uppercase;">
-                                    ${ev.status}
-                                </span>
-                                <div style="display:flex; gap: 8px; margin-top: auto;">
-                                    <button onclick="showEventModal('${ev.id}')" style="background: rgba(255,255,255,0.1); border:1px solid #aaa; color:#fff; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s;">✏️ Bearbeiten</button>
-                                    <button onclick="deleteEvent('${ev.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s;">🗑️ Löschen</button>
-                                </div>
-                            </div>
+                    <div id="event-card-${ev.id}" class="${ev.status === 'Entfällt' ? 'event-canceled' : ''}" style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${statusColor}; padding: 20px; border-radius: 8px; transition: 0.3s; display: flex; flex-direction: column; height: 100%;">
+                        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <h4 class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: white; font-size: 1.2rem; margin-bottom: 0; text-transform: uppercase;">
+                                <span style="color: var(--primary); margin-right: 5px; font-size: 0.9rem; display:block;">[${ev.event_type || 'Event'}]</span>
+                                ${ev.name}
+                            </h4>
+                            <span id="status-badge-${ev.id}" style="background: ${statusColor}15; color: ${statusColor}; padding: 4px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; border: 1px solid ${statusColor}; text-transform: uppercase; white-space: nowrap;">
+                                ${ev.status}
+                            </span>
                         </div>
+                        
+                        <div class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: #bbb; font-size: 0.95rem; line-height: 1.6; flex-grow: 1;">
+                            📅 <strong>Datum:</strong> ${dateDisplay} <br>
+                            🕒 <strong>Zeit:</strong> ${timeDisplay} <br>
+                            🎮 <strong>Sim:</strong> ${ev.simulator || '-'} <br>
+                            🏎️ <strong>Car:</strong> ${ev.car || '-'} <br>
+                            🏁 <strong>Track:</strong> ${ev.track || '-'}
+                        </div>
+                        
+                        ${streamsHtml}
+
+                        <div id="countdown-${ev.id}" style="font-size: 0.95rem; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); color: #ccc;">
+                            Lade Countdown...
+                        </div>
+                        
+                        <div class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: #666; font-size: 0.8rem; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">
+                            Erstellt von: ${ev.creator_name || 'Unbekannt'}
+                        </div>
+                        
+                        ${actionsHtml}
                     </div>
                 `;
             });
             container.innerHTML = html;
+            
+            // Starte den Ticker für alle gerade geladenen Events
+            startEventTicker();
+        }
+
+        // --- TICKER & COUNTDOWN LOGIK ---
+        function parseEventDate(dateStr, timeStr, defaultTime) {
+            if (!dateStr) return null;
+            let t = timeStr || defaultTime;
+            if (t.split(':').length === 2) {
+                t += ':00'; // Füge Sekunden hinzu falls sie fehlen
+            }
+            return new Date(`${dateStr}T${t}`);
+        }
+
+        function startEventTicker() {
+            if (eventTickerInterval) clearInterval(eventTickerInterval);
+            updateCountdowns(); // Sofort einmal ausführen
+            eventTickerInterval = setInterval(updateCountdowns, 1000); // Dann sekündlich
+        }
+
+        function updateCountdowns() {
+            const now = new Date();
+            
+            currentTeamEvents.forEach(ev => {
+                const card = document.getElementById(`event-card-${ev.id}`);
+                const cd = document.getElementById(`countdown-${ev.id}`);
+                const badge = document.getElementById(`status-badge-${ev.id}`);
+                
+                if (!card || !cd) return;
+
+                // Entfällt-Status blockiert den restlichen Timer
+                if (ev.status === 'Entfällt') {
+                    cd.innerHTML = '<span style="color: #dc3545; font-weight: bold;">Kein Countdown (Entfällt)</span>';
+                    return;
+                }
+
+                if (!ev.date) {
+                    cd.innerHTML = '<span style="color: #aaa;">Kein Datum hinterlegt</span>';
+                    return;
+                }
+
+                let startTime = parseEventDate(ev.date, ev.time_start, '00:00:00');
+                let endTime = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59');
+
+                if (now < startTime) {
+                    // Zukunft -> Countdown berechnen
+                    card.classList.remove('live-glow');
+                    let diff = startTime - now;
+                    
+                    let days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    let hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+                    let mins = Math.floor((diff / 1000 / 60) % 60);
+                    let secs = Math.floor((diff / 1000) % 60);
+                    
+                    let hStr = hours.toString().padStart(2, '0');
+                    let mStr = mins.toString().padStart(2, '0');
+                    let sStr = secs.toString().padStart(2, '0');
+                    
+                    let cdText = days > 0 ? `${days}d ${hStr}:${mStr}:${sStr}` : `${hStr}:${mStr}:${sStr}`;
+                    cd.innerHTML = `⏳ Startet in: <strong style="color: white; font-family: monospace; font-size: 1.05rem;">${cdText}</strong>`;
+                    
+                    // Sicherheitshalber den Badge-Text zurücksetzen falls er verfälscht wurde
+                    if (badge && badge.innerText === 'LIVE') {
+                        badge.innerText = ev.status;
+                        let color = ev.status === 'Unklar' ? '#ffcc00' : '#28a745';
+                        badge.style.background = `${color}15`;
+                        badge.style.color = color;
+                        badge.style.borderColor = color;
+                    }
+
+                } else if (now >= startTime && now <= endTime) {
+                    // JETZT LIVE
+                    card.classList.add('live-glow');
+                    cd.innerHTML = `<span style="color: #ff0000; font-weight: bold; animation: textPulse 1.5s infinite; display: inline-block;">🔴 Event läuft gerade!</span>`;
+                    
+                    if (badge && badge.innerText !== 'LIVE') {
+                        badge.innerText = 'LIVE';
+                        badge.style.background = 'rgba(255,0,0,0.15)';
+                        badge.style.color = '#ff0000';
+                        badge.style.borderColor = '#ff0000';
+                    }
+
+                } else {
+                    // Vergangenheit -> Beendet
+                    card.classList.remove('live-glow');
+                    cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
+                }
+            });
+        }
+
+        // -------------------------------------------------------------
+
+        function formatDateGerman(dateString) {
+            if(!dateString) return '';
+            const parts = dateString.split('-');
+            if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`;
+            return dateString;
         }
 
         function showEventModal(eventId = null) {
             document.getElementById('event-modal').style.display = 'flex';
             
             if (eventId) {
-                // Bearbeiten-Modus
                 document.getElementById('event-modal-title').innerText = "Termin bearbeiten";
                 currentEditEventId = eventId;
                 
@@ -947,30 +2255,52 @@
                     document.getElementById('ev-name').value = ev.name || '';
                     document.getElementById('ev-type').value = ev.event_type || 'Training';
                     document.getElementById('ev-date').value = ev.date || '';
+                    document.getElementById('ev-date-end').value = ev.date_end || ''; 
+                    document.getElementById('ev-all-day').checked = !!ev.is_all_day;
+                    document.getElementById('ev-multi-day').checked = !!(ev.date_end && ev.date !== ev.date_end);  
                     document.getElementById('ev-status').value = ev.status || 'Findet statt';
                     document.getElementById('ev-start').value = ev.time_start || '';
                     document.getElementById('ev-end').value = ev.time_end || '';
                     document.getElementById('ev-sim').value = ev.simulator || '';
                     document.getElementById('ev-car').value = ev.car || '';
                     document.getElementById('ev-track').value = ev.track || '';
-                    document.getElementById('ev-streams').value = ev.streams || '';
+                    
+                    document.getElementById('streams-container').innerHTML = '';
+                    if (ev.streams) {
+                        try {
+                            const parsed = JSON.parse(ev.streams);
+                            parsed.forEach(s => addStreamInput(s.platform, s.url));
+                        } catch(e) {
+                            addStreamInput('Andere', ev.streams);
+                        }
+                    }
+                    if (document.getElementById('streams-container').children.length === 0) {
+                        addStreamInput();
+                    }
                 }
             } else {
-                // Erstellen-Modus
                 document.getElementById('event-modal-title').innerText = "Neuen Termin erstellen";
                 currentEditEventId = null;
                 
                 document.getElementById('ev-name').value = '';
                 document.getElementById('ev-type').value = 'Training';
                 document.getElementById('ev-date').value = '';
+                document.getElementById('ev-date-end').value = '';  
+                document.getElementById('ev-all-day').checked = false; 
+                document.getElementById('ev-multi-day').checked = false;
                 document.getElementById('ev-status').value = 'Findet statt';
                 document.getElementById('ev-start').value = '';
                 document.getElementById('ev-end').value = '';
                 document.getElementById('ev-sim').value = '';
                 document.getElementById('ev-car').value = '';
                 document.getElementById('ev-track').value = '';
-                document.getElementById('ev-streams').value = '';
+                
+                document.getElementById('streams-container').innerHTML = '';
+                addStreamInput();
             }
+            
+            toggleTimeInputs();
+            toggleDateInputs();
         }
 
         function closeEventModal() {
@@ -979,50 +2309,81 @@
         }
 
         async function saveEvent() {
-            if (!supabaseClient) return alert("Demo-Modus");
+            if (!supabaseClient) {
+                showToast("Demo-Modus", "info");
+                return;
+            }
+            
+            if (currentMyRole === 'Community') {
+                showToast("Keine Berechtigung!", "error");
+                return;
+            }
+
+            const isAllDay = document.getElementById('ev-all-day').checked;
+            const isMultiDay = document.getElementById('ev-multi-day').checked;
+
+            const streamRows = document.querySelectorAll('.stream-input-row');
+            let streamsArray = [];
+            streamRows.forEach(row => {
+                const plat = row.querySelector('.stream-platform').value;
+                const url = row.querySelector('.stream-url').value.trim();
+                if (url) {
+                    streamsArray.push({ platform: plat, url: url });
+                }
+            });
+            const streamsJson = streamsArray.length > 0 ? JSON.stringify(streamsArray) : null;
 
             const payload = {
                 team_id: currentOpenTeamId,
                 name: document.getElementById('ev-name').value.trim(),
                 event_type: document.getElementById('ev-type').value,
                 date: document.getElementById('ev-date').value || null,
+                date_end: isMultiDay ? (document.getElementById('ev-date-end').value || null) : null,
+                is_all_day: isAllDay,
                 status: document.getElementById('ev-status').value,
-                time_start: document.getElementById('ev-start').value || null,
-                time_end: document.getElementById('ev-end').value || null,
+                time_start: isAllDay ? null : (document.getElementById('ev-start').value || null),
+                time_end: isAllDay ? null : (document.getElementById('ev-end').value || null),
                 simulator: document.getElementById('ev-sim').value.trim(),
                 car: document.getElementById('ev-car').value.trim(),
                 track: document.getElementById('ev-track').value.trim(),
-                streams: document.getElementById('ev-streams').value.trim(),
+                streams: streamsJson,
             };
 
-            if (!payload.name) return alert("Bitte gib dem Event mindestens einen Namen!");
+            if (!payload.name) {
+                showToast("Bitte gib dem Event mindestens einen Namen!", "error");
+                return;
+            }
 
             if (currentEditEventId) {
-                // Termin updaten
                 const { error } = await supabaseClient.from('events').update(payload).eq('id', currentEditEventId);
-                if (error) alert("Fehler beim Aktualisieren: " + error.message);
+                if (error) showToast("Fehler beim Aktualisieren: " + error.message, "error");
+                else showToast("Termin aktualisiert.", "success");
             } else {
-                // Neuen Termin anlegen
                 payload.creator_name = `${activeUser.first_name} ${activeUser.last_name}`;
+                if (activeUser.id) payload.creator_id = activeUser.id; 
+
                 const { error } = await supabaseClient.from('events').insert([payload]);
-                if (error) alert("Fehler beim Erstellen: " + error.message);
+                if (error) showToast("Fehler beim Erstellen: " + error.message, "error");
+                else showToast("Termin erstellt.", "success");
             }
 
             closeEventModal();
             loadTeamEvents(); 
         }
 
-        async function deleteEvent(id) {
-            if(!confirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?")) return;
-            if (!supabaseClient) return;
+        function deleteEvent(id) {
+            customConfirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?", async () => {
+                if (!supabaseClient) return;
 
-            const { error } = await supabaseClient.from('events').delete().eq('id', id);
-            
-            if (error) {
-                alert("Fehler beim Löschen: " + error.message);
-            } else {
-                loadTeamEvents(); 
-            }
+                const { error } = await supabaseClient.from('events').delete().eq('id', id);
+                
+                if (error) {
+                    showToast("Fehler beim Löschen: " + error.message, "error");
+                } else {
+                    showToast("Termin gelöscht.", "success");
+                    loadTeamEvents();
+                }
+            });
         }
 
     </script>
