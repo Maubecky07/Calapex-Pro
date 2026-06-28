@@ -1186,22 +1186,34 @@
             let count = 0;
             
             for (const id in state) {
-                state[id].forEach(user => {
-                    count++;
-                    const status = user.status || 'online';
-                    const isAway = status === 'away';
-                    
-                    const dotColor = isAway ? '#ffcc00' : '#00ff00';
-                    const glowColor = isAway ? 'rgba(255, 204, 0, 0.6)' : 'rgba(0, 255, 0, 0.6)';
-                    const statusText = isAway ? '<span style="color: #ffcc00; font-size: 0.8rem; margin-left: 5px;">(Abwesend)</span>' : '';
-                    
-                    listDiv.innerHTML += `
-                        <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; color: white; display: flex; align-items: center; gap: 8px;">
-                            <span style="display:inline-block; width:8px; height:8px; background:${dotColor}; border-radius:50%; box-shadow: 0 0 8px ${glowColor}; flex-shrink: 0;"></span>
-                            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${user.user_name}</span> ${statusText}
-                        </div>`;
-                });
+                const connections = state[id];
+                if (!connections || connections.length === 0) continue;
+                
+                count++;
+                
+                // Zusammenfassen: Wenn auch nur eine Session "online" ist, gilt der Fahrer als online.
+                let finalStatus = 'away';
+                let userName = connections[0].user_name || 'Unbekannt';
+                
+                for (const conn of connections) {
+                    if (conn.status === 'online') {
+                        finalStatus = 'online';
+                        break;
+                    }
+                }
+                
+                const isAway = finalStatus === 'away';
+                const dotColor = isAway ? '#ffcc00' : '#00ff00';
+                const glowColor = isAway ? 'rgba(255, 204, 0, 0.6)' : 'rgba(0, 255, 0, 0.6)';
+                const statusText = isAway ? '<span style="color: #ffcc00; font-size: 0.8rem; margin-left: 5px;">(Abwesend)</span>' : '';
+                
+                listDiv.innerHTML += `
+                    <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; color: white; display: flex; align-items: center; gap: 8px;">
+                        <span style="display:inline-block; width:8px; height:8px; background:${dotColor}; border-radius:50%; box-shadow: 0 0 8px ${glowColor}; flex-shrink: 0;"></span>
+                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</span> ${statusText}
+                    </div>`;
             }
+            
             if (count === 0) listDiv.innerHTML = `<span style="color: #aaa; font-size: 0.9rem;">Derzeit niemand online</span>`;
         }
 
