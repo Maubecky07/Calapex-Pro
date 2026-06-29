@@ -388,7 +388,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>Version</label>
-                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.4">
+                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.5">
                 </div>
                 <div class="form-group">
                     <label>Typ</label>
@@ -435,6 +435,10 @@
                     <option>rFactor 2</option>
                     <option>Multi-Sim</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>Discord Webhook URL (optional)</label>
+                <input type="text" id="edit-team-webhook" placeholder="https://discord.com/api/webhooks/...">
             </div>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn-submit" onclick="saveTeamEdit()">Speichern</button>
@@ -631,7 +635,7 @@
             
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
-                Calapex Beta | v3.1.4
+                Calapex Beta | v3.1.5
             </div>
         </main>
         <!-- ================= ENDE STARTSEITE ================= -->
@@ -677,7 +681,7 @@
             
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.4
+                Calapex Beta | v3.1.5
             </div>
         </main>
         
@@ -719,7 +723,7 @@
 
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.4
+                Calapex Beta | v3.1.5
             </div>
         </main>
 
@@ -1043,7 +1047,6 @@
                 showToast("Fehler bei der Registrierung: " + error.message, "error");
             } else {
                 // 2. Den neuen User direkt in deine app_users Tabelle schreiben.
-                // Das Klartext-Passwort setzen wir auf NULL, da er jetzt sicher verschlüsselt ist.
                 if (data.user) {
                     await supabaseClient.from('app_users').insert([{
                         id: data.user.id,
@@ -1088,14 +1091,14 @@
                 return;
             }
 
-            // 2. ALTER USER (Legacy Login): Hat er noch sein Passwort im Klartext?
+            // 2. ALTER USER (Legacy Login)
             if (dbUser.password && dbUser.password === pw) {
                 activeUser = dbUser;
                 processLoginSuccess();
                 return;
             }
 
-            // 3. NEUER USER (Supabase Auth): Anmeldung im Hintergrund über die gefundene E-Mail
+            // 3. NEUER USER (Supabase Auth)
             if (dbUser.email) {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: dbUser.email,
@@ -1111,7 +1114,6 @@
                     return;
                 }
 
-                // Erfolgreich eingeloggt!
                 activeUser = {
                     id: data.user.id,
                     first_name: dbUser.first_name,
@@ -1145,10 +1147,7 @@
             document.getElementById('online-users-widget').style.display = 'none'; 
             if (eventTickerInterval) clearInterval(eventTickerInterval);
             
-            // Falls echtes Auth verwendet wird, auch die Session beenden:
             if(supabaseClient) supabaseClient.auth.signOut();
-
-            // Bringt uns nun auf die Landing-Page statt zum Login zurück
             openView('view-landing'); 
         }
 
@@ -1216,7 +1215,6 @@
                 })
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_global_chat' }, payload => {
                     appendChatMessage(payload.new);
-                    // Nur nach unten scrollen, wenn das Home-Menü gerade auch offen ist
                     if (document.getElementById('view-home').classList.contains('active')) {
                         scrollToChatBottom();
                     }
@@ -1243,7 +1241,6 @@
                 config: { presence: { key: safeUserId } },
             });
 
-            // Explizite Anbindung an sync, join und leave Events für 100% Sicherheit bei Live-Updates
             presenceChannel
                 .on('presence', { event: 'sync' }, () => {
                     if (presenceChannel) renderOnlineUsers(presenceChannel.presenceState());
@@ -1301,7 +1298,6 @@
             if (!presenceChannel || !activeUser) return;
             const userName = `${activeUser.first_name} ${activeUser.last_name}`;
             await presenceChannel.track({ user_name: userName, status: newStatus });
-            // Sync kümmert sich ab hier von alleine über die Event-Listener um die UI
         }
 
         function renderOnlineUsers(state) {
@@ -1320,7 +1316,6 @@
                     
                     count++;
                     
-                    // Zusammenfassen: Wenn auch nur eine Session "online" ist, gilt der Fahrer als online.
                     let finalStatus = 'away';
                     let userName = connections[0].user_name || 'Unbekannt';
                     
@@ -1407,7 +1402,6 @@
         function appendChatMessage(msg) {
             const container = document.getElementById('global-chat-messages');
             
-            // Neu: Duplikate durch Live-Sync & lokales Einfügen verhindern
             if (msg.id && document.getElementById('chat-msg-' + msg.id)) return; 
 
             const noMsgHint = document.getElementById('no-msg-hint');
@@ -1440,7 +1434,7 @@
             
             if (!text || !activeUser) return;
 
-            input.value = ''; // Sofort leeren fürs gute UX-Gefühl
+            input.value = ''; 
 
             if (!supabaseClient) {
                 showToast("Demo-Modus: Chat funktioniert ohne Datenbank nur lokal.", "info");
@@ -1466,7 +1460,6 @@
             if (error) {
                 showToast("Fehler beim Senden: " + error.message, "error");
             } else if (data && data.length > 0) {
-                // Sofort lokal anzeigen
                 appendChatMessage(data[0]);
                 scrollToChatBottom();
             }
@@ -1609,7 +1602,6 @@
                 return;
             }
 
-            // Patchlog nach Versionen gruppieren
             const versionOrder = [];
             const groupedLogs = {};
 
@@ -1624,7 +1616,6 @@
 
             let html = '';
             
-            // Schleife durch alle gesammelten Versionen (chronologisch anhand der neusten Einträge)
             versionOrder.forEach(version => {
                 const entries = groupedLogs[version];
 
@@ -1792,6 +1783,7 @@
             if(!currentTeamData) return;
             document.getElementById('edit-team-name').value = currentTeamData.name;
             document.getElementById('edit-team-sim').value = currentTeamData.sim;
+            document.getElementById('edit-team-webhook').value = currentTeamData.discord_webhook_url || '';
             document.getElementById('edit-team-logo').value = '';
             document.getElementById('edit-team-modal').style.display = 'flex';
         }
@@ -1803,6 +1795,7 @@
         async function saveTeamEdit() {
             const name = document.getElementById('edit-team-name').value.trim();
             const sim = document.getElementById('edit-team-sim').value;
+            const webhookUrl = document.getElementById('edit-team-webhook').value.trim();
             const logoInput = document.getElementById('edit-team-logo');
 
             if(!name) {
@@ -1810,7 +1803,7 @@
                 return;
             }
 
-            let logoUrl = currentTeamData.logo_url; // Altes Logo behalten, falls kein neues gewählt wurde
+            let logoUrl = currentTeamData.logo_url;
 
             if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
                 const file = logoInput.files[0];
@@ -1834,7 +1827,7 @@
             }
 
             const { error } = await supabaseClient.from('teams').update({
-                name: name, sim: sim, logo_url: logoUrl
+                name: name, sim: sim, logo_url: logoUrl, discord_webhook_url: webhookUrl
             }).eq('id', currentOpenTeamId);
 
             if(error) {
@@ -1845,10 +1838,10 @@
             showToast("Team erfolgreich aktualisiert!", "success");
             closeEditTeamModal();
             
-            // UI Updaten
             currentTeamData.name = name;
             currentTeamData.sim = sim;
             currentTeamData.logo_url = logoUrl;
+            currentTeamData.discord_webhook_url = webhookUrl;
             document.getElementById('calendar-team-name').innerText = name;
         }
 
@@ -1992,7 +1985,6 @@
             const btnEditTeam = document.getElementById('btn-edit-team');
             const btnNewEvent = document.getElementById('btn-new-event');
             
-            // "Neuer Termin" ist für alle sichtbar, AUSSER Community
             btnNewEvent.style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
 
             if(currentMyRole === 'Admin' || currentMyRole === 'Manager') {
@@ -2004,7 +1996,7 @@
                 if (currentMyRole === 'Admin') {
                     btnEditTeam.style.display = 'inline-block';
                 } else {
-                    btnEditTeam.style.display = 'none'; // Manager darf Team nicht bearbeiten
+                    btnEditTeam.style.display = 'none'; 
                 }
             } else {
                 adminControls.style.display = 'none';
@@ -2025,7 +2017,6 @@
             
             const menu = document.getElementById('context-menu');
             
-            // Dynamisch Menü-Inhalt anhand der eigenen Rolle erzeugen
             let html = `
                 <div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;" id="context-user-name-display">Aktion für: ${userName}</div>
                 <hr>
@@ -2035,7 +2026,6 @@
                 html += `<div onclick="updateMemberRole('Admin')">👑 Admin</div>`;
             }
             
-            // Manager dürfen Rollen verteilen, aber niemanden zum Admin machen
             html += `
                 <div onclick="updateMemberRole('Manager')">🛠️ Manager</div>
                 <div onclick="updateMemberRole('Mitglied')">👤 Mitglied</div>
@@ -2115,7 +2105,6 @@
                 if(m.role === 'Mitglied') color = '#28a745';
                 if(m.role === 'Community') color = '#17a2b8';
 
-                // Rechtekontrolle für das Kontext-Menü
                 const isSelf = m.user_id === activeUser.id;
                 const targetIsAdmin = m.role === 'Admin';
                 let canManageUser = false;
@@ -2223,6 +2212,80 @@
 
         // ================= EVENT / KALENDER FUNKTIONEN =================
 
+        // --- DISCORD WEBHOOK LOGIK ---
+        async function sendDiscordWebhook(webhookUrl, payload) {
+            try {
+                const res = await fetch(webhookUrl + "?wait=true", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    return data.id; 
+                }
+            } catch (e) { console.error("Discord Webhook Error:", e); }
+            return null;
+        }
+
+        async function editDiscordWebhook(webhookUrl, messageId, payload) {
+            try {
+                await fetch(`${webhookUrl}/messages/${messageId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) { console.error("Discord Webhook Edit Error:", e); }
+        }
+
+        async function deleteDiscordWebhook(webhookUrl, messageId) {
+            try {
+                await fetch(`${webhookUrl}/messages/${messageId}`, { method: 'DELETE' });
+            } catch (e) { console.error("Discord Webhook Delete Error:", e); }
+        }
+
+        function buildDiscordEmbed(payload, ev) {
+            let color = 2664261; // Grün für Findet statt
+            if (payload.status === 'Unklar') color = 16763904; // Gelb
+            if (payload.status === 'Entfällt') color = 14431557; // Rot
+
+            let dateDisplay = payload.date ? formatDateGerman(payload.date) : 'Nicht festgelegt';
+            if (payload.date && payload.date_end && payload.date !== payload.date_end) {
+                dateDisplay = `${formatDateGerman(payload.date)} bis ${formatDateGerman(payload.date_end)}`;
+            }
+            let timeDisplay = payload.is_all_day ? 'Ganztägig' : `${payload.time_start || '?'} Uhr - ${payload.time_end || '?'} Uhr`;
+
+            const creatorName = ev && ev.creator_name ? ev.creator_name : payload.creator_name || 'Unbekannt';
+
+            let streamsText = "-";
+            if (payload.streams) {
+                try {
+                    let parsed = JSON.parse(payload.streams);
+                    if(parsed.length > 0) {
+                        streamsText = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join('\n');
+                    }
+                } catch(e){}
+            }
+
+            return {
+                embeds: [{
+                    title: `[${payload.event_type || 'Event'}] ${payload.name}`,
+                    color: color,
+                    fields: [
+                        { name: "📅 Datum", value: dateDisplay, inline: true },
+                        { name: "🕒 Zeit", value: timeDisplay, inline: true },
+                        { name: "🚦 Status", value: payload.status, inline: true },
+                        { name: "🎮 Simulator", value: payload.simulator || '-', inline: true },
+                        { name: "🏎️ Fahrzeug", value: payload.car || '-', inline: true },
+                        { name: "🏁 Strecke", value: payload.track || '-', inline: true },
+                        { name: "📺 Streams", value: streamsText, inline: false }
+                    ],
+                    footer: { text: `Erstellt von: ${creatorName}` }
+                }]
+            };
+        }
+        // -----------------------------
+
         function addStreamInput(platform = 'Twitch', url = '') {
             const container = document.getElementById('streams-container');
             const row = document.createElement('div');
@@ -2305,7 +2368,6 @@
 
                 let timeDisplay = ev.is_all_day ? 'Ganztägig' : `${ev.time_start || '?'} Uhr - ${ev.time_end || '?'} Uhr`;
 
-                // Rechtekontrolle für das Bearbeiten / Löschen von Events
                 let canEdit = false;
                 let canDelete = false;
 
@@ -2403,7 +2465,6 @@
             });
             container.innerHTML = html;
             
-            // Starte den Ticker für alle gerade geladenen Events
             startEventTicker();
         }
 
@@ -2412,15 +2473,15 @@
             if (!dateStr) return null;
             let t = timeStr || defaultTime;
             if (t.split(':').length === 2) {
-                t += ':00'; // Füge Sekunden hinzu falls sie fehlen
+                t += ':00'; 
             }
             return new Date(`${dateStr}T${t}`);
         }
 
         function startEventTicker() {
             if (eventTickerInterval) clearInterval(eventTickerInterval);
-            updateCountdowns(); // Sofort einmal ausführen
-            eventTickerInterval = setInterval(updateCountdowns, 1000); // Dann sekündlich
+            updateCountdowns(); 
+            eventTickerInterval = setInterval(updateCountdowns, 1000); 
         }
 
         function updateCountdowns() {
@@ -2433,7 +2494,6 @@
                 
                 if (!card || !cd) return;
 
-                // Entfällt-Status blockiert den restlichen Timer
                 if (ev.status === 'Entfällt') {
                     cd.innerHTML = '<span style="color: #dc3545; font-weight: bold;">Kein Countdown (Entfällt)</span>';
                     return;
@@ -2448,7 +2508,6 @@
                 let endTime = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59');
 
                 if (now < startTime) {
-                    // Zukunft -> Countdown berechnen
                     card.classList.remove('live-glow');
                     let diff = startTime - now;
                     
@@ -2464,7 +2523,6 @@
                     let cdText = days > 0 ? `${days}d ${hStr}:${mStr}:${sStr}` : `${hStr}:${mStr}:${sStr}`;
                     cd.innerHTML = `⏳ Startet in: <strong style="color: white; font-family: monospace; font-size: 1.05rem;">${cdText}</strong>`;
                     
-                    // Sicherheitshalber den Badge-Text zurücksetzen falls er verfälscht wurde
                     if (badge && badge.innerText === 'LIVE') {
                         badge.innerText = ev.status;
                         let color = ev.status === 'Unklar' ? '#ffcc00' : '#28a745';
@@ -2474,7 +2532,6 @@
                     }
 
                 } else if (now >= startTime && now <= endTime) {
-                    // JETZT LIVE
                     card.classList.add('live-glow');
                     cd.innerHTML = `<span style="color: #ff0000; font-weight: bold; animation: textPulse 1.5s infinite; display: inline-block;">🔴 Event läuft gerade!</span>`;
                     
@@ -2486,9 +2543,20 @@
                     }
 
                 } else {
-                    // Vergangenheit -> Beendet
                     card.classList.remove('live-glow');
                     cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
+                    
+                    // DISCORD WEBHOOK AUTO-DELETE WENN EVENT BEENDET IST
+                    if (ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
+                        // Nur Admins / Manager triggern das Löschen, um Spam/Rate Limits bei vielen Leuten zu verhindern
+                        if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
+                            deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
+                            if (supabaseClient) {
+                                supabaseClient.from('events').update({ discord_message_id: null }).eq('id', ev.id).then();
+                            }
+                        }
+                        ev.discord_message_id = null; // lokal direkt löschen um Mehrfachausführung zu blocken
+                    }
                 }
             });
         }
@@ -2613,6 +2681,23 @@
                 return;
             }
 
+            // DISCORD WEBHOOK LOGIK
+            let oldEvent = currentEditEventId ? currentTeamEvents.find(e => e.id === currentEditEventId) : null;
+            let msgId = oldEvent ? oldEvent.discord_message_id : null;
+
+            if (currentTeamData && currentTeamData.discord_webhook_url) {
+                const embedPayload = buildDiscordEmbed(payload, oldEvent);
+                if (currentEditEventId && msgId) {
+                    await editDiscordWebhook(currentTeamData.discord_webhook_url, msgId, embedPayload);
+                } else {
+                    const newMsgId = await sendDiscordWebhook(currentTeamData.discord_webhook_url, embedPayload);
+                    if (newMsgId) {
+                        payload.discord_message_id = newMsgId;
+                    }
+                }
+            }
+
+            // DATENBANK SPEICHERN
             if (currentEditEventId) {
                 const { error } = await supabaseClient.from('events').update(payload).eq('id', currentEditEventId);
                 if (error) showToast("Fehler beim Aktualisieren: " + error.message, "error");
@@ -2633,6 +2718,12 @@
         function deleteEvent(id) {
             customConfirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?", async () => {
                 if (!supabaseClient) return;
+
+                // DISCORD WEBHOOK LÖSCHEN WENN EVENT GELÖSCHT WIRD
+                const ev = currentTeamEvents.find(e => e.id === id);
+                if (ev && ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
+                    await deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
+                }
 
                 const { error } = await supabaseClient.from('events').delete().eq('id', id);
                 
