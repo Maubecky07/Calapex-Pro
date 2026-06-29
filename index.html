@@ -869,7 +869,7 @@
         let presenceChannel = null;
         let dataSubscriptionChannel = null; 
         let currentOpenTeamId = null;
-        let currentTeamData = null; // Speichert aktuelle Team-Infos ab (fürs Bearbeiten)
+        let currentTeamData = null; 
         let currentMyRole = null; 
         let currentTeamEvents = []; 
         let currentEditEventId = null; 
@@ -893,7 +893,6 @@
                 var windowHeight = window.innerHeight;
                 var elementTop = reveals[i].getBoundingClientRect().top;
                 var elementVisible = 100;
-                // Check against 0 avoids activating elements inside hidden views
                 if (elementTop < windowHeight - elementVisible && elementTop !== 0) {
                     reveals[i].classList.add("active");
                 }
@@ -954,7 +953,7 @@
             
             setTimeout(() => { 
                 document.getElementById(viewId).classList.add('active'); 
-                reveal(); // Trigger animations in new view
+                reveal(); 
             }, 50);
             
             if(viewId === 'view-teams-main') {
@@ -962,7 +961,7 @@
             }
             
             if(viewId === 'view-home' && activeUser) {
-                loadGlobalChat(); // Lade Chat neu, wenn man ins Hauptmenü zurückkehrt
+                loadGlobalChat(); 
             }
 
             const onlineWidget = document.getElementById('online-users-widget');
@@ -1031,7 +1030,6 @@
                 return;
             }
 
-            // 1. Sichere Registrierung für die E-Mail-Bestätigung starten
             const { data, error } = await supabaseClient.auth.signUp({
                 email: em,
                 password: pw,
@@ -1046,7 +1044,6 @@
             if (error) {
                 showToast("Fehler bei der Registrierung: " + error.message, "error");
             } else {
-                // 2. Den neuen User direkt in deine app_users Tabelle schreiben.
                 if (data.user) {
                     await supabaseClient.from('app_users').insert([{
                         id: data.user.id,
@@ -1078,7 +1075,6 @@
                 return;
             }
 
-            // 1. Suche den User anhand von Vor- und Nachname in deiner Tabelle
             const { data: dbUser, error: dbError } = await supabaseClient
                 .from('app_users')
                 .select('*')
@@ -1091,14 +1087,12 @@
                 return;
             }
 
-            // 2. ALTER USER (Legacy Login)
             if (dbUser.password && dbUser.password === pw) {
                 activeUser = dbUser;
                 processLoginSuccess();
                 return;
             }
 
-            // 3. NEUER USER (Supabase Auth)
             if (dbUser.email) {
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: dbUser.email,
@@ -1193,7 +1187,7 @@
                                 }
                                 
                                 document.getElementById('btn-new-event').style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
-                                loadTeamEvents(); // Neuladen wegen Event-Rechten
+                                loadTeamEvents(); 
                             }
                         }
 
@@ -2244,6 +2238,35 @@
             } catch (e) { console.error("Discord Webhook Delete Error:", e); }
         }
 
+        async function sendDiscordReminderWebhook(webhookUrl, payload) {
+            let streamsText = "";
+            if (payload.streams) {
+                try {
+                    let parsed = JSON.parse(payload.streams);
+                    if(parsed.length > 0) {
+                        let streamLinks = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join(' | ');
+                        streamsText = `\n📺 **Streams:** ${streamLinks}`;
+                    }
+                } catch(e){}
+            }
+
+            const embed = {
+                content: "⏳ **Erinnerung:** Ein Event startet in Kürze!",
+                embeds: [{
+                    title: `[${payload.event_type || 'Event'}] ${payload.name}`,
+                    description: `Das Event beginnt in **1 Stunde**!\n\n🎮 **Simulator:** ${payload.simulator || '-'}\n🏎️ **Fahrzeug:** ${payload.car || '-'}\n🏁 **Strecke:** ${payload.track || '-'}${streamsText}`,
+                    color: 16763904, // Gelb
+                }]
+            };
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(embed)
+                });
+            } catch (e) { console.error("Discord Reminder Webhook Error:", e); }
+        }
+
         function buildDiscordEmbed(payload, ev) {
             let color = 2664261; // Grün für Findet statt
             if (payload.status === 'Unklar') color = 16763904; // Gelb
@@ -2531,6 +2554,17 @@
                         badge.style.borderColor = color;
                     }
 
+                    // --- DISCORD 1-STUNDE ERINNERUNG LOGIK ---
+                    // Triggert nur, wenn der Timer genau zwischen 60 und 59:58 Minuten steht (2-Sekunden Fenster)
+                    if (diff <= 3600000 && diff > 3598000 && !ev._reminderSentLocally) {
+                        ev._reminderSentLocally = true; 
+                        
+                        // Nur ein Admin / Manager schickt die Erinnerung, um mehrfachen Spam zu vermeiden
+                        if ((currentMyRole === 'Admin' || currentMyRole === 'Manager') && currentTeamData && currentTeamData.discord_webhook_url) {
+                            sendDiscordReminderWebhook(currentTeamData.discord_webhook_url, ev);
+                        }
+                    }
+
                 } else if (now >= startTime && now <= endTime) {
                     card.classList.add('live-glow');
                     cd.innerHTML = `<span style="color: #ff0000; font-weight: bold; animation: textPulse 1.5s infinite; display: inline-block;">🔴 Event läuft gerade!</span>`;
@@ -2546,16 +2580,14 @@
                     card.classList.remove('live-glow');
                     cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
                     
-                    // DISCORD WEBHOOK AUTO-DELETE WENN EVENT BEENDET IST
                     if (ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
-                        // Nur Admins / Manager triggern das Löschen, um Spam/Rate Limits bei vielen Leuten zu verhindern
                         if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
                             deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
                             if (supabaseClient) {
                                 supabaseClient.from('events').update({ discord_message_id: null }).eq('id', ev.id).then();
                             }
                         }
-                        ev.discord_message_id = null; // lokal direkt löschen um Mehrfachausführung zu blocken
+                        ev.discord_message_id = null; 
                     }
                 }
             });
@@ -2681,7 +2713,6 @@
                 return;
             }
 
-            // DISCORD WEBHOOK LOGIK
             let oldEvent = currentEditEventId ? currentTeamEvents.find(e => e.id === currentEditEventId) : null;
             let msgId = oldEvent ? oldEvent.discord_message_id : null;
 
@@ -2697,7 +2728,6 @@
                 }
             }
 
-            // DATENBANK SPEICHERN
             if (currentEditEventId) {
                 const { error } = await supabaseClient.from('events').update(payload).eq('id', currentEditEventId);
                 if (error) showToast("Fehler beim Aktualisieren: " + error.message, "error");
@@ -2719,7 +2749,6 @@
             customConfirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?", async () => {
                 if (!supabaseClient) return;
 
-                // DISCORD WEBHOOK LÖSCHEN WENN EVENT GELÖSCHT WIRD
                 const ev = currentTeamEvents.find(e => e.id === id);
                 if (ev && ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
                     await deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
