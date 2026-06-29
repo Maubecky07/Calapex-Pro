@@ -342,6 +342,7 @@
 </head>
 <body>
 
+    <!-- NEUE HINTERGRUND STRUKTUR (Fix für Mobile Safari) -->
     <div class="background-wrapper">
         <div class="bg-gradient"></div>
         <div class="bg-pattern"></div>
@@ -360,6 +361,7 @@
         </div>
     </div>
 
+    <!-- News Modal -->
     <div id="news-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">News erstellen</h2>
@@ -378,6 +380,7 @@
         </div>
     </div>
 
+    <!-- Patchlog Modal -->
     <div id="patchlog-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
@@ -412,6 +415,7 @@
         </div>
     </div>
 
+    <!-- Edit Team Modal -->
     <div id="edit-team-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
@@ -440,7 +444,8 @@
     </div>
 
     <div id="context-menu" class="context-menu">
-        </div>
+        <!-- Generiert durch JS basierend auf Berechtigungen -->
+    </div>
 
     <div id="profile-badge">
         <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
@@ -570,6 +575,7 @@
 
     <div class="container">
 
+        <!-- ================= NEUE STARTSEITE (LANDING PAGE) ================= -->
         <main id="view-landing" class="view active" style="position: relative;">
             <div class="landing-hero reveal">
                 <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
@@ -623,10 +629,15 @@
                 <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
             </div>
             
+            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
                 Calapex Beta | v3.1.4
             </div>
         </main>
+        <!-- ================= ENDE STARTSEITE ================= -->
+
+
+        <!-- ANMELDUNG / REGISTRIERUNG -->
         <main id="view-auth" class="view">
             <div style="max-width: 500px; margin: 60px auto;">
                 
@@ -639,8 +650,11 @@
                         <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
                         <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
                     </div>
-                    <div class="form-group"><input type="email" id="login-email" placeholder="E-Mail Adresse"></div>
+                    <!-- VORNAME UND NACHNAME SIND WIEDER DA -->
+                    <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
+                    <div class="form-group"><input type="text" id="login-lastname" placeholder="Nachname"></div>
                     <div class="form-group"><input type="password" id="login-password" placeholder="Passwort"></div>
+                    
                     <button class="btn-submit" onclick="loginUser()">Einloggen</button>
                     <p style="text-align: center; margin-top: 20px; color: #aaa;">Noch kein Account? <a href="#" onclick="toggleAuth('register')" style="color: var(--primary);">Registrieren</a></p>
                 </div>
@@ -661,6 +675,7 @@
                 </div>
             </div>
             
+            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
                 Calapex Beta | v3.1.4
             </div>
@@ -676,6 +691,7 @@
                 </button>
             </div>
 
+            <!-- Separated News & Patchlog Buttons -->
             <div style="max-width: 800px; margin: 50px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
                 <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadNews()">
                     📰 News <span style="margin-top: 5px; font-size: 0.95rem;">Updates & Ankündigungen</span>
@@ -685,12 +701,14 @@
                 </button>
             </div>
 
+            <!-- GLOBAL CHAT EMBEDDED -->
             <div style="max-width: 800px; margin: 50px auto 0;">
                 <h2 class="panel-header" style="margin-bottom: 15px; border-bottom-color: #17a2b8; font-size: 1.8rem;">Globaler Chat <span style="color: #17a2b8; font-size: 1rem; vertical-align: middle; margin-left: 10px;">💬 Pre-Release</span></h2>
                 <div class="panel" style="padding: 0;">
                     <div class="chat-container">
                         <div id="global-chat-messages" class="chat-messages">
-                            </div>
+                            <!-- Nachrichten werden hier generiert -->
+                        </div>
                         <div class="chat-input-area">
                             <input type="text" id="global-chat-input" class="form-group" style="margin:0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; width: 100%;" placeholder="Nachricht eingeben..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
                             <button class="btn-submit" style="width: auto; margin-top: 0; background: #17a2b8;" onclick="sendGlobalChatMessage()">Senden</button>
@@ -699,6 +717,7 @@
                 </div>
             </div>
 
+            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
                 Calapex Beta | v3.1.4
             </div>
@@ -1008,7 +1027,7 @@
                 return;
             }
 
-            // Supabase Auth für echtes E-Mail-Verfahren nutzen
+            // 1. Sichere Registrierung für die E-Mail-Bestätigung starten
             const { data, error } = await supabaseClient.auth.signUp({
                 email: em,
                 password: pw,
@@ -1023,71 +1042,88 @@
             if (error) {
                 showToast("Fehler bei der Registrierung: " + error.message, "error");
             } else {
-                // Lege den User parallel in app_users an (damit die App-Abwärtskompatibilität bzw. Relationen wie is_developer klappen)
+                // 2. Den neuen User direkt in deine app_users Tabelle schreiben.
+                // Das Klartext-Passwort setzen wir auf NULL, da er jetzt sicher verschlüsselt ist.
                 if (data.user) {
                     await supabaseClient.from('app_users').insert([{
                         id: data.user.id,
                         first_name: fn,
                         last_name: ln,
                         email: em,
-                        password: pw // Legacy (Eigentlich überflüssig durch echtes Auth-System)
+                        password: null 
                     }]);
                 }
-                showToast("Registrierung erfolgreich! Bitte überprüfe dein E-Mail-Postfach und bestätige deine Adresse, bevor du dich anmeldest.", "success");
+                
+                showToast("Registrierung erfolgreich! Bitte überprüfe dein E-Mail-Postfach und bestätige deine Adresse.", "success");
                 toggleAuth('login');
             }
         }
 
         async function loginUser() {
-            const em = document.getElementById('login-email').value.trim();
+            const fn = document.getElementById('login-firstname').value.trim();
+            const ln = document.getElementById('login-lastname').value.trim();
             const pw = document.getElementById('login-password').value;
 
-            if(!em || !pw) {
-                showToast("Bitte E-Mail und Passwort ausfüllen!", "error");
+            if(!fn || !ln || !pw) {
+                showToast("Bitte alle Felder ausfüllen!", "error");
                 return;
             }
 
             if(!supabaseClient) { 
-                activeUser = { id: 'demo-uuid-123', first_name: 'Demo', last_name: 'User', email: em, is_developer: true };
+                activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln, email: 'demo@beispiel.de', is_developer: true };
                 processLoginSuccess();
                 return;
             }
 
-            // Sicherer Login über Supabase Auth
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: em,
-                password: pw
-            });
+            // 1. Suche den User anhand von Vor- und Nachname in deiner Tabelle
+            const { data: dbUser, error: dbError } = await supabaseClient
+                .from('app_users')
+                .select('*')
+                .eq('first_name', fn)
+                .eq('last_name', ln)
+                .single();
 
-            if(error) {
-                if (error.message.includes('Email not confirmed')) {
-                    showToast("Bitte bestätige zuerst deine E-Mail-Adresse in deinem Postfach!", "error");
-                } else {
-                    showToast("E-Mail oder Passwort falsch!", "error");
+            if (dbError || !dbUser) {
+                showToast("Vorname oder Nachname nicht gefunden!", "error");
+                return;
+            }
+
+            // 2. ALTER USER (Legacy Login): Hat er noch sein Passwort im Klartext?
+            if (dbUser.password && dbUser.password === pw) {
+                activeUser = dbUser;
+                processLoginSuccess();
+                return;
+            }
+
+            // 3. NEUER USER (Supabase Auth): Anmeldung im Hintergrund über die gefundene E-Mail
+            if (dbUser.email) {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: dbUser.email,
+                    password: pw
+                });
+
+                if (error) {
+                    if (error.message.includes('Email not confirmed')) {
+                        showToast("Bitte bestätige zuerst deine E-Mail-Adresse im Postfach!", "error");
+                    } else {
+                        showToast("Vorname, Nachname oder Passwort falsch!", "error");
+                    }
+                    return;
                 }
+
+                // Erfolgreich eingeloggt!
+                activeUser = {
+                    id: data.user.id,
+                    first_name: dbUser.first_name,
+                    last_name: dbUser.last_name,
+                    email: dbUser.email,
+                    is_developer: dbUser.is_developer
+                };
+                processLoginSuccess();
                 return;
             }
 
-            if(!data || !data.user) {
-                showToast("Falsche Daten!", "error");
-                return;
-            }
-
-            // Metadaten der Registrierung laden
-            const meta = data.user.user_metadata || {};
-            
-            // Lade zusätzliche Rollen-Informationen aus unserer custom Tabelle (z.B. is_developer)
-            const { data: dbUser } = await supabaseClient.from('app_users').select('*').eq('id', data.user.id).single();
-
-            activeUser = {
-                id: data.user.id,
-                first_name: meta.first_name || (dbUser ? dbUser.first_name : 'Unbekannt'),
-                last_name: meta.last_name || (dbUser ? dbUser.last_name : ''),
-                email: data.user.email,
-                is_developer: dbUser ? dbUser.is_developer : false
-            };
-
-            processLoginSuccess();
+            showToast("Vorname, Nachname oder Passwort falsch!", "error");
         }
 
         function processLoginSuccess() {
