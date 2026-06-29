@@ -654,7 +654,6 @@
                         <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
                         <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
                     </div>
-                    <!-- VORNAME UND NACHNAME SIND WIEDER DA -->
                     <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
                     <div class="form-group"><input type="text" id="login-lastname" placeholder="Nachname"></div>
                     <div class="form-group"><input type="password" id="login-password" placeholder="Passwort"></div>
@@ -2238,35 +2237,6 @@
             } catch (e) { console.error("Discord Webhook Delete Error:", e); }
         }
 
-        async function sendDiscordReminderWebhook(webhookUrl, payload) {
-            let streamsText = "";
-            if (payload.streams) {
-                try {
-                    let parsed = JSON.parse(payload.streams);
-                    if(parsed.length > 0) {
-                        let streamLinks = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join(' | ');
-                        streamsText = `\n📺 **Streams:** ${streamLinks}`;
-                    }
-                } catch(e){}
-            }
-
-            const embed = {
-                content: "⏳ **Erinnerung:** Ein Event startet in Kürze!",
-                embeds: [{
-                    title: `[${payload.event_type || 'Event'}] ${payload.name}`,
-                    description: `Das Event beginnt in **1 Stunde**!\n\n🎮 **Simulator:** ${payload.simulator || '-'}\n🏎️ **Fahrzeug:** ${payload.car || '-'}\n🏁 **Strecke:** ${payload.track || '-'}${streamsText}`,
-                    color: 16763904, // Gelb
-                }]
-            };
-            try {
-                await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(embed)
-                });
-            } catch (e) { console.error("Discord Reminder Webhook Error:", e); }
-        }
-
         function buildDiscordEmbed(payload, ev) {
             let color = 2664261; // Grün für Findet statt
             if (payload.status === 'Unklar') color = 16763904; // Gelb
@@ -2552,17 +2522,6 @@
                         badge.style.background = `${color}15`;
                         badge.style.color = color;
                         badge.style.borderColor = color;
-                    }
-
-                    // --- DISCORD 1-STUNDE ERINNERUNG LOGIK ---
-                    // Triggert nur, wenn der Timer genau zwischen 60 und 59:58 Minuten steht (2-Sekunden Fenster)
-                    if (diff <= 3600000 && diff > 3598000 && !ev._reminderSentLocally) {
-                        ev._reminderSentLocally = true; 
-                        
-                        // Nur ein Admin / Manager schickt die Erinnerung, um mehrfachen Spam zu vermeiden
-                        if ((currentMyRole === 'Admin' || currentMyRole === 'Manager') && currentTeamData && currentTeamData.discord_webhook_url) {
-                            sendDiscordReminderWebhook(currentTeamData.discord_webhook_url, ev);
-                        }
                     }
 
                 } else if (now >= startTime && now <= endTime) {
