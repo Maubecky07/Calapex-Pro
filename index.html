@@ -342,7 +342,6 @@
 </head>
 <body>
 
-    <!-- NEUE HINTERGRUND STRUKTUR (Fix für Mobile Safari) -->
     <div class="background-wrapper">
         <div class="bg-gradient"></div>
         <div class="bg-pattern"></div>
@@ -361,7 +360,6 @@
         </div>
     </div>
 
-    <!-- News Modal -->
     <div id="news-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">News erstellen</h2>
@@ -380,7 +378,6 @@
         </div>
     </div>
 
-    <!-- Patchlog Modal -->
     <div id="patchlog-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
@@ -388,7 +385,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>Version</label>
-                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.6">
+                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.4">
                 </div>
                 <div class="form-group">
                     <label>Typ</label>
@@ -415,7 +412,6 @@
         </div>
     </div>
 
-    <!-- Edit Team Modal -->
     <div id="edit-team-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
@@ -444,8 +440,7 @@
     </div>
 
     <div id="context-menu" class="context-menu">
-        <!-- Generiert durch JS basierend auf Berechtigungen -->
-    </div>
+        </div>
 
     <div id="profile-badge">
         <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
@@ -544,7 +539,18 @@
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group"><label>Simulator</label><input type="text" id="ev-sim" placeholder="z.B. iRacing"></div>
+                <div class="form-group">
+                    <label>Simulator</label>
+                    <select id="ev-sim">
+                        <option value="iRacing">iRacing</option>
+                        <option value="Assetto Corsa Competizione">Assetto Corsa Competizione</option>
+                        <option value="Le Mans Ultimate">Le Mans Ultimate</option>
+                        <option value="rFactor 2">rFactor 2</option>
+                        <option value="Automobilista 2">Automobilista 2</option>
+                        <option value="Assetto Corsa EVO">Assetto Corsa EVO</option>
+                        <option value="RaceRoom">RaceRoom</option>
+                    </select>
+                </div>
                 <div class="form-group"><label>Fahrzeug</label><input type="text" id="ev-car" placeholder="z.B. Porsche 911 GT3 R"></div>
             </div>
 
@@ -564,7 +570,6 @@
 
     <div class="container">
 
-        <!-- ================= NEUE STARTSEITE (LANDING PAGE) ================= -->
         <main id="view-landing" class="view active" style="position: relative;">
             <div class="landing-hero reveal">
                 <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
@@ -618,15 +623,10 @@
                 <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
             </div>
             
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.4
             </div>
         </main>
-        <!-- ================= ENDE STARTSEITE ================= -->
-
-
-        <!-- ANMELDUNG / REGISTRIERUNG -->
         <main id="view-auth" class="view">
             <div style="max-width: 500px; margin: 60px auto;">
                 
@@ -639,8 +639,7 @@
                         <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
                         <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
                     </div>
-                    <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
-                    <div class="form-group"><input type="text" id="login-lastname" placeholder="Nachname"></div>
+                    <div class="form-group"><input type="email" id="login-email" placeholder="E-Mail Adresse"></div>
                     <div class="form-group"><input type="password" id="login-password" placeholder="Passwort"></div>
                     <button class="btn-submit" onclick="loginUser()">Einloggen</button>
                     <p style="text-align: center; margin-top: 20px; color: #aaa;">Noch kein Account? <a href="#" onclick="toggleAuth('register')" style="color: var(--primary);">Registrieren</a></p>
@@ -662,9 +661,8 @@
                 </div>
             </div>
             
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.4
             </div>
         </main>
         
@@ -678,7 +676,6 @@
                 </button>
             </div>
 
-            <!-- Separated News & Patchlog Buttons -->
             <div style="max-width: 800px; margin: 50px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
                 <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadNews()">
                     📰 News <span style="margin-top: 5px; font-size: 0.95rem;">Updates & Ankündigungen</span>
@@ -688,14 +685,12 @@
                 </button>
             </div>
 
-            <!-- GLOBAL CHAT EMBEDDED -->
             <div style="max-width: 800px; margin: 50px auto 0;">
                 <h2 class="panel-header" style="margin-bottom: 15px; border-bottom-color: #17a2b8; font-size: 1.8rem;">Globaler Chat <span style="color: #17a2b8; font-size: 1rem; vertical-align: middle; margin-left: 10px;">💬 Pre-Release</span></h2>
                 <div class="panel" style="padding: 0;">
                     <div class="chat-container">
                         <div id="global-chat-messages" class="chat-messages">
-                            <!-- Nachrichten werden hier generiert -->
-                        </div>
+                            </div>
                         <div class="chat-input-area">
                             <input type="text" id="global-chat-input" class="form-group" style="margin:0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; width: 100%;" placeholder="Nachricht eingeben..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
                             <button class="btn-submit" style="width: auto; margin-top: 0; background: #17a2b8;" onclick="sendGlobalChatMessage()">Senden</button>
@@ -704,9 +699,8 @@
                 </div>
             </div>
 
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.4
             </div>
         </main>
 
@@ -1014,38 +1008,85 @@
                 return;
             }
 
-            const { error } = await supabaseClient.from('app_users').insert([{ first_name: fn, last_name: ln, email: em, password: pw }]);
+            // Supabase Auth für echtes E-Mail-Verfahren nutzen
+            const { data, error } = await supabaseClient.auth.signUp({
+                email: em,
+                password: pw,
+                options: {
+                    data: {
+                        first_name: fn,
+                        last_name: ln
+                    }
+                }
+            });
+
             if (error) {
-                showToast("Fehler: " + error.message, "error");
+                showToast("Fehler bei der Registrierung: " + error.message, "error");
             } else {
-                showToast("Erfolgreich registriert!", "success");
+                // Lege den User parallel in app_users an (damit die App-Abwärtskompatibilität bzw. Relationen wie is_developer klappen)
+                if (data.user) {
+                    await supabaseClient.from('app_users').insert([{
+                        id: data.user.id,
+                        first_name: fn,
+                        last_name: ln,
+                        email: em,
+                        password: pw // Legacy (Eigentlich überflüssig durch echtes Auth-System)
+                    }]);
+                }
+                showToast("Registrierung erfolgreich! Bitte überprüfe dein E-Mail-Postfach und bestätige deine Adresse, bevor du dich anmeldest.", "success");
                 toggleAuth('login');
             }
         }
 
         async function loginUser() {
-            const fn = document.getElementById('login-firstname').value.trim();
-            const ln = document.getElementById('login-lastname').value.trim();
+            const em = document.getElementById('login-email').value.trim();
             const pw = document.getElementById('login-password').value;
 
-            if(!fn || !ln || !pw) {
-                showToast("Bitte alle Felder ausfüllen!", "error");
+            if(!em || !pw) {
+                showToast("Bitte E-Mail und Passwort ausfüllen!", "error");
                 return;
             }
 
             if(!supabaseClient) { 
-                activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln, email: 'demo@beispiel.de', is_developer: true };
+                activeUser = { id: 'demo-uuid-123', first_name: 'Demo', last_name: 'User', email: em, is_developer: true };
                 processLoginSuccess();
                 return;
             }
 
-            const { data, error } = await supabaseClient.from('app_users').select('*').eq('first_name', fn).eq('last_name', ln).eq('password', pw).single();
-            if(error || !data) {
+            // Sicherer Login über Supabase Auth
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: em,
+                password: pw
+            });
+
+            if(error) {
+                if (error.message.includes('Email not confirmed')) {
+                    showToast("Bitte bestätige zuerst deine E-Mail-Adresse in deinem Postfach!", "error");
+                } else {
+                    showToast("E-Mail oder Passwort falsch!", "error");
+                }
+                return;
+            }
+
+            if(!data || !data.user) {
                 showToast("Falsche Daten!", "error");
                 return;
             }
 
-            activeUser = data;
+            // Metadaten der Registrierung laden
+            const meta = data.user.user_metadata || {};
+            
+            // Lade zusätzliche Rollen-Informationen aus unserer custom Tabelle (z.B. is_developer)
+            const { data: dbUser } = await supabaseClient.from('app_users').select('*').eq('id', data.user.id).single();
+
+            activeUser = {
+                id: data.user.id,
+                first_name: meta.first_name || (dbUser ? dbUser.first_name : 'Unbekannt'),
+                last_name: meta.last_name || (dbUser ? dbUser.last_name : ''),
+                email: data.user.email,
+                is_developer: dbUser ? dbUser.is_developer : false
+            };
+
             processLoginSuccess();
         }
 
@@ -1068,6 +1109,9 @@
             document.getElementById('online-users-widget').style.display = 'none'; 
             if (eventTickerInterval) clearInterval(eventTickerInterval);
             
+            // Falls echtes Auth verwendet wird, auch die Session beenden:
+            if(supabaseClient) supabaseClient.auth.signOut();
+
             // Bringt uns nun auf die Landing-Page statt zum Login zurück
             openView('view-landing'); 
         }
@@ -2440,7 +2484,7 @@
                     document.getElementById('ev-status').value = ev.status || 'Findet statt';
                     document.getElementById('ev-start').value = ev.time_start || '';
                     document.getElementById('ev-end').value = ev.time_end || '';
-                    document.getElementById('ev-sim').value = ev.simulator || '';
+                    document.getElementById('ev-sim').value = ev.simulator || 'iRacing';
                     document.getElementById('ev-car').value = ev.car || '';
                     document.getElementById('ev-track').value = ev.track || '';
                     
@@ -2470,7 +2514,7 @@
                 document.getElementById('ev-status').value = 'Findet statt';
                 document.getElementById('ev-start').value = '';
                 document.getElementById('ev-end').value = '';
-                document.getElementById('ev-sim').value = '';
+                document.getElementById('ev-sim').value = 'iRacing';
                 document.getElementById('ev-car').value = '';
                 document.getElementById('ev-track').value = '';
                 
