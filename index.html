@@ -76,7 +76,7 @@
             100% { transform: translate(50px, 50px); }
         }
 
-        /* 3. Logo mit Floating & Glow-Effekt (NEUE URL) */
+        /* 3. Logo mit Floating & Glow-Effekt */
         .bg-logo {
             position: absolute; top: 50%; left: 50%;
             width: 70%; max-width: 900px; height: 70%;
@@ -564,6 +564,16 @@
             </div>
 
             <div class="form-group"><label>Strecke</label><input type="text" id="ev-track" placeholder="z.B. Nordschleife"></div>
+            
+            <div class="form-group">
+                <label>Setup anhängen (.sto) - Optional</label>
+                <input type="file" id="ev-setup" accept=".sto">
+                <div id="ev-setup-current" style="display:none; color: var(--primary); margin-top: 5px; font-size: 0.9rem;">
+                    Aktuelles Setup: <span id="ev-setup-name" style="color: white;"></span>
+                    <button type="button" onclick="removeCurrentSetup()" style="background: transparent; border: 1px solid #dc3545; color: #dc3545; margin-left: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;">Entfernen</button>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Stream Link(s)</label>
                 <div id="streams-container"></div>
@@ -635,7 +645,7 @@
             
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
-                Calapex Beta | v3.1.5
+                Calapex Beta | v3.1.6
             </div>
         </main>
         <!-- ================= ENDE STARTSEITE ================= -->
@@ -680,7 +690,7 @@
             
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.5
+                Calapex Beta | v3.1.6
             </div>
         </main>
         
@@ -722,7 +732,7 @@
 
             <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.5
+                Calapex Beta | v3.1.6
             </div>
         </main>
 
@@ -840,14 +850,37 @@
                 </div>
             </div>
 
-            <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
-                    <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
-                    <button id="btn-new-event" class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
-                </div>
-                
-                <div id="team-events-list" class="team-events-grid">
+            <div class="team-tabs" style="margin-bottom: 20px;">
+                <button class="tab-btn active" id="tab-btn-calendar" onclick="switchTeamSubTab('calendar')">📅 Kalender</button>
+                <button class="tab-btn" id="tab-btn-setups" onclick="switchTeamSubTab('setups')">⚙️ Setups</button>
+            </div>
+
+            <div id="team-calendar-section">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
+                        <button id="btn-new-event" class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
                     </div>
+                    
+                    <div id="team-events-list" class="team-events-grid">
+                        </div>
+                </div>
+            </div>
+
+            <div id="team-setups-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; font-size: 1.5rem; margin: 0;" id="setup-breadcrumb">📂 Root</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="setup-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem; background: #555; border: 1px solid #777;" onclick="createSetupFolder()">+ Neuer Ordner</button>
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="document.getElementById('setup-file-input').click()">+ Setup (.sto)</button>
+                            <input type="file" id="setup-file-input" accept=".sto" style="display: none;" onchange="uploadSetupFile(event)">
+                        </div>
+                    </div>
+                    <div id="team-setups-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                        <!-- Setup Listen -->
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -879,6 +912,12 @@
         let idleTimeout = null;
         let isIdle = false;
         let eventTickerInterval = null; 
+
+        // Setup Tracking State
+        let currentSetupFolderId = null;
+        let setupBreadcrumbs = [{id: null, name: 'Root'}];
+        let contextSetupId = null;
+        let currentSetupRemoved = false; // Steuert das Entfernen eines Setups aus einem Termin
 
         // --- Developer Check ---
         function isDeveloper() {
@@ -988,6 +1027,24 @@
             if(tabId === 'tab-search-team') {
                 document.getElementById('search-result-box').style.display = 'none';
                 document.getElementById('search-team-code').value = '';
+            }
+        }
+
+        function switchTeamSubTab(tab) {
+            document.getElementById('tab-btn-calendar').classList.remove('active');
+            document.getElementById('tab-btn-setups').classList.remove('active');
+            document.getElementById('team-calendar-section').style.display = 'none';
+            document.getElementById('team-setups-section').style.display = 'none';
+
+            if(tab === 'calendar') {
+                document.getElementById('tab-btn-calendar').classList.add('active');
+                document.getElementById('team-calendar-section').style.display = 'block';
+            } else {
+                document.getElementById('tab-btn-setups').classList.add('active');
+                document.getElementById('team-setups-section').style.display = 'block';
+                currentSetupFolderId = null;
+                setupBreadcrumbs = [{id: null, name: 'Root'}];
+                loadTeamSetups();
             }
         }
 
@@ -1186,6 +1243,13 @@
                                 }
                                 
                                 document.getElementById('btn-new-event').style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
+                                
+                                if (currentMyRole === 'Community') {
+                                    document.getElementById('setup-action-btns').style.display = 'none';
+                                } else {
+                                    document.getElementById('setup-action-btns').style.display = 'flex';
+                                }
+
                                 loadTeamEvents(); 
                             }
                         }
@@ -1956,6 +2020,7 @@
         // --- Team View Aufbau ---
         async function openTeamCalendar(teamId) {
             currentOpenTeamId = teamId;
+            switchTeamSubTab('calendar');
             
             const { data: memberData } = await supabaseClient
                 .from('team_members')
@@ -1994,6 +2059,12 @@
             } else {
                 adminControls.style.display = 'none';
                 document.getElementById('sidebar-admin-hint').style.display = 'none';
+            }
+
+            if (currentMyRole === 'Community') {
+                document.getElementById('setup-action-btns').style.display = 'none';
+            } else {
+                document.getElementById('setup-action-btns').style.display = 'flex';
             }
 
             loadSidebarMembers(teamId);
@@ -2203,6 +2274,184 @@
             document.getElementById('requests-modal').style.display = 'none';
         }
 
+        // ================= SETUP FUNKTIONEN =================
+        function renderSetupBreadcrumbs() {
+            const bc = document.getElementById('setup-breadcrumb');
+            let html = '📂 ';
+            setupBreadcrumbs.forEach((crumb, index) => {
+                if (index === setupBreadcrumbs.length - 1) {
+                    html += `<span style="color: white;">${crumb.name}</span>`;
+                } else {
+                    html += `<span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="navigateToBreadcrumb(${index})">${crumb.name}</span> / `;
+                }
+            });
+            bc.innerHTML = html;
+        }
+
+        async function loadTeamSetups() {
+            const container = document.getElementById('team-setups-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade Setups...</p>';
+
+            let query = supabaseClient.from('team_setups').select('*').eq('team_id', currentOpenTeamId);
+            if (currentSetupFolderId === null) {
+                query = query.is('parent_id', null);
+            } else {
+                query = query.eq('parent_id', currentSetupFolderId);
+            }
+
+            const { data, error } = await query.order('is_folder', { ascending: false }).order('name', { ascending: true });
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
+                return;
+            }
+
+            renderSetupBreadcrumbs();
+            let html = '';
+
+            if (currentSetupFolderId !== null) {
+                html += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px dashed #555;" onclick="navigateSetupUp()">
+                        <div style="font-size: 2.5rem;">⬆️</div>
+                        <div style="margin-top: 10px; font-weight: bold; color: #aaa;">Zurück</div>
+                    </div>
+                `;
+            }
+
+            if (data.length === 0 && currentSetupFolderId === null) {
+                html += `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Setups oder Ordner vorhanden.</p>`;
+            }
+
+            data.forEach(item => {
+                if (item.is_folder) {
+                    html += `
+                        <div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px solid var(--primary); transition: 0.2s;" onclick="openSetupFolder('${item.id}', '${item.name}')" oncontextmenu="showSetupContext(event, '${item.id}', true)">
+                            <div style="font-size: 2.5rem; color: #ffcc00;">📁</div>
+                            <div style="margin-top: 10px; font-weight: bold; color: white;">${item.name}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative;" oncontextmenu="showSetupContext(event, '${item.id}', false)">
+                            <div style="font-size: 2.5rem; color: #aaa;">📄</div>
+                            <div style="margin-top: 10px; font-weight: bold; color: white; word-break: break-all; font-size: 0.9rem;">${item.name}</div>
+                            <a href="${item.file_url}" download="${item.name}" target="_blank" class="btn-submit" style="display: block; margin-top: 15px; padding: 6px; font-size: 0.85rem; background: #28a745;">💾 Download</a>
+                        </div>
+                    `;
+                }
+            });
+
+            container.innerHTML = html;
+        }
+
+        function openSetupFolder(id, name) {
+            currentSetupFolderId = id;
+            setupBreadcrumbs.push({id, name});
+            loadTeamSetups();
+        }
+
+        function navigateSetupUp() {
+            setupBreadcrumbs.pop();
+            currentSetupFolderId = setupBreadcrumbs[setupBreadcrumbs.length - 1].id;
+            loadTeamSetups();
+        }
+
+        function navigateToBreadcrumb(index) {
+            setupBreadcrumbs = setupBreadcrumbs.slice(0, index + 1);
+            currentSetupFolderId = setupBreadcrumbs[setupBreadcrumbs.length - 1].id;
+            loadTeamSetups();
+        }
+
+        async function createSetupFolder() {
+            const name = prompt("Name des neuen Ordners:");
+            if (!name || name.trim() === '') return;
+
+            const { error } = await supabaseClient.from('team_setups').insert([{
+                team_id: currentOpenTeamId,
+                parent_id: currentSetupFolderId,
+                name: name.trim(),
+                is_folder: true
+            }]);
+
+            if (error) showToast("Fehler beim Erstellen: " + error.message, "error");
+            else loadTeamSetups();
+        }
+
+        async function uploadSetupFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.toLowerCase().endsWith('.sto')) {
+                showToast("Bitte nur .sto Dateien hochladen!", "error");
+                event.target.value = '';
+                return;
+            }
+
+            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+            showToast("Lade Setup hoch...", "info");
+            
+            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('setups').upload(fileName, file);
+            if (uploadError) {
+                showToast("Fehler beim Upload: " + uploadError.message, "error");
+                event.target.value = '';
+                return;
+            }
+
+            const { data: publicUrlData } = supabaseClient.storage.from('setups').getPublicUrl(fileName);
+
+            const { error: dbError } = await supabaseClient.from('team_setups').insert([{
+                team_id: currentOpenTeamId,
+                parent_id: currentSetupFolderId,
+                name: file.name,
+                is_folder: false,
+                file_url: publicUrlData.publicUrl
+            }]);
+
+            if (dbError) showToast("Fehler beim Speichern in der Datenbank: " + dbError.message, "error");
+            else showToast("Setup erfolgreich hochgeladen!", "success");
+
+            event.target.value = ''; 
+            loadTeamSetups();
+        }
+
+        function showSetupContext(e, id, isFolder) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (currentMyRole !== 'Admin' && currentMyRole !== 'Manager') return;
+
+            contextSetupId = id;
+            const menu = document.getElementById('context-menu');
+            menu.innerHTML = `
+                <div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;">Aktion für ${isFolder ? 'Ordner' : 'Setup'}</div>
+                <hr>
+                <div style="color:#dc3545;" onclick="deleteSetupItem()">🗑️ Löschen</div>
+            `;
+            menu.style.display = 'block';
+            
+            let x = e.clientX;
+            let y = e.clientY;
+            if (x + 200 > window.innerWidth) x -= 200;
+            if (y + 250 > window.innerHeight) y -= 250;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+        }
+
+        async function deleteSetupItem() {
+            document.getElementById('context-menu').style.display = 'none';
+            if(!contextSetupId) return;
+
+            customConfirm("Möchtest du dieses Element wirklich löschen?\nAlle darin enthaltenen Daten werden unwiderruflich entfernt.", async () => {
+                const { error } = await supabaseClient.from('team_setups').delete().eq('id', contextSetupId);
+                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
+                else {
+                    showToast("Erfolgreich gelöscht.", "success");
+                    loadTeamSetups();
+                }
+            });
+        }
+
         // ================= EVENT / KALENDER FUNKTIONEN =================
 
         // --- DISCORD WEBHOOK LOGIK ---
@@ -2260,6 +2509,11 @@
                 } catch(e){}
             }
 
+            let setupText = "-";
+            if (payload.setup_file_url) {
+                setupText = `[${payload.setup_file_name || 'Download'}](${payload.setup_file_url})`;
+            }
+
             return {
                 embeds: [{
                     title: `[${payload.event_type || 'Event'}] ${payload.name}`,
@@ -2271,6 +2525,7 @@
                         { name: "🎮 Simulator", value: payload.simulator || '-', inline: true },
                         { name: "🏎️ Fahrzeug", value: payload.car || '-', inline: true },
                         { name: "🏁 Strecke", value: payload.track || '-', inline: true },
+                        { name: "💾 Setup", value: setupText, inline: true },
                         { name: "📺 Streams", value: streamsText, inline: false }
                     ],
                     footer: { text: `Erstellt von: ${creatorName}` }
@@ -2422,6 +2677,15 @@
                     }
                 }
 
+                let setupHtml = '';
+                if (ev.setup_file_url) {
+                    setupHtml = `
+                        <a href="${ev.setup_file_url}" download="${ev.setup_file_name || 'setup.sto'}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px dashed #aaa; font-size: 0.85rem; transition: 0.2s; margin-top: 10px;">
+                            💾 Setup Download (.sto)
+                        </a>
+                    `;
+                }
+
                 html += `
                     <div id="event-card-${ev.id}" class="${ev.status === 'Entfällt' ? 'event-canceled' : ''}" style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${statusColor}; padding: 20px; border-radius: 8px; transition: 0.3s; display: flex; flex-direction: column; height: 100%;">
                         <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
@@ -2443,6 +2707,7 @@
                         </div>
                         
                         ${streamsHtml}
+                        ${setupHtml}
 
                         <div id="countdown-${ev.id}" style="font-size: 0.95rem; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); color: #ccc;">
                             Lade Countdown...
@@ -2538,16 +2803,6 @@
                 } else {
                     card.classList.remove('live-glow');
                     cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
-                    
-                    if (ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
-                        if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
-                            deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
-                            if (supabaseClient) {
-                                supabaseClient.from('events').update({ discord_message_id: null }).eq('id', ev.id).then();
-                            }
-                        }
-                        ev.discord_message_id = null; 
-                    }
                 }
             });
         }
@@ -2561,8 +2816,16 @@
             return dateString;
         }
 
+        function removeCurrentSetup() {
+            currentSetupRemoved = true;
+            document.getElementById('ev-setup-current').style.display = 'none';
+            document.getElementById('ev-setup').value = ''; 
+        }
+
         function showEventModal(eventId = null) {
             document.getElementById('event-modal').style.display = 'flex';
+            document.getElementById('ev-setup').value = '';
+            currentSetupRemoved = false;
             
             if (eventId) {
                 document.getElementById('event-modal-title').innerText = "Termin bearbeiten";
@@ -2582,6 +2845,13 @@
                     document.getElementById('ev-sim').value = ev.simulator || 'iRacing';
                     document.getElementById('ev-car').value = ev.car || '';
                     document.getElementById('ev-track').value = ev.track || '';
+
+                    if (ev.setup_file_name) {
+                        document.getElementById('ev-setup-current').style.display = 'block';
+                        document.getElementById('ev-setup-name').innerText = ev.setup_file_name;
+                    } else {
+                        document.getElementById('ev-setup-current').style.display = 'none';
+                    }
                     
                     document.getElementById('streams-container').innerHTML = '';
                     if (ev.streams) {
@@ -2612,6 +2882,7 @@
                 document.getElementById('ev-sim').value = 'iRacing';
                 document.getElementById('ev-car').value = '';
                 document.getElementById('ev-track').value = '';
+                document.getElementById('ev-setup-current').style.display = 'none';
                 
                 document.getElementById('streams-container').innerHTML = '';
                 addStreamInput();
@@ -2651,6 +2922,36 @@
             });
             const streamsJson = streamsArray.length > 0 ? JSON.stringify(streamsArray) : null;
 
+            let oldEvent = currentEditEventId ? currentTeamEvents.find(e => e.id === currentEditEventId) : null;
+            let setupUrl = oldEvent ? oldEvent.setup_file_url : null;
+            let setupName = oldEvent ? oldEvent.setup_file_name : null;
+
+            if (currentSetupRemoved) {
+                setupUrl = null;
+                setupName = null;
+            }
+
+            const setupInput = document.getElementById('ev-setup');
+            if (setupInput.files && setupInput.files.length > 0) {
+                const file = setupInput.files[0];
+                if (!file.name.toLowerCase().endsWith('.sto')) {
+                    showToast("Bitte nur .sto Dateien für das Setup hochladen!", "error");
+                    return;
+                }
+                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                
+                showToast("Lade Setup hoch...", "info");
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('setups').upload(fileName, file);
+                
+                if (uploadError) {
+                    showToast("Fehler beim Setup-Upload: " + uploadError.message, "error");
+                    return;
+                }
+                const { data: publicUrlData } = supabaseClient.storage.from('setups').getPublicUrl(fileName);
+                setupUrl = publicUrlData.publicUrl;
+                setupName = file.name;
+            }
+
             const payload = {
                 team_id: currentOpenTeamId,
                 name: document.getElementById('ev-name').value.trim(),
@@ -2665,6 +2966,8 @@
                 car: document.getElementById('ev-car').value.trim(),
                 track: document.getElementById('ev-track').value.trim(),
                 streams: streamsJson,
+                setup_file_url: setupUrl,
+                setup_file_name: setupName
             };
 
             if (!payload.name) {
@@ -2672,7 +2975,6 @@
                 return;
             }
 
-            let oldEvent = currentEditEventId ? currentTeamEvents.find(e => e.id === currentEditEventId) : null;
             let msgId = oldEvent ? oldEvent.discord_message_id : null;
 
             if (currentTeamData && currentTeamData.discord_webhook_url) {
