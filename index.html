@@ -1534,6 +1534,28 @@
 
         // ================= NEWS FUNKTIONEN =================
 
+        async function postToWhatsAppChannel(title, content) {
+            // HINWEIS: Da Frontend-JS keine direkten WhatsApp-Nachrichten versenden darf (ohne Token zu leaken), 
+            // benötigst du hier einen Webhook-Link (z.B. von Make.com, Zapier oder der Meta Graph API), 
+            // der die Daten an deinen Kanal weiterleitet.
+            const whatsappWebhookUrl = "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN"; 
+            
+            if (!whatsappWebhookUrl || whatsappWebhookUrl === "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN") return;
+
+            try {
+                await fetch(whatsappWebhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: title,
+                        message: content
+                    })
+                });
+            } catch (e) {
+                console.error("Fehler beim WhatsApp-Post:", e);
+            }
+        }
+
         async function loadNews() {
             openView('view-news');
             const container = document.getElementById('news-list');
@@ -1618,6 +1640,10 @@
             if (error) {
                 showToast("Fehler beim Posten: " + error.message, "error");
             } else {
+                
+                // WHATSAPP KANAL AUTOMATISIERUNG AUSFÜHREN
+                postToWhatsAppChannel(title, content);
+
                 showToast("News erfolgreich gepostet!", "success");
                 closeNewsModal();
                 loadNews();
@@ -2587,8 +2613,9 @@
                 <select class="stream-platform" style="padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem; width: 120px;">
                     <option value="Twitch" ${platform==='Twitch'?'selected':''}>Twitch</option>
                     <option value="YouTube" ${platform==='YouTube'?'selected':''}>YouTube</option>
-                    <option value="Kick" ${platform==='Kick'?'selected':''}>Kick</option>
-                    <option value="Andere" ${platform==='Andere'?'selected':''}>Andere</option>
+                    <option value="Instagram" ${platform==='Instagram'?'selected':''}>Instagram</option>
+                    <option value="TikTok" ${platform==='TikTok'?'selected':''}>TikTok</option>
+                    <option value="Facebook" ${platform==='Facebook'?'selected':''}>Facebook</option>
                 </select>
                 <input type="text" class="stream-url" placeholder="z.B. twitch.tv/deinkanal" value="${url}" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem;">
                 <button type="button" onclick="this.parentElement.remove()" style="background: transparent; border: 1px solid #dc3545; color: #dc3545; padding: 0 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2rem;">×</button>
@@ -2706,7 +2733,9 @@
                             
                             if (s.platform === 'Twitch') { icon = '🟪'; color = '#a970ff'; bg = 'rgba(169,112,255,0.15)'; }
                             else if (s.platform === 'YouTube') { icon = '🟥'; color = '#ff0000'; bg = 'rgba(255,0,0,0.15)'; }
-                            else if (s.platform === 'Kick') { icon = '🟩'; color = '#53fc18'; bg = 'rgba(83,252,24,0.15)'; }
+                            else if (s.platform === 'Instagram') { icon = '📸'; color = '#E1306C'; bg = 'rgba(225,48,108,0.15)'; }
+                            else if (s.platform === 'TikTok') { icon = '🎵'; color = '#00f2fe'; bg = 'rgba(0,242,254,0.15)'; }
+                            else if (s.platform === 'Facebook') { icon = '🟦'; color = '#1877F2'; bg = 'rgba(24,119,242,0.15)'; }
                             
                             streamsHtml += `
                                 <a href="${url}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: ${bg}; color: ${color}; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px solid ${color}; font-size: 0.85rem; transition: 0.2s;">
