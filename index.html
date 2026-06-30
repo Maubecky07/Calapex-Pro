@@ -388,7 +388,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>Version</label>
-                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.5">
+                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.6">
                 </div>
                 <div class="form-group">
                     <label>Typ</label>
@@ -917,7 +917,7 @@
         let currentSetupFolderId = null;
         let setupBreadcrumbs = [{id: null, name: 'Root'}];
         let contextSetupId = null;
-        let currentSetupRemoved = false; // Steuert das Entfernen eines Setups aus einem Termin
+        let currentSetupRemoved = false; 
 
         // --- Developer Check ---
         function isDeveloper() {
@@ -1031,6 +1031,11 @@
         }
 
         function switchTeamSubTab(tab) {
+            if (tab === 'setups' && currentMyRole === 'Community') {
+                showToast("Keine Berechtigung für Setups.", "error");
+                return;
+            }
+
             document.getElementById('tab-btn-calendar').classList.remove('active');
             document.getElementById('tab-btn-setups').classList.remove('active');
             document.getElementById('team-calendar-section').style.display = 'none';
@@ -1246,8 +1251,13 @@
                                 
                                 if (currentMyRole === 'Community') {
                                     document.getElementById('setup-action-btns').style.display = 'none';
+                                    document.getElementById('tab-btn-setups').style.display = 'none';
+                                    if(document.getElementById('team-setups-section').style.display === 'block') {
+                                        switchTeamSubTab('calendar');
+                                    }
                                 } else {
                                     document.getElementById('setup-action-btns').style.display = 'flex';
+                                    document.getElementById('tab-btn-setups').style.display = '';
                                 }
 
                                 loadTeamEvents(); 
@@ -2063,8 +2073,10 @@
 
             if (currentMyRole === 'Community') {
                 document.getElementById('setup-action-btns').style.display = 'none';
+                document.getElementById('tab-btn-setups').style.display = 'none';
             } else {
                 document.getElementById('setup-action-btns').style.display = 'flex';
+                document.getElementById('tab-btn-setups').style.display = '';
             }
 
             loadSidebarMembers(teamId);
@@ -2486,6 +2498,35 @@
             } catch (e) { console.error("Discord Webhook Delete Error:", e); }
         }
 
+        async function sendDiscordReminderWebhook(webhookUrl, payload) {
+            let streamsText = "";
+            if (payload.streams) {
+                try {
+                    let parsed = JSON.parse(payload.streams);
+                    if(parsed.length > 0) {
+                        let streamLinks = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join(' | ');
+                        streamsText = `\n📺 **Streams:** ${streamLinks}`;
+                    }
+                } catch(e){}
+            }
+
+            const embed = {
+                content: "⏳ **Erinnerung:** Ein Event startet in Kürze!",
+                embeds: [{
+                    title: `[${payload.event_type || 'Event'}] ${payload.name}`,
+                    description: `Das Event beginnt in **1 Stunde**!\n\n🎮 **Simulator:** ${payload.simulator || '-'}\n🏎️ **Fahrzeug:** ${payload.car || '-'}\n🏁 **Strecke:** ${payload.track || '-'}${streamsText}`,
+                    color: 16763904, // Gelb
+                }]
+            };
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(embed)
+                });
+            } catch (e) { console.error("Discord Reminder Webhook Error:", e); }
+        }
+
         function buildDiscordEmbed(payload, ev) {
             let color = 2664261; // Grün für Findet statt
             if (payload.status === 'Unklar') color = 16763904; // Gelb
@@ -2678,7 +2719,7 @@
                 }
 
                 let setupHtml = '';
-                if (ev.setup_file_url) {
+                if (ev.setup_file_url && currentMyRole !== 'Community') {
                     setupHtml = `
                         <a href="${ev.setup_file_url}" download="${ev.setup_file_name || 'setup.sto'}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px dashed #aaa; font-size: 0.85rem; transition: 0.2s; margin-top: 10px;">
                             💾 Setup Download (.sto)
@@ -2789,6 +2830,17 @@
                         badge.style.borderColor = color;
                     }
 
+                    // --- DISCORD 1-STUNDE ERINNERUNG LOGIK ---
+                    // Triggert nur, wenn der Timer genau zwischen 60 und 59:58 Minuten steht (2-Sekunden Fenster)
+                    if (diff <= 3600000 && diff > 3598000 && !ev._reminderSentLocally) {
+                        ev._reminderSentLocally = true; 
+                        
+                        // Nur ein Admin / Manager schickt die Erinnerung, um mehrfachen Spam zu vermeiden
+                        if ((currentMyRole === 'Admin' || currentMyRole === 'Manager') && currentTeamData && currentTeamData.discord_webhook_url) {
+                            sendDiscordReminderWebhook(currentTeamData.discord_webhook_url, ev);
+                        }
+                    }
+
                 } else if (now >= startTime && now <= endTime) {
                     card.classList.add('live-glow');
                     cd.innerHTML = `<span style="color: #ff0000; font-weight: bold; animation: textPulse 1.5s infinite; display: inline-block;">🔴 Event läuft gerade!</span>`;
@@ -2803,6 +2855,16 @@
                 } else {
                     card.classList.remove('live-glow');
                     cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
+                    
+                    if (ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
+                        if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
+                            deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
+                            if (supabaseClient) {
+                                supabaseClient.from('events').update({ discord_message_id: null }).eq('id', ev.id).then();
+                            }
+                        }
+                        ev.discord_message_id = null; 
+                    }
                 }
             });
         }
