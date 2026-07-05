@@ -4,9 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calapex | Simracing Management</title>
+    
     <link rel="icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" type="image/png">
+    <link rel="shortcut icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png">
+    <meta name="theme-color" content="#d11212">
+    
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsuites@4/dist/jsuites.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4/dist/jsuites.css" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/jspreadsheet.css" type="text/css" />
+
     <style>
         :root {
             --primary: #d11212;
@@ -321,6 +334,41 @@
         .chat-input-area { display: flex; padding: 15px; background: rgba(20,20,20,0.8); border-top: 1px solid rgba(255,255,255,0.1); gap: 10px; }
         .chat-input-area input { flex: 1; }
 
+        /* Masonry Gallery Grid */
+        .masonry-grid {
+            column-count: 3;
+            column-gap: 15px;
+        }
+        @media (max-width: 900px) { .masonry-grid { column-count: 2; } }
+        @media (max-width: 600px) { .masonry-grid { column-count: 1; } }
+        
+        .masonry-item {
+            break-inside: avoid;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .masonry-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px 8px 0 0;
+            display: block;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-bottom: none;
+        }
+
+        /* Spreadsheet (JExcel) Container Isolation */
+        .spreadsheet-container {
+            background: #ffffff; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            color: #000000; 
+        }
+        .spreadsheet-container .jexcel_content { box-shadow: none !important; max-height: 600px; overflow-y: auto; }
+        .spreadsheet-container .jexcel > thead > tr > td { background-color: #f3f3f3; color: #333; font-weight: bold; }
+        .spreadsheet-container .jexcel > tbody > tr > td { color: #000; }
+        .spreadsheet-container .jexcel > tbody > tr > td.readonly { background-color: #fafafa; }
+        .jexcel_toolbar i { color: #555 !important; }
+
         /* Mobile Adjustments */
         @media (max-width: 768px) {
             .menu-btn { padding: 25px 20px; font-size: 1.5rem; }
@@ -342,7 +390,6 @@
 </head>
 <body>
 
-    <!-- NEUE HINTERGRUND STRUKTUR (Fix für Mobile Safari) -->
     <div class="background-wrapper">
         <div class="bg-gradient"></div>
         <div class="bg-pattern"></div>
@@ -361,7 +408,31 @@
         </div>
     </div>
 
-    <!-- News Modal -->
+    <div id="sync-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Live-Kalender Synchronisation</h2>
+            <p style="color: #ccc; margin-bottom: 20px; line-height: 1.5;">Kopiere diesen Link und füge ihn als "Kalender abonnieren" (WebCal / URL) in deinen Google Kalender, Apple Kalender oder Outlook ein. Er aktualisiert sich ab sofort vollautomatisch!</p>
+            
+            <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="sync-url-input" readonly style="flex: 1; min-width: 250px; padding: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--primary); border-radius: 5px; font-family: monospace; font-size: 0.95rem;">
+                <button class="btn-submit" style="width: auto; margin-top: 0; padding: 12px 25px; font-size: 1.1rem; background: #28a745;" onclick="copySyncUrl()">📋 Kopieren</button>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                <h4 style="color: white; margin-bottom: 10px;">So wird's gemacht:</h4>
+                <ul style="color: #aaa; margin-left: 20px; font-size: 0.95rem; line-height: 1.6;">
+                    <li><strong>Google Kalender:</strong> Links bei "Weitere Kalender" auf das <strong>+</strong> klicken ➔ "Über URL" ➔ Link einfügen.</li>
+                    <li><strong>Apple Kalender:</strong> Ablage ➔ Neues Kalenderabonnement ➔ Link einfügen.</li>
+                    <li><strong>Outlook:</strong> Kalender hinzufügen ➔ Aus dem Web abonnieren ➔ Link einfügen.</li>
+                </ul>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeSyncModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
     <div id="news-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">News erstellen</h2>
@@ -380,7 +451,6 @@
         </div>
     </div>
 
-    <!-- Patchlog Modal -->
     <div id="patchlog-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
@@ -388,7 +458,7 @@
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="form-group">
                     <label>Version</label>
-                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.6">
+                    <input type="text" id="patchlog-version" placeholder="z.B. v3.1.11">
                 </div>
                 <div class="form-group">
                     <label>Typ</label>
@@ -415,7 +485,6 @@
         </div>
     </div>
 
-    <!-- Edit Team Modal -->
     <div id="edit-team-modal" class="modal-overlay">
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
@@ -448,8 +517,7 @@
     </div>
 
     <div id="context-menu" class="context-menu">
-        <!-- Generiert durch JS basierend auf Berechtigungen -->
-    </div>
+        </div>
 
     <div id="profile-badge">
         <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
@@ -565,7 +633,7 @@
 
             <div class="form-group"><label>Strecke</label><input type="text" id="ev-track" placeholder="z.B. Nordschleife"></div>
             
-            <div class="form-group">
+            <div class="form-group" id="ev-setup-container">
                 <label>Setup anhängen (.sto) - Optional</label>
                 <input type="file" id="ev-setup" accept=".sto">
                 <div id="ev-setup-current" style="display:none; color: var(--primary); margin-top: 5px; font-size: 0.9rem;">
@@ -589,7 +657,6 @@
 
     <div class="container">
 
-        <!-- ================= NEUE STARTSEITE (LANDING PAGE) ================= -->
         <main id="view-landing" class="view active" style="position: relative;">
             <div class="landing-hero reveal">
                 <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
@@ -643,15 +710,10 @@
                 <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
             </div>
             
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.11
             </div>
         </main>
-        <!-- ================= ENDE STARTSEITE ================= -->
-
-
-        <!-- ANMELDUNG / REGISTRIERUNG -->
         <main id="view-auth" class="view">
             <div style="max-width: 500px; margin: 60px auto;">
                 
@@ -688,9 +750,8 @@
                 </div>
             </div>
             
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.11
             </div>
         </main>
         
@@ -704,7 +765,6 @@
                 </button>
             </div>
 
-            <!-- Separated News & Patchlog Buttons -->
             <div style="max-width: 800px; margin: 50px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
                 <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadNews()">
                     📰 News <span style="margin-top: 5px; font-size: 0.95rem;">Updates & Ankündigungen</span>
@@ -714,14 +774,12 @@
                 </button>
             </div>
 
-            <!-- GLOBAL CHAT EMBEDDED -->
             <div style="max-width: 800px; margin: 50px auto 0;">
                 <h2 class="panel-header" style="margin-bottom: 15px; border-bottom-color: #17a2b8; font-size: 1.8rem;">Globaler Chat <span style="color: #17a2b8; font-size: 1rem; vertical-align: middle; margin-left: 10px;">💬 Pre-Release</span></h2>
                 <div class="panel" style="padding: 0;">
                     <div class="chat-container">
                         <div id="global-chat-messages" class="chat-messages">
-                            <!-- Nachrichten werden hier generiert -->
-                        </div>
+                            </div>
                         <div class="chat-input-area">
                             <input type="text" id="global-chat-input" class="form-group" style="margin:0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; width: 100%;" placeholder="Nachricht eingeben..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
                             <button class="btn-submit" style="width: auto; margin-top: 0; background: #17a2b8;" onclick="sendGlobalChatMessage()">Senden</button>
@@ -730,9 +788,8 @@
                 </div>
             </div>
 
-            <!-- Versionsnummer und Beta Indikator -->
             <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">
-                Calapex Beta | v3.1.6
+                Calapex Beta | v3.1.11
             </div>
         </main>
 
@@ -840,6 +897,9 @@
                     <span id="calendar-team-id" style="font-family: monospace; color: var(--primary); font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;"></span>
                 </div>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; background: #17a2b8; border: 1px solid #117a8b;" onclick="openSyncModal()">
+                        🔄 Kalender Sync
+                    </button>
                     <button id="btn-edit-team" class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; background: #555; border: 1px solid #777;" onclick="openEditTeamModal()">
                         ⚙️ Team bearbeiten
                     </button>
@@ -852,7 +912,9 @@
 
             <div class="team-tabs" style="margin-bottom: 20px;">
                 <button class="tab-btn active" id="tab-btn-calendar" onclick="switchTeamSubTab('calendar')">📅 Kalender</button>
+                <button class="tab-btn" id="tab-btn-stint" onclick="switchTeamSubTab('stint')">⏱️ Stintplaner</button>
                 <button class="tab-btn" id="tab-btn-setups" onclick="switchTeamSubTab('setups')">⚙️ Setups</button>
+                <button class="tab-btn" id="tab-btn-gallery" onclick="switchTeamSubTab('gallery')">🖼️ Galerie</button>
             </div>
 
             <div id="team-calendar-section">
@@ -864,6 +926,34 @@
                     
                     <div id="team-events-list" class="team-events-grid">
                         </div>
+                </div>
+            </div>
+            
+            <div id="team-stint-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">⏱️ Stintplaner</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="stint-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="createNewStintPlan()">+ Neue Tabelle</button>
+                        </div>
+                    </div>
+
+                    <div id="team-stint-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                        </div>
+
+                    <div id="team-stint-editor" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary); flex-wrap: wrap; gap: 15px;">
+                            <h4 id="stint-editor-title" style="color: white; margin: 0; font-size: 1.4rem;">Plan bearbeiten</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc; padding: 8px 15px; font-size: 1rem; margin-top: 0;" onclick="closeStintEditor()">Abbrechen / Schließen</button>
+                                <button class="btn-submit" id="stint-save-btn" style="padding: 8px 15px; font-size: 1rem; margin-top: 0;" onclick="saveStintPlan()">💾 Speichern</button>
+                            </div>
+                        </div>
+                        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 15px;"><strong>Hinweis:</strong> Formeln wie <code>=A1*10</code> müssen manuell eingetippt werden. Das System berechnet die Felder dann völlig automatisch. Rechtsklick auf die Tabelle für weitere Optionen (Zeilen/Spalten hinzufügen, Löschen, etc.).</p>
+                        <div class="spreadsheet-container">
+                            <div id="spreadsheet"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -878,8 +968,24 @@
                         </div>
                     </div>
                     <div id="team-setups-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
-                        <!-- Setup Listen -->
+                        </div>
+                </div>
+            </div>
+
+            <div id="team-gallery-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; font-size: 1.5rem; margin: 0;" id="gallery-breadcrumb">📂 Root</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="gallery-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem; background: #555; border: 1px solid #777;" onclick="createGalleryFolder()">+ Neuer Ordner</button>
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="document.getElementById('gallery-file-input').click()">+ Bild hochladen</button>
+                            <input type="file" id="gallery-file-input" accept="image/png, image/jpeg, image/jpg" multiple style="display: none;" onchange="uploadGalleryImage(event)">
+                        </div>
                     </div>
+                    <div id="team-gallery-folders" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        </div>
+                    <div id="team-gallery-images" class="masonry-grid">
+                        </div>
                 </div>
             </div>
         </main>
@@ -887,6 +993,105 @@
     </div>
 
     <script>
+
+        async function openSyncModal() {
+            document.getElementById('sync-modal').style.display = 'flex';
+            const urlInput = document.getElementById('sync-url-input');
+            urlInput.value = 'Wird generiert...';
+
+            if (!supabaseClient) {
+                urlInput.value = 'Keine Datenbankverbindung.';
+                return;
+            }
+
+            // Sicherstellen, dass die Datei existiert, bevor sie angezeigt wird
+            await updateLiveCalendar(currentOpenTeamId);
+
+            const calUrl = `${SUPABASE_URL}/storage/v1/object/public/calendars/team_${currentOpenTeamId}.ics`;
+            urlInput.value = calUrl;
+        }
+
+        function closeSyncModal() {
+            document.getElementById('sync-modal').style.display = 'none';
+        }
+
+        function copySyncUrl() {
+            const input = document.getElementById('sync-url-input');
+            input.select();
+            input.setSelectionRange(0, 99999); // Für mobile Geräte
+            document.execCommand('copy');
+            showToast('Link kopiert!', 'success');
+        }
+
+        async function updateLiveCalendar(teamId) {
+            if (!supabaseClient) return;
+
+            const { data: events, error: fetchErr } = await supabaseClient
+                .from('events')
+                .select('*')
+                .eq('team_id', teamId);
+            
+            if (fetchErr) return;
+
+            let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Calapex//Team Calendar//DE\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+
+            (events || []).forEach(ev => {
+                let start = parseEventDate(ev.date, ev.time_start, '00:00:00');
+                let end = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59');
+                if(!start || !end) return;
+
+                let dtStart = start.toISOString().replace(/[-:]/g, '').split('.')[0] + "Z";
+                let dtEnd = end.toISOString().replace(/[-:]/g, '').split('.')[0] + "Z";
+                let dtStamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + "Z";
+
+                icsContent += "BEGIN:VEVENT\n";
+                icsContent += `UID:event-${ev.id}@calapex\n`;
+                icsContent += `DTSTAMP:${dtStamp}\n`;
+                
+                if (ev.is_all_day) {
+                    let startDay = start.toISOString().split('T')[0].replace(/-/g, '');
+                    let nextDay = new Date(end);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    let endDay = nextDay.toISOString().split('T')[0].replace(/-/g, '');
+                    
+                    icsContent += `DTSTART;VALUE=DATE:${startDay}\n`;
+                    icsContent += `DTEND;VALUE=DATE:${endDay}\n`;
+                } else {
+                    icsContent += `DTSTART:${dtStart}\n`;
+                    icsContent += `DTEND:${dtEnd}\n`;
+                }
+
+                icsContent += `SUMMARY:[${ev.event_type}] ${ev.name}\n`;
+                
+                let desc = `Simulator: ${ev.simulator || '-'}\\nFahrzeug: ${ev.car || '-'}\\nStrecke: ${ev.track || '-'}`;
+                if(ev.streams) desc += `\\nStreams: vorhanden`;
+                
+                icsContent += `DESCRIPTION:${desc}\n`;
+                if (ev.track) icsContent += `LOCATION:${ev.track}\n`;
+                if (ev.status === 'Entfällt') icsContent += `STATUS:CANCELLED\n`;
+                else icsContent += `STATUS:CONFIRMED\n`;
+                
+                icsContent += "END:VEVENT\n";
+            });
+
+            icsContent += "END:VCALENDAR";
+
+            const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+
+            const { error: uploadError } = await supabaseClient.storage
+                .from('calendars')
+                .upload(`team_${teamId}.ics`, blob, {
+                    cacheControl: '3600',
+                    upsert: true,
+                    contentType: 'text/calendar'
+                });
+            
+            if (uploadError) {
+                console.error("Fehler beim ICS Upload:", uploadError);
+            }
+        }
+
+
         // ================= SUPABASE CONFIGURATION =================
         const SUPABASE_URL = 'https://upbxznmaviomljfejlyw.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ';
@@ -918,6 +1123,15 @@
         let setupBreadcrumbs = [{id: null, name: 'Root'}];
         let contextSetupId = null;
         let currentSetupRemoved = false; 
+
+        // Gallery Tracking State
+        let currentGalleryFolderId = null;
+        let galleryBreadcrumbs = [{id: null, name: 'Root'}];
+        let contextGalleryId = null;
+
+        // Stintplaner State
+        let currentStintSheet = null;
+        let currentStintId = null;
 
         // --- Developer Check ---
         function isDeveloper() {
@@ -1031,25 +1245,40 @@
         }
 
         function switchTeamSubTab(tab) {
-            if (tab === 'setups' && currentMyRole === 'Community') {
-                showToast("Keine Berechtigung für Setups.", "error");
+            if ((tab === 'setups' || tab === 'gallery' || tab === 'stint') && currentMyRole === 'Community') {
+                showToast("Keine Berechtigung für diesen Bereich.", "error");
                 return;
             }
 
             document.getElementById('tab-btn-calendar').classList.remove('active');
             document.getElementById('tab-btn-setups').classList.remove('active');
+            document.getElementById('tab-btn-gallery').classList.remove('active');
+            document.getElementById('tab-btn-stint').classList.remove('active');
+            
             document.getElementById('team-calendar-section').style.display = 'none';
             document.getElementById('team-setups-section').style.display = 'none';
+            document.getElementById('team-gallery-section').style.display = 'none';
+            document.getElementById('team-stint-section').style.display = 'none';
 
             if(tab === 'calendar') {
                 document.getElementById('tab-btn-calendar').classList.add('active');
                 document.getElementById('team-calendar-section').style.display = 'block';
-            } else {
+            } else if(tab === 'setups') {
                 document.getElementById('tab-btn-setups').classList.add('active');
                 document.getElementById('team-setups-section').style.display = 'block';
                 currentSetupFolderId = null;
                 setupBreadcrumbs = [{id: null, name: 'Root'}];
                 loadTeamSetups();
+            } else if(tab === 'gallery') {
+                document.getElementById('tab-btn-gallery').classList.add('active');
+                document.getElementById('team-gallery-section').style.display = 'block';
+                currentGalleryFolderId = null;
+                galleryBreadcrumbs = [{id: null, name: 'Root'}];
+                loadTeamGallery();
+            } else if(tab === 'stint') {
+                document.getElementById('tab-btn-stint').classList.add('active');
+                document.getElementById('team-stint-section').style.display = 'block';
+                loadTeamStintplanners();
             }
         }
 
@@ -1220,6 +1449,14 @@
                         }
                     }
                 })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'team_stintplaner' }, payload => {
+                    if (currentOpenTeamId && document.getElementById('team-stint-section').style.display === 'block') {
+                        const affectedTeamId = payload.new ? payload.new.team_id : (payload.old ? payload.old.team_id : null);
+                        if(affectedTeamId === currentOpenTeamId && currentStintId === null) {
+                            loadTeamStintplanners();
+                        }
+                    }
+                })
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, payload => {
                     const affectedTeamId = payload.new ? payload.new.team_id : (payload.old ? payload.old.team_id : null);
                     const affectedUserId = payload.new ? payload.new.user_id : (payload.old ? payload.old.user_id : null);
@@ -1242,9 +1479,17 @@
                                     document.getElementById('sidebar-admin-hint').style.display = 'block';
                                     if(currentMyRole === 'Admin') btnEditTeam.style.display = 'inline-block';
                                     else btnEditTeam.style.display = 'none';
+                                    document.getElementById('gallery-action-btns').style.display = 'flex';
+                                    document.getElementById('stint-action-btns').style.display = 'flex';
                                 } else {
                                     adminControls.style.display = 'none';
                                     document.getElementById('sidebar-admin-hint').style.display = 'none';
+                                    document.getElementById('gallery-action-btns').style.display = 'none';
+                                    if(currentMyRole === 'Mitglied') {
+                                        document.getElementById('stint-action-btns').style.display = 'flex';
+                                    } else {
+                                        document.getElementById('stint-action-btns').style.display = 'none';
+                                    }
                                 }
                                 
                                 document.getElementById('btn-new-event').style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
@@ -1252,12 +1497,19 @@
                                 if (currentMyRole === 'Community') {
                                     document.getElementById('setup-action-btns').style.display = 'none';
                                     document.getElementById('tab-btn-setups').style.display = 'none';
-                                    if(document.getElementById('team-setups-section').style.display === 'block') {
+                                    document.getElementById('tab-btn-gallery').style.display = 'none';
+                                    document.getElementById('tab-btn-stint').style.display = 'none';
+                                    
+                                    if(document.getElementById('team-setups-section').style.display === 'block' || 
+                                       document.getElementById('team-gallery-section').style.display === 'block' || 
+                                       document.getElementById('team-stint-section').style.display === 'block') {
                                         switchTeamSubTab('calendar');
                                     }
                                 } else {
                                     document.getElementById('setup-action-btns').style.display = 'flex';
                                     document.getElementById('tab-btn-setups').style.display = '';
+                                    document.getElementById('tab-btn-gallery').style.display = '';
+                                    document.getElementById('tab-btn-stint').style.display = '';
                                 }
 
                                 loadTeamEvents(); 
@@ -1535,9 +1787,6 @@
         // ================= NEWS FUNKTIONEN =================
 
         async function postToWhatsAppChannel(title, content) {
-            // HINWEIS: Da Frontend-JS keine direkten WhatsApp-Nachrichten versenden darf (ohne Token zu leaken), 
-            // benötigst du hier einen Webhook-Link (z.B. von Make.com, Zapier oder der Meta Graph API), 
-            // der die Daten an deinen Kanal weiterleitet.
             const whatsappWebhookUrl = "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN"; 
             
             if (!whatsappWebhookUrl || whatsappWebhookUrl === "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN") return;
@@ -1641,7 +1890,6 @@
                 showToast("Fehler beim Posten: " + error.message, "error");
             } else {
                 
-                // WHATSAPP KANAL AUTOMATISIERUNG AUSFÜHREN
                 postToWhatsAppChannel(title, content);
 
                 showToast("News erfolgreich gepostet!", "success");
@@ -1753,7 +2001,7 @@
         }
 
         function showPatchlogModal() {
-            document.getElementById('patchlog-version').value = '';
+            document.getElementById('patchlog-version').value = 'v3.1.11';
             document.getElementById('patchlog-type').value = 'NEU';
             document.getElementById('patchlog-title').value = '';
             document.getElementById('patchlog-content').value = '';
@@ -2092,17 +2340,29 @@
                 } else {
                     btnEditTeam.style.display = 'none'; 
                 }
+                document.getElementById('gallery-action-btns').style.display = 'flex';
+                document.getElementById('stint-action-btns').style.display = 'flex';
             } else {
                 adminControls.style.display = 'none';
                 document.getElementById('sidebar-admin-hint').style.display = 'none';
+                document.getElementById('gallery-action-btns').style.display = 'none';
+                if(currentMyRole === 'Mitglied') {
+                    document.getElementById('stint-action-btns').style.display = 'flex';
+                } else {
+                    document.getElementById('stint-action-btns').style.display = 'none';
+                }
             }
 
             if (currentMyRole === 'Community') {
                 document.getElementById('setup-action-btns').style.display = 'none';
                 document.getElementById('tab-btn-setups').style.display = 'none';
+                document.getElementById('tab-btn-gallery').style.display = 'none';
+                document.getElementById('tab-btn-stint').style.display = 'none';
             } else {
                 document.getElementById('setup-action-btns').style.display = 'flex';
                 document.getElementById('tab-btn-setups').style.display = '';
+                document.getElementById('tab-btn-gallery').style.display = '';
+                document.getElementById('tab-btn-stint').style.display = '';
             }
 
             loadSidebarMembers(teamId);
@@ -2312,6 +2572,222 @@
             document.getElementById('requests-modal').style.display = 'none';
         }
 
+        // ================= STINTPLANER FUNKTIONEN =================
+        
+        async function loadTeamStintplanners() {
+            const container = document.getElementById('team-stint-list');
+            container.innerHTML = '<p style="color:#aaa;">Lade Stintpläne...</p>';
+            document.getElementById('team-stint-list').style.display = 'grid';
+            document.getElementById('team-stint-editor').style.display = 'none';
+            document.getElementById('stint-action-btns').style.display = currentMyRole === 'Community' ? 'none' : 'flex';
+
+            if (!supabaseClient) return;
+
+            const { data, error } = await supabaseClient.from('team_stintplaner').select('*').eq('team_id', currentOpenTeamId).order('created_at', { ascending: false });
+
+            if (error) {
+                container.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                container.innerHTML = `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Stintpläne vorhanden.</p>`;
+                return;
+            }
+
+            let html = '';
+            data.forEach(plan => {
+                html += `
+                    <div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid #17a2b8; padding: 20px; border-radius: 8px; transition: 0.3s; position: relative;">
+                        <h4 style="color: white; margin: 0 0 10px 0; font-size: 1.2rem;">📊 ${plan.name}</h4>
+                        <p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">Erstellt von: ${plan.created_by_name || 'Unbekannt'}</p>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-submit" style="padding: 6px 12px; font-size: 0.9rem; flex: 1;" onclick="openStintEditor('${plan.id}')">Öffnen / Bearbeiten</button>
+                        </div>
+                        ${(currentMyRole === 'Admin' || currentMyRole === 'Manager' || plan.created_by === activeUser.id) ? `
+                            <div style="position: absolute; top: 15px; right: 15px; cursor: pointer; color: #dc3545;" onclick="deleteStintPlan('${plan.id}')">🗑️</div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function createNewStintPlan() {
+            if(currentMyRole === 'Community') return;
+            const name = prompt("Name für den neuen Stintplan (z.B. Nürburgring 24h):");
+            if (!name || name.trim() === '') return;
+
+            const defaultData = {
+                data: [
+                    [1, "Max Mustermann", "15:00", 60, 7, 110, "Soft", "Sonnig", "Startstint", "=D1*E1"],
+                    [2, "", "", "", "", "", "", "", "", ""],
+                    [3, "", "", "", "", "", "", "", "", ""],
+                    [4, "", "", "", "", "", "", "", "", ""],
+                    [5, "", "", "", "", "", "", "", "", ""]
+                ],
+                columns: [
+                    { type: 'text', title: 'Stint', width: 60, align: 'center' },
+                    { type: 'text', title: 'Fahrer', width: 150 },
+                    { type: 'text', title: 'Startzeit', width: 100, align: 'center' },
+                    { type: 'numeric', title: 'Dauer (Min)', width: 100, align: 'center' },
+                    { type: 'numeric', title: 'Runden', width: 80, align: 'center' },
+                    { type: 'numeric', title: 'Tank (L)', width: 80, align: 'center' },
+                    { type: 'text', title: 'Reifen', width: 100, align: 'center' },
+                    { type: 'text', title: 'Wetter', width: 100, align: 'center' },
+                    { type: 'text', title: 'Bemerkung', width: 250 },
+                    { type: 'text', title: 'Berechnung', width: 100, align: 'center' }
+                ],
+                style: {}
+            };
+
+            const { error } = await supabaseClient.from('team_stintplaner').insert([{
+                team_id: currentOpenTeamId,
+                name: name.trim(),
+                data: defaultData,
+                created_by: activeUser.id,
+                created_by_name: `${activeUser.first_name} ${activeUser.last_name}`
+            }]);
+
+            if (error) showToast("Fehler beim Erstellen: " + error.message, "error");
+            else {
+                showToast("Stintplan erstellt!", "success");
+                loadTeamStintplanners();
+            }
+        }
+
+        async function openStintEditor(id) {
+            currentStintId = id;
+            document.getElementById('team-stint-list').style.display = 'none';
+            document.getElementById('stint-action-btns').style.display = 'none';
+            document.getElementById('team-stint-editor').style.display = 'block';
+            document.getElementById('spreadsheet').innerHTML = ''; 
+
+            const { data: plan, error } = await supabaseClient.from('team_stintplaner').select('*').eq('id', id).single();
+            if (error) {
+                showToast("Fehler beim Laden: " + error.message, "error");
+                closeStintEditor();
+                return;
+            }
+
+            document.getElementById('stint-editor-title').innerText = `Bearbeite: ${plan.name}`;
+
+            let config = plan.data || {};
+            
+            currentStintSheet = jspreadsheet(document.getElementById('spreadsheet'), {
+                data: config.data || [['','',''], ['','','']],
+                columns: config.columns || [],
+                style: config.style || {},
+                parseFormulas: true,
+                minDimensions: [15, 30],
+                defaultColWidth: 100,
+                tableOverflow: true,
+                tableWidth: "100%",
+                tableHeight: "600px",
+                freezeColumns: 2,
+                search: true,
+                allowInsertRow: true,
+                allowManualInsertColumn: true,
+                allowInsertColumn: true,
+                allowDeleteRow: true,
+                allowDeleteColumn: true,
+                allowRenameColumn: true,
+                wordWrap: true,
+                toolbar: [
+                    { type: 'i', content: 'undo', onclick: function() { currentStintSheet.undo(); } },
+                    { type: 'i', content: 'redo', onclick: function() { currentStintSheet.redo(); } },
+                    { type: 'i', content: 'save', onclick: function() { saveStintPlan(); } },
+                    { type: 'i', content: 'format_align_left', k: 'text-align', v: 'left' },
+                    { type: 'i', content: 'format_align_center', k: 'text-align', v: 'center' },
+                    { type: 'i', content: 'format_align_right', k: 'text-align', v: 'right' },
+                    { type: 'i', content: 'format_bold', k: 'font-weight', v: 'bold' },
+                    { type: 'color', content: 'format_color_text', k: 'color' },
+                    { type: 'color', content: 'format_color_fill', k: 'background-color' }
+                ]
+            });
+
+            if (currentMyRole === 'Community') {
+                document.getElementById('stint-save-btn').style.display = 'none';
+                showToast("Du bist im Lese-Modus (Community).", "info");
+            } else {
+                document.getElementById('stint-save-btn').style.display = 'block';
+            }
+        }
+
+        function closeStintEditor() {
+            document.getElementById('team-stint-editor').style.display = 'none';
+            document.getElementById('team-stint-list').style.display = 'grid';
+            document.getElementById('stint-action-btns').style.display = currentMyRole === 'Community' ? 'none' : 'flex';
+            if (currentStintSheet) {
+                jspreadsheet.destroy(document.getElementById('spreadsheet'));
+                currentStintSheet = null;
+            }
+            currentStintId = null;
+        }
+
+        async function saveStintPlan() {
+            if (!currentStintSheet || !currentStintId) return;
+
+            showToast("Speichere...", "info");
+            
+            try {
+                let colConfig = [];
+                let cols = currentStintSheet.options.columns ? currentStintSheet.options.columns.length : currentStintSheet.headers.length;
+                
+                for(let i=0; i<cols; i++) {
+                    let optCol = currentStintSheet.options.columns[i] || {};
+                    colConfig.push({
+                        width: currentStintSheet.getWidth(i),
+                        title: currentStintSheet.getHeader(i),
+                        type: optCol.type || 'text',
+                        align: optCol.align || 'center'
+                    });
+                }
+
+                // Daten aus Jspreadsheet auslesen (ohne fehlerhafte getFormula Aufrufe)
+                let rawData = [];
+                let sourceData = currentStintSheet.options.data;
+                for(let j=0; j<sourceData.length; j++) {
+                    let row = [];
+                    for(let i=0; i<cols; i++) {
+                        let val = sourceData[j][i];
+                        row.push(val !== undefined && val !== null ? val : "");
+                    }
+                    rawData.push(row);
+                }
+
+                const saveData = {
+                    data: rawData,
+                    style: currentStintSheet.getStyle(),
+                    columns: colConfig
+                };
+
+                const { error } = await supabaseClient.from('team_stintplaner').update({ data: saveData }).eq('id', currentStintId);
+
+                if (error) {
+                    showToast("Fehler beim Speichern in DB: " + error.message, "error");
+                    console.error("DB Error:", error);
+                } else {
+                    showToast("Erfolgreich gespeichert!", "success");
+                }
+            } catch (e) {
+                console.error("Save Error:", e);
+                showToast("Interner Fehler beim Speichern! Konsole prüfen.", "error");
+            }
+        }
+
+        async function deleteStintPlan(id) {
+            customConfirm("Möchtest du diesen Stintplan wirklich löschen?", async () => {
+                const { error } = await supabaseClient.from('team_stintplaner').delete().eq('id', id);
+                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
+                else {
+                    showToast("Stintplan gelöscht.", "success");
+                    loadTeamStintplanners();
+                }
+            });
+        }
+
+
         // ================= SETUP FUNKTIONEN =================
         function renderSetupBreadcrumbs() {
             const bc = document.getElementById('setup-breadcrumb');
@@ -2373,7 +2849,7 @@
                         <div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative;" oncontextmenu="showSetupContext(event, '${item.id}', false)">
                             <div style="font-size: 2.5rem; color: #aaa;">📄</div>
                             <div style="margin-top: 10px; font-weight: bold; color: white; word-break: break-all; font-size: 0.9rem;">${item.name}</div>
-                            <a href="${item.file_url}" download="${item.name}" target="_blank" class="btn-submit" style="display: block; margin-top: 15px; padding: 6px; font-size: 0.85rem; background: #28a745;">💾 Download</a>
+                            <a href="${item.file_url}?download=" download="${item.name}" target="_blank" class="btn-submit" style="display: block; margin-top: 15px; padding: 6px; font-size: 0.85rem; background: #28a745;">💾 Download</a>
                         </div>
                     `;
                 }
@@ -2486,6 +2962,196 @@
                 else {
                     showToast("Erfolgreich gelöscht.", "success");
                     loadTeamSetups();
+                }
+            });
+        }
+
+        // ================= GALERIE FUNKTIONEN =================
+        function renderGalleryBreadcrumbs() {
+            const bc = document.getElementById('gallery-breadcrumb');
+            let html = '📂 ';
+            galleryBreadcrumbs.forEach((crumb, index) => {
+                if (index === galleryBreadcrumbs.length - 1) {
+                    html += `<span style="color: white;">${crumb.name}</span>`;
+                } else {
+                    html += `<span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="navigateToGalleryBreadcrumb(${index})">${crumb.name}</span> / `;
+                }
+            });
+            bc.innerHTML = html;
+        }
+
+        async function loadTeamGallery() {
+            const foldersContainer = document.getElementById('team-gallery-folders');
+            const imagesContainer = document.getElementById('team-gallery-images');
+            
+            foldersContainer.innerHTML = '<p style="color:#aaa;">Lade Ordner...</p>';
+            imagesContainer.innerHTML = '';
+
+            let query = supabaseClient.from('team_gallery').select('*').eq('team_id', currentOpenTeamId);
+            if (currentGalleryFolderId === null) {
+                query = query.is('parent_id', null);
+            } else {
+                query = query.eq('parent_id', currentGalleryFolderId);
+            }
+
+            const { data, error } = await query.order('is_folder', { ascending: false }).order('name', { ascending: true });
+
+            if (error) {
+                foldersContainer.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
+                return;
+            }
+
+            renderGalleryBreadcrumbs();
+            
+            let foldersHtml = '';
+            let imagesHtml = '';
+
+            if (currentGalleryFolderId !== null) {
+                foldersHtml += `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px dashed #555;" onclick="navigateGalleryUp()">
+                        <div style="font-size: 2.5rem;">⬆️</div>
+                        <div style="margin-top: 10px; font-weight: bold; color: #aaa;">Zurück</div>
+                    </div>
+                `;
+            }
+
+            if (data.length === 0 && currentGalleryFolderId === null) {
+                foldersHtml += `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Bilder oder Ordner vorhanden.</p>`;
+            }
+
+            data.forEach(item => {
+                if (item.is_folder) {
+                    foldersHtml += `
+                        <div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px solid var(--primary); transition: 0.2s;" onclick="openGalleryFolder('${item.id}', '${item.name}')" oncontextmenu="showGalleryContext(event, '${item.id}', true)">
+                            <div style="font-size: 2.5rem; color: #ffcc00;">📁</div>
+                            <div style="margin-top: 10px; font-weight: bold; color: white;">${item.name}</div>
+                        </div>
+                    `;
+                } else {
+                    imagesHtml += `
+                        <div class="masonry-item" oncontextmenu="showGalleryContext(event, '${item.id}', false)">
+                            <a href="${item.file_url}" target="_blank">
+                                <img src="${item.file_url}" alt="${item.name}">
+                            </a>
+                            <div style="margin-top: 5px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,0.05); border-top: none;">
+                                <span style="color: #ccc; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">${item.name}</span>
+                                <a href="${item.file_url}?download=" download="${item.name}" target="_blank" style="color: white; text-decoration: none; background: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;" title="Herunterladen">💾</a>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+
+            foldersContainer.innerHTML = foldersHtml;
+            imagesContainer.innerHTML = imagesHtml;
+        }
+
+        function openGalleryFolder(id, name) {
+            currentGalleryFolderId = id;
+            galleryBreadcrumbs.push({id, name});
+            loadTeamGallery();
+        }
+
+        function navigateGalleryUp() {
+            galleryBreadcrumbs.pop();
+            currentGalleryFolderId = galleryBreadcrumbs[galleryBreadcrumbs.length - 1].id;
+            loadTeamGallery();
+        }
+
+        function navigateToGalleryBreadcrumb(index) {
+            galleryBreadcrumbs = galleryBreadcrumbs.slice(0, index + 1);
+            currentGalleryFolderId = galleryBreadcrumbs[galleryBreadcrumbs.length - 1].id;
+            loadTeamGallery();
+        }
+
+        async function createGalleryFolder() {
+            const name = prompt("Name des neuen Ordners:");
+            if (!name || name.trim() === '') return;
+
+            const { error } = await supabaseClient.from('team_gallery').insert([{
+                team_id: currentOpenTeamId,
+                parent_id: currentGalleryFolderId,
+                name: name.trim(),
+                is_folder: true
+            }]);
+
+            if (error) showToast("Fehler beim Erstellen: " + error.message, "error");
+            else loadTeamGallery();
+        }
+
+        async function uploadGalleryImage(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            showToast(`Lade ${files.length} Bild(er) hoch...`, "info");
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                if (!file.type.startsWith('image/')) {
+                    showToast(`Überspringe ${file.name} (kein Bild)`, "error");
+                    continue;
+                }
+
+                const fileName = `${Date.now()}_${i}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                
+                const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('gallery').upload(fileName, file);
+                if (uploadError) {
+                    showToast(`Fehler bei ${file.name}: ` + uploadError.message, "error");
+                    continue;
+                }
+
+                const { data: publicUrlData } = supabaseClient.storage.from('gallery').getPublicUrl(fileName);
+
+                const { error: dbError } = await supabaseClient.from('team_gallery').insert([{
+                    team_id: currentOpenTeamId,
+                    parent_id: currentGalleryFolderId,
+                    name: file.name,
+                    is_folder: false,
+                    file_url: publicUrlData.publicUrl
+                }]);
+
+                if (dbError) showToast(`Fehler beim Speichern von ${file.name}: ` + dbError.message, "error");
+            }
+
+            showToast("Bilder-Upload abgeschlossen!", "success");
+            event.target.value = ''; 
+            loadTeamGallery();
+        }
+
+        function showGalleryContext(e, id, isFolder) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (currentMyRole !== 'Admin' && currentMyRole !== 'Manager') return;
+
+            contextGalleryId = id;
+            const menu = document.getElementById('context-menu');
+            menu.innerHTML = `
+                <div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;">Aktion für ${isFolder ? 'Ordner' : 'Bild'}</div>
+                <hr>
+                <div style="color:#dc3545;" onclick="deleteGalleryItem()">🗑️ Löschen</div>
+            `;
+            menu.style.display = 'block';
+            
+            let x = e.clientX;
+            let y = e.clientY;
+            if (x + 200 > window.innerWidth) x -= 200;
+            if (y + 250 > window.innerHeight) y -= 250;
+            
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+        }
+
+        async function deleteGalleryItem() {
+            document.getElementById('context-menu').style.display = 'none';
+            if(!contextGalleryId) return;
+
+            customConfirm("Möchtest du dieses Bild/Diesen Ordner wirklich löschen?", async () => {
+                const { error } = await supabaseClient.from('team_gallery').delete().eq('id', contextGalleryId);
+                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
+                else {
+                    showToast("Erfolgreich gelöscht.", "success");
+                    loadTeamGallery();
                 }
             });
         }
@@ -2664,7 +3330,35 @@
                 return;
             }
 
-            currentTeamEvents = events || []; 
+            // --- NEU: Auto-Delete Termine älter als 24h ---
+            const now = new Date();
+            let validEvents = [];
+            let idsToDelete = [];
+
+            (events || []).forEach(ev => {
+                if (ev.date) {
+                    let endTime = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59');
+                    let timeDiff = now.getTime() - endTime.getTime();
+                    let hoursDiff = timeDiff / (1000 * 60 * 60);
+
+                    // Wenn Event länger als 24h beendet ist, zum Löschen markieren
+                    if (hoursDiff > 24) {
+                        idsToDelete.push(ev.id);
+                    } else {
+                        validEvents.push(ev);
+                    }
+                } else {
+                    validEvents.push(ev);
+                }
+            });
+
+            // Asynchrones Löschen der veralteten Termine in der Datenbank (nur Admin/Manager dürfen das triggern)
+            if (idsToDelete.length > 0 && (currentMyRole === 'Admin' || currentMyRole === 'Manager')) {
+                supabaseClient.from('events').delete().in('id', idsToDelete).then();
+            }
+            
+            currentTeamEvents = validEvents; 
+            // ----------------------------------------------
 
             if (currentTeamEvents.length === 0) {
                 container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; grid-column: 1/-1;">Noch keine Termine vorhanden.</p>';
@@ -2750,7 +3444,7 @@
                 let setupHtml = '';
                 if (ev.setup_file_url && currentMyRole !== 'Community') {
                     setupHtml = `
-                        <a href="${ev.setup_file_url}" download="${ev.setup_file_name || 'setup.sto'}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px dashed #aaa; font-size: 0.85rem; transition: 0.2s; margin-top: 10px;">
+                        <a href="${ev.setup_file_url}?download=" download="${ev.setup_file_name || 'setup.sto'}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px dashed #aaa; font-size: 0.85rem; transition: 0.2s; margin-top: 10px;">
                             💾 Setup Download (.sto)
                         </a>
                     `;
@@ -3095,6 +3789,7 @@
 
             closeEventModal();
             loadTeamEvents(); 
+            updateLiveCalendar(currentOpenTeamId); 
         }
 
         function deleteEvent(id) {
@@ -3113,6 +3808,7 @@
                 } else {
                     showToast("Termin gelöscht.", "success");
                     loadTeamEvents();
+                    updateLiveCalendar(currentOpenTeamId); 
                 }
             });
         }
