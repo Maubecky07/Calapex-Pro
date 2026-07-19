@@ -19,221 +19,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4/dist/jsuites.css" type="text/css" />
     <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/index.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/jspreadsheet.css" type="text/css" />
-
-    <style>
-        :root {
-            --primary: #d11212;
-            --primary-glow: rgba(209, 18, 18, 0.6);
-            --bg-dark: #050505;
-            --panel-bg: rgba(20, 20, 20, 0.75);
-            --text-main: #ffffff;
-            --text-muted: #999999;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); overflow-x: hidden; min-height: 100vh; }
-
-        .background-wrapper { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -10; pointer-events: none; overflow: hidden; }
-        .bg-gradient { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #000000, #140101, #000000, #2a0303); background-size: 300% 300%; animation: gradientShift 12s ease infinite; }
-        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
-        .bg-pattern {
-            position: absolute; top: -100px; left: -100px; width: calc(100% + 200px); height: calc(100% + 200px);
-            background-image: linear-gradient(rgba(209, 18, 18, 0.25) 1px, transparent 1px), linear-gradient(90deg, rgba(209, 18, 18, 0.25) 1px, transparent 1px);
-            background-size: 50px 50px; animation: gridDrift 3s linear infinite;
-            mask-image: radial-gradient(circle at center, black 30%, transparent 90%);
-            -webkit-mask-image: radial-gradient(circle at center, black 30%, transparent 90%);
-        }
-        @keyframes gridDrift { 0% { transform: translate(0px, 0px); } 100% { transform: translate(50px, 50px); } }
-
-        .bg-logo {
-            position: absolute; top: 50%; left: 50%; width: 70%; max-width: 900px; height: 70%;
-            background-image: url('https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png');
-            background-size: contain; background-position: center; background-repeat: no-repeat;
-            animation: logoFloatPulse 6s ease-in-out infinite;
-        }
-        @keyframes logoFloatPulse {
-            0% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; filter: drop-shadow(0 0 15px rgba(209, 18, 18, 0.4)); }
-            50% { transform: translate(-50%, calc(-50% - 20px)) scale(1.03); opacity: 0.4; filter: drop-shadow(0 0 40px rgba(209, 18, 18, 0.9)); }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; filter: drop-shadow(0 0 15px rgba(209, 18, 18, 0.4)); }
-        }
-
-        #toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 90%; max-width: 400px; }
-        .toast { background: rgba(20, 20, 20, 0.95); border-left: 4px solid var(--primary); color: white; padding: 15px 25px; border-radius: 8px; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.8); font-size: 1.1rem; animation: fadeInDown 0.3s ease forwards; white-space: pre-wrap; }
-        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeOutUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-20px); } }
-
-        #profile-badge { display: none; position: fixed; top: 20px; right: 20px; background: rgba(20, 20, 20, 0.85); border: 1px solid var(--primary); padding: 10px 20px; border-radius: 30px; backdrop-filter: blur(10px); z-index: 1000; align-items: center; gap: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        #btn-logout { background: transparent; border: 1px solid #aaa; color: #aaa; padding: 4px 12px; border-radius: 15px; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
-        #btn-logout:hover { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-
-        .container { max-width: 1400px; margin: 0 auto; padding: 40px 20px; }
-        .view { display: none; opacity: 0; transform: translateY(30px); }
-        .view.active { display: block; animation: slideUp 0.6s forwards; }
-        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } from { opacity: 0; transform: translateY(30px); } }
-
-        .landing-hero { text-align: center; margin-bottom: 60px; margin-top: 40px; }
-        .landing-hero h1 { font-size: 3.5rem; color: white; text-transform: uppercase; margin-bottom: 20px; text-shadow: 0 0 20px rgba(209, 18, 18, 0.5); }
-        .landing-hero p { font-size: 1.3rem; color: #ccc; max-width: 800px; margin: 0 auto 40px auto; line-height: 1.6; }
-        .auth-buttons-container { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
-        .landing-section { max-width: 1000px; margin: 0 auto 50px auto; padding: 40px; background: var(--panel-bg); border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .landing-section h2 { color: var(--primary); font-size: 2.5rem; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid rgba(209, 18, 18, 0.3); padding-bottom: 10px; }
-        .landing-section p { font-size: 1.2rem; color: #ddd; line-height: 1.8; margin-bottom: 20px; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 30px; }
-        .feature-card { background: rgba(0,0,0,0.6); padding: 25px; border-radius: 12px; border-top: 4px solid var(--primary); transition: transform 0.3s, box-shadow 0.3s; }
-        .feature-card:hover { transform: translateY(-8px); box-shadow: 0 10px 20px rgba(0,0,0,0.6), 0 0 15px rgba(209, 18, 18, 0.3); }
-        .feature-card h3 { font-size: 1.6rem; margin-bottom: 15px; color: white; }
-        .feature-card p { font-size: 1.05rem; color: #aaa; line-height: 1.5; }
-        .reveal { opacity: 0; transform: translateY(60px); transition: all 0.8s ease-out; }
-        .reveal.active { opacity: 1; transform: translateY(0); }
-
-        .menu-grid { display: flex; flex-direction: column; gap: 25px; max-width: 800px; margin: 50px auto 0; }
-        .menu-btn { background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--primary); padding: 35px 40px; text-align: center; color: white; font-size: 2rem; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; cursor: pointer; border-radius: 12px; transition: all 0.4s ease; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
-        .menu-btn.disabled { opacity: 0.5; cursor: not-allowed; border-left-color: #555; }
-        .menu-btn span { display: block; margin-top: 10px; font-size: 1.1rem; color: #aaa; text-transform: none; font-weight: 500; }
-        .menu-btn:not(.disabled):hover { transform: translateX(10px); box-shadow: 0 15px 30px rgba(0,0,0,0.6), 0 0 25px var(--primary-glow); border-color: var(--primary); color: var(--primary); }
-
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
-        .back-btn { background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px; border-radius: 8px; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: 0.3s; }
-        .back-btn:hover { background: var(--primary); color: white; box-shadow: 0 0 15px var(--primary-glow); }
-        .panel { background: var(--panel-bg); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 30px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .panel-header { font-size: 2rem; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px; display: inline-block; }
-
-        .event-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
-        @media (max-width: 900px) { .event-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px) { .event-grid { grid-template-columns: 1fr; } }
-        .team-events-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        @media (max-width: 1400px) { .team-events-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 900px) { .team-events-grid { grid-template-columns: 1fr; } }
-
-        .team-card { background: linear-gradient(145deg, rgba(30, 30, 30, 0.9), rgba(15, 15, 15, 0.95)); border: 1px solid rgba(255, 255, 255, 0.05); border-top: 4px solid var(--primary); border-radius: 12px; padding: 25px; transition: 0.4s; position: relative; cursor: pointer; }
-        .team-card:hover { transform: translateY(-8px); border-color: rgba(209, 18, 18, 0.5); box-shadow: 0 12px 25px rgba(0,0,0,0.6), 0 0 20px rgba(209, 18, 18, 0.3); }
-        .team-logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; margin-bottom: 15px; background: #222; border: 1px solid #444; }
-        .team-title { font-size: 1.5rem; font-weight: 700; color: white; margin-bottom: 10px; }
-        .team-badge { position: absolute; top: 20px; right: 20px; background: rgba(209, 18, 18, 0.15); color: var(--primary); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(209, 18, 18, 0.3); }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); font-size: 0.9rem;}
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; font-family: inherit; }
-        .form-group textarea { resize: vertical; min-height: 100px; }
-        .form-group input[type="file"] { padding: 10px; cursor: pointer; background: rgba(209, 18, 18, 0.15); border: 1px solid var(--primary); }
-        .form-group input[type="file"]::file-selector-button { background: var(--primary); color: white; border: none; padding: 8px 15px; border-radius: 5px; margin-right: 15px; cursor: pointer; font-weight: bold; }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
-        
-        .custom-checkbox-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .custom-checkbox-container input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary); }
-        .custom-checkbox-container label { margin-bottom: 0; color: white; font-size: 1.1rem; cursor: pointer; }
-
-        .btn-submit { background: var(--primary); color: white; border: none; padding: 12px 25px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; width: 100%; text-transform: uppercase; margin-top: 10px; }
-        .btn-submit:hover { background: white; color: var(--primary); box-shadow: 0 0 20px var(--primary-glow); }
-
-        .team-tabs { display: flex; gap: 15px; margin-bottom: 30px; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 15px; flex-wrap: wrap; }
-        .tab-btn { background: transparent; border: none; color: #aaa; font-size: 1.2rem; cursor: pointer; text-transform: uppercase; font-weight: 600; transition: 0.3s; padding: 10px 20px; border-radius: 8px; flex: 1; text-align: center; min-width: 150px; }
-        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 0 15px var(--primary-glow); }
-        .tab-btn:hover:not(.active) { color: white; background: rgba(255,255,255,0.05); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideUp 0.4s forwards; }
-
-        #member-sidebar { position: fixed; top: 0; right: -100%; width: 350px; max-width: 100vw; height: 100vh; background: rgba(15, 15, 15, 0.98); border-left: 2px solid var(--primary); transition: right 0.4s ease; z-index: 2000; padding: 30px 20px; box-shadow: -10px 0 30px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
-        #member-sidebar.open { right: 0; }
-        .sidebar-close { float: right; cursor: pointer; color: var(--primary); font-size: 2rem; background: none; border: none; line-height: 1; }
-        .hamburger-btn { background: transparent; border: 1px solid var(--primary); color: white; font-size: 1.2rem; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; text-transform: uppercase; }
-        .hamburger-btn:hover { background: var(--primary); box-shadow: 0 0 15px var(--primary-glow); }
-
-        #sidebar-member-list { flex: 1; overflow-y: auto; }
-        .member-item { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; gap: 10px; transition: 0.2s; border-radius: 8px; padding-inline: 5px; }
-        .member-item.admin-hover:hover { background: rgba(255,255,255,0.05); cursor: context-menu; }
-
-        .context-menu { display: none; position: fixed; z-index: 4000; background: rgba(15,15,15,0.98); border: 1px solid var(--primary); border-radius: 8px; padding: 5px 0; box-shadow: 0 5px 20px rgba(0,0,0,0.9); backdrop-filter: blur(10px); min-width: 180px; }
-        .context-menu div { padding: 10px 20px; color: white; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
-        .context-menu div:hover { background: rgba(209,18,18,0.2); color: var(--primary); }
-        .context-menu hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0; }
-
-        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0,0,0,0.8); z-index: 3000; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .modal-content { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); width: 90%; max-width: 700px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
-        .confirm-box { background: var(--panel-bg); padding: 30px; border-radius: 12px; border: 1px solid var(--primary); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); max-width: 400px; width: 90%; }
-        .confirm-msg { color: white; font-size: 1.2rem; margin-bottom: 25px; line-height: 1.4; white-space: pre-wrap;}
-        .confirm-btns { display: flex; gap: 15px; justify-content: center; }
-
-        #online-users-widget { display: none; position: fixed; bottom: 20px; left: 20px; width: 250px; max-width: calc(100vw - 40px); background: rgba(10,10,10,0.85); border: 1px solid var(--primary); border-radius: 12px; padding: 15px; z-index: 900; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
-        #online-users-list { max-height: 35vh; overflow-y: auto; transition: all 0.3s ease; }
-        .collapsed-list { display: none !important; }
-
-        .event-canceled { opacity: 0.5; filter: grayscale(80%); }
-        .event-canceled-text { text-decoration: line-through; }
-        .live-glow { border-color: #ff0000 !important; box-shadow: 0 0 20px rgba(255, 0, 0, 0.6) !important; animation: cardPulse 2s infinite; }
-        @keyframes cardPulse { 0% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); } 50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); } 100% { box-shadow: 0 0 15px rgba(255, 0, 0, 0.4); } }
-        @keyframes textPulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        .chat-container { display: flex; flex-direction: column; height: 60vh; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
-        .chat-message { background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 8px; border-left: 3px solid var(--primary); align-self: flex-start; max-width: 80%; }
-        .chat-message.own { background: rgba(209, 18, 18, 0.15); border-left: none; border-right: 3px solid var(--primary); align-self: flex-end; }
-        .chat-input-area { display: flex; padding: 15px; background: rgba(20,20,20,0.8); border-top: 1px solid rgba(255,255,255,0.1); gap: 10px; }
-        .chat-input-area input { flex: 1; }
-
-        .masonry-grid { column-count: 3; column-gap: 15px; }
-        @media (max-width: 900px) { .masonry-grid { column-count: 2; } }
-        @media (max-width: 600px) { .masonry-grid { column-count: 1; } }
-        .masonry-item { break-inside: avoid; margin-bottom: 15px; position: relative; }
-        .masonry-item img { width: 100%; height: auto; border-radius: 8px 8px 0 0; display: block; border: 1px solid rgba(255,255,255,0.1); border-bottom: none; }
-
-        .spreadsheet-container { background: #ffffff; border-radius: 8px; overflow: hidden; color: #000000; }
-        .spreadsheet-container .jexcel_content { box-shadow: none !important; max-height: 600px; overflow-y: auto; }
-        .spreadsheet-container .jexcel > thead > tr > td { background-color: #f3f3f3; color: #333; font-weight: bold; }
-        .spreadsheet-container .jexcel > tbody > tr > td { color: #000; }
-        .spreadsheet-container .jexcel > tbody > tr > td.readonly { background-color: #fafafa; }
-        .jexcel_toolbar i { color: #555 !important; }
-        
-        .formula-active { background-color: #d1f2f8 !important; color: #000000 !important; border: 2px solid #17a2b8 !important; box-shadow: 0 0 10px rgba(23, 162, 184, 0.5) !important; outline: none !important; }
-
-        /* iRacing Events Design für das schwebende Widget */
-        .iracing-event-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255,255,255,0.05);
-            border-left: 3px solid #ff0000; 
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 5px;
-            transition: 0.3s;
-        }
-        .iracing-event-card:hover { background: rgba(30, 30, 30, 0.9); border-color: #ff0000; }
-        .iracing-month-label { color: #ff0000; font-weight: bold; font-size: 0.9rem; display: block; margin-bottom: -2px; }
-        .iracing-date-label { color: white; font-size: 1.1rem; font-weight: bold; }
-        .iracing-title-label { color: white; font-size: 1.1rem; font-weight: bold; text-transform: uppercase; }
-        .iracing-track-label { color: #aaa; font-size: 0.8rem; text-transform: uppercase; font-weight: 500; }
-        .iracing-cars-label { color: #ccc; font-size: 0.85rem; }
-        .iracing-cars-container { text-align: left; width: 100%; margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; }
-        
-        .badge-team { background: rgba(0, 80, 143, 0.2); color: #66b3ff; border: 1px solid #00508F; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-bottom: 3px; }
-        .badge-super { background: rgba(255, 165, 0, 0.2); color: #ffcc00; border: 1px solid #ffcc00; font-size: 0.65rem; font-weight: bold; padding: 2px 6px; border-radius: 8px; display: inline-block; margin-bottom: 3px; }
-
-        @media (max-width: 900px) {
-            #team-calendar-layout { grid-template-columns: 1fr !important; }
-        }
-
-        @media (max-width: 768px) {
-            .menu-btn { padding: 25px 20px; font-size: 1.5rem; }
-            .top-nav { flex-direction: column; align-items: stretch; text-align: center; }
-            .back-btn, .hamburger-btn { width: 100%; }
-            #admin-controls { flex-direction: column; align-items: stretch; gap: 15px; text-align: center; }
-            #online-users-widget { bottom: 10px; left: 10px; max-width: calc(100vw - 20px); }
-            #profile-badge { position: absolute; top: 10px; right: 10px; padding: 5px 10px; }
-            .panel { padding: 20px; }
-            .landing-section { padding: 25px 20px; }
-            .landing-hero h1 { font-size: 2.5rem; }
-            .landing-hero p { font-size: 1.1rem; }
-            .feature-grid { grid-template-columns: 1fr; gap: 20px; }
-            #iracing-widget { top: 60px !important; right: 10px !important; width: calc(100vw - 20px) !important; }
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <div id="maintenance-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; backdrop-filter: blur(10px);">
+        <h1 style="color: #e30613; font-size: 3.5rem; margin-bottom: 20px; text-transform: uppercase;">Wartungsarbeiten</h1>
+        <p style="font-size: 1.3rem; color: #ccc; max-width: 600px; line-height: 1.5;">Das Calapex-System wird derzeit gewartet und ist vorübergehend offline. Bitte versuche es später noch einmal.</p>
+    </div>
 
     <div class="background-wrapper">
         <div class="bg-gradient"></div>
@@ -283,7 +76,7 @@
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <div class="form-group"><label>Version</label><input type="text" id="patchlog-version" placeholder="z.B. v3.1.12"></div>
+                <div class="form-group"><label>Version</label><input type="text" id="patchlog-version" placeholder="z.B. v0.7.0"></div>
                 <div class="form-group"><label>Typ</label><select id="patchlog-type"><option value="NEU">NEU</option><option value="ÄNDERUNG">ÄNDERUNG</option><option value="FIX">FIX</option></select></div>
             </div>
             <div class="form-group"><label>Titel</label><input type="text" id="patchlog-title" placeholder="Kurze Beschreibung..."></div>
@@ -299,6 +92,7 @@
         <div class="modal-content">
             <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
             <div class="form-group"><label>Team Name</label><input type="text" id="edit-team-name" placeholder="Team Name"></div>
+            <div class="form-group"><label>Allgemeininformationen</label><textarea id="edit-team-desc" placeholder="Beschreibe dein Team kurz für zukünftige Bewerber..."></textarea></div>
             <div class="form-group"><label>Neues Teamlogo (optional)</label><input type="file" id="edit-team-logo" accept="image/*"></div>
             <div class="form-group">
                 <label>Haupt-Simulator</label>
@@ -415,6 +209,19 @@
 
     <div class="container">
         <main id="view-landing" class="view active" style="position: relative;">
+            <div class="landing-side-images">
+                <div class="landing-side-col left">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild7.png" alt="Simracing 1">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild8.png" alt="Simracing 2">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild3.png" alt="Simracing 3">
+                </div>
+                <div class="landing-side-col right">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild4.png" alt="Simracing 4">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild5.png" alt="Simracing 5">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild6.png" alt="Simracing 6">
+                </div>
+            </div>
+
             <div class="landing-hero reveal">
                 <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
                 <h1>Das Simracing-Portal</h1>
@@ -423,6 +230,12 @@
                     <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem;" onclick="openAuthView('login')">Log-In</button>
                     <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 2px solid var(--primary); color: white;" onclick="openAuthView('register')">Registrieren</button>
                 </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; max-width: 800px; margin: 0 auto;">
+                    <h3 style="color: white; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,255,255,0.2);">Live Racing entdecken</h3>
+                    <div class="auth-buttons-container">
+                        <button class="btn-submit" style="width: auto; padding: 12px 30px; font-size: 1.2rem; background: #ff4500; border: 1px solid #cc3700; color: white; box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);" onclick="openStreamCenter('official')">📺 Offizielle Serien</button>
+                        <button class="btn-submit" style="width: auto; padding: 12px 30px; font-size: 1.2rem; background: #a970ff; border: 1px solid #8c52ff; color: white; box-shadow: 0 0 15px rgba(169, 112, 255, 0.4);" onclick="openStreamCenter('community')">🎮 Community Live</button>
+                    </div>
             </div>
 
             <div class="landing-section reveal">
@@ -446,7 +259,7 @@
                 <p style="margin-bottom: 30px;">Registriere dich noch heute kostenlos und bring die Organisation deines Rennteams auf das nächste Level!</p>
                 <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
             </div>
-            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">Calapex Beta | v3.1.12</div>
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">Calapex Beta | v0.7.0</div>
         </main>
 
         <main id="view-auth" class="view">
@@ -480,7 +293,6 @@
                     <p style="text-align: center; margin-top: 20px; color: #aaa;">Bereits registriert? <a href="#" onclick="toggleAuth('login')" style="color: var(--primary);">Zur Anmeldung</a></p>
                 </div>
             </div>
-            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 40px; margin-bottom: 10px;">Calapex Beta | v3.1.12</div>
         </main>
         
         <main id="view-home" class="view" style="position: relative;">
@@ -509,7 +321,7 @@
                     </div>
                 </div>
             </div>
-            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">Calapex Beta | v3.1.12</div>
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">Calapex Beta | v0.7.0</div>
         </main>
 
         <main id="view-news" class="view">
@@ -541,6 +353,7 @@
                 <div id="tab-create-team" class="tab-content">
                     <div style="max-width: 600px; margin: 0 auto;">
                         <div class="form-group"><label>Team Name</label><input type="text" id="create-team-name" placeholder="z.B. Calapex Motorsport"></div>
+                        <div class="form-group"><label>Allgemeininformationen (optional)</label><textarea id="create-team-desc" placeholder="Beschreibe dein Team kurz für zukünftige Bewerber..."></textarea></div>
                         <div class="form-group"><label>Teamlogo (vom PC auswählen)</label><input type="file" id="create-team-logo" accept="image/*"></div>
                         <div class="form-group">
                             <label>Haupt-Simulator</label>
@@ -589,7 +402,6 @@
             <div id="team-calendar-section">
                 <div id="team-calendar-layout" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px;">
                     
-                    <!-- Team Chat Panel -->
                     <div class="panel" style="display: flex; flex-direction: column; height: 700px; padding: 20px;">
                         <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">💬 Team Chat</h3>
                         <div class="chat-container" style="flex: 1; height: auto; border: none; background: transparent;">
@@ -601,7 +413,6 @@
                         </div>
                     </div>
 
-                    <!-- Calendar Panel -->
                     <div class="panel">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
                             <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
@@ -643,7 +454,7 @@
                         <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="setup-action-btns">
                             <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem; background: #555; border: 1px solid #777;" onclick="createSetupFolder()">+ Neuer Ordner</button>
                             <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="document.getElementById('setup-file-input').click()">+ Setup (.sto)</button>
-                            <input type="file" id="setup-file-input" accept=".sto" style="display: none;" onchange="uploadSetupFile(event)">
+                            <input type="file" id="setup-file-input" accept=".sto" multiple style="display: none;" onchange="uploadSetupFile(event)">
                         </div>
                     </div>
                     <div id="team-setups-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;"></div>
@@ -666,1256 +477,81 @@
             </div>
         </main>
 
+        <main id="view-streams" class="view">
+            <div class="top-nav">
+                <h2 class="panel-header" id="stream-center-title" style="margin-bottom: 0;">Stream Center</h2>
+                <!-- Dynamischer Zurück-Button -->
+                <button class="back-btn" onclick="closeStreamCenter()">◄ Zurück</button>
+            </div>
+
+            <!-- Das Layout aus deiner test2.html -->
+            <div class="serien-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                
+                <!-- Linke Seite: Der Video Player -->
+                <div class="player-bereich" style="flex: 2; min-width: 300px;">
+                    <div class="video-box" id="video-box-container" style="position: relative; width: 100%; aspect-ratio: 16/9; background-color: #1a1a1a; border-radius: 8px; overflow: hidden; border: 1px solid #333;">
+                        <div class="placeholder" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; height: 100%;">
+                            <h3 id="placeholder-title" style="color: white; margin-bottom: 10px;">Wähle einen Stream</h3>
+                            <p id="placeholder-text" style="color: #aaa;">Klicke rechts auf ein Event, um die Übertragung zu starten.</p>
+                            <button class="btn-submit" id="activation-button" style="display:none; width: auto; background-color: #ff4500;" onclick="triggerVideoLoad()">Stream jetzt laden</button>
+                        </div>
+                    </div>
+                    <!-- Zusatzinfos unter dem Video -->
+                    <div id="stream-info-box" style="margin-top: 20px; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; display: none;"></div>
+                </div>
+
+                <!-- Rechte Seite: Die Playlist -->
+                <div class="renn-liste" style="flex: 1; min-width: 300px; background-color: #1a1a1a; border-radius: 8px; padding: 15px; max-height: 600px; overflow-y: auto; border: 1px solid #333;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <select id="stream-filter-sim" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); color: white; border-radius: 5px; outline: none; border: 1px solid #555;" onchange="applyStreamFilters()">
+                            <option value="all">Alle Simulatoren</option>
+                            <option value="iRacing">iRacing</option>
+                            <option value="Assetto Corsa Competizione">ACC</option>
+                            <option value="rFactor 2">rFactor 2</option>
+                        </select>
+                    </div>
+                    <h3 style="color: white; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;" id="playlist-title">Saison-Kalender</h3>
+                    <div id="playlist-container"></div>
+                </div>
+            </div>
+        </main>
+
     </div>
+    
+<!-- 1. Konfiguration zuerst laden! -->
+    <script src="config.js"></script>
 
+    <!-- 2. Werkzeuge und Basis-Skripte -->
+    <script src="ui.js"></script>
+    <script src="realtime.js"></script>
+    <script src="auth.js"></script>
+
+    <!-- 3. Features -->
+    <script src="chat.js"></script>
+    <script src="news.js"></script>
+    <script src="teams.js"></script>
+    <script src="files.js"></script>
+    <script src="stint.js"></script>
+    <script src="events.js"></script>
+    <script src="streams.js"></script>
+
+    <!-- 4. Der Start-Befehl, der ausgeführt wird, sobald die Seite geladen ist -->
     <script>
-
-        // ================= IRACING WIDGET LOGIK =================
-        function toggleIRacingWidget() {
-            const content = document.getElementById('iracing-widget-content');
-            const icon = document.getElementById('iracing-widget-icon');
-            if (content.style.display === 'none') {
-                content.style.display = 'block';
-                icon.style.transform = 'rotate(180deg)';
-            } else {
-                content.style.display = 'none';
-                icon.style.transform = 'rotate(0deg)';
-            }
-        }
-
-        function renderIRacingEvents() {
-            const events = [
-                { m: 'JAN', d: '9-10', t: 'Roar', tr: 'Daytona International Speedway', c: 'LMP2, GT4, Touring', b: '' },
-                { m: 'JAN', d: '16-18', t: 'Daytona 24', tr: 'Daytona International Speedway', c: 'GTP, LMP2, GT3', b: 'TEAM EVENT' },
-                { m: 'JAN', d: '28TH', t: 'Dale Jr Charity Event', tr: 'Iowa Speedway', c: 'Mini Stock', b: '' },
-                { m: 'FEB', d: '11-18', t: 'Daytona 500', tr: 'Daytona International Speedway', c: 'NASCAR Cup', b: '' },
-                { m: 'FEB', d: '20-22', t: 'Bathurst 12', tr: 'Mount Panorama Circuit', c: 'GT3', b: 'TEAM EVENT' },
-                { m: 'MAR', d: '27-29', t: 'Sebring 12', tr: 'Sebring International Raceway', c: 'GTP, LMP2, GT3', b: 'TEAM EVENT' },
-                { m: 'APR', d: '10-11', t: 'Road America 500', tr: 'Road America', c: 'Nissan GTP, Audi 90', b: 'TEAM EVENT' },
-                { m: 'MAY', d: '1-3', t: 'Nurburgring 24h', tr: 'Nurburgring - Gesamtstrecke 24H', c: 'GT3, PCup, GT4, Touring', b: 'TEAM EVENT' },
-                { m: 'MAY', d: '5-11', t: 'Indy 500 - Fixed', tr: 'Indianapolis Motor Speedway', c: 'Dallara IR-18', b: '' },
-                { m: 'MAY', d: '12-18', t: 'Indy 500 - Open', tr: 'Indianapolis Motor Speedway', c: 'Dallara IR-18', b: '' },
-                { m: 'MAY', d: '20-25', t: 'World 600', tr: 'Charlotte Motor Speedway', c: 'NASCAR Cup', b: '' },
-                { m: 'MAY', d: '29-31', t: '4 Hours at Thruxton', tr: 'Thruxton Circuit', c: 'Touring Cars', b: '' },
-                { m: 'JUN', d: '19-21', t: 'Watkins Glen 6 Hour', tr: 'Watkins Glen International', c: 'GTP, LMP2, GT3', b: 'TEAM EVENT' },
-                { m: 'JUN/JUL', d: '30 - 6', t: 'Firecracker 400', tr: 'Daytona International Speedway 2007', c: '1987 NASCAR Cup', b: '' },
-                { m: 'JUL', d: '10-12', t: 'Spa 24', tr: 'Circuit de Spa-Francorchamps', c: 'GT3', b: 'TEAM EVENT' },
-                { m: 'JUL', d: '22-27', t: 'Brickyard 400', tr: 'Indianapolis Motor Speedway', c: 'NASCAR Cup', b: '' },
-                { m: 'JUL', d: '24-26', t: '6 Hours of Road America', tr: 'Road America', c: 'GTP, LMP2, GT3', b: 'TEAM EVENT' },
-                { m: 'AUG', d: '4-9', t: 'Knoxville Nationals', tr: 'Knoxville Raceway', c: '410 Winged Sprint Car', b: 'SUPER SESSION' },
-                { m: 'AUG', d: '14-15', t: 'Portimao 1000km', tr: 'Algarve International Circuit', c: 'HPD, GT1, GT2', b: '' },
-                { m: 'AUG', d: '25-30', t: 'Crandon Championship', tr: 'Crandon International Raceway', c: 'Pro 4 Truck', b: 'SUPER SESSION' },
-                { m: 'SEP', d: '2-7', t: 'Southern 500', tr: 'Darlington Raceway', c: 'NASCAR Cup', b: '' },
-                { m: 'SEP', d: '10-15', t: 'Suzuka 1000km', tr: 'Suzuka Circuit', c: 'GT3', b: 'TEAM EVENT' },
-                { m: 'SEP', d: '18-20', t: 'Britcar 24', tr: 'Silverstone', c: 'GT3, GT4', b: 'TEAM EVENT' },
-                { m: 'SEP', d: '25-27', t: 'Petit Le Mans', tr: 'Michelin Raceway Road Atlanta', c: 'GTP, LMP2, GT3', b: 'TEAM EVENT' },
-                { m: 'OCT', d: '2-4', t: 'Bathurst 1000', tr: 'Mount Panorama Circuit', c: 'Supercars', b: 'TEAM EVENT' },
-                { m: 'OCT', d: '16-18', t: '8 Hours of Indianapolis', tr: 'Indianapolis Motor Speedway', c: 'GT3', b: 'TEAM EVENT' },
-                { m: 'OCT', d: '30-31', t: 'iRacing FF1600 Festival', tr: 'Brands Hatch', c: 'FF1600', b: '' },
-                { m: 'NOV', d: '4-9', t: 'Homestead Championship', tr: 'Homestead Miami Speedway', c: 'NASCAR Cup', b: '' },
-                { m: 'NOV', d: '13-15', t: 'SFL Mountain Showdown', tr: 'Mount Panorama Circuit', c: 'Super Formula Light', b: 'SUPER SESSION' },
-                { m: 'NOV', d: '17-21', t: 'iRacing Runoffs', tr: 'Road America', c: '6 Classes', b: 'SUPER SESSION' },
-                { m: 'DEC', d: '2-7', t: 'Winter Derby', tr: 'Five Flags Speedway', c: 'Super Late Model', b: '' },
-                { m: 'DEC', d: '15-20', t: 'Chili Bowl', tr: 'Chili Bowl', c: 'Dirt Midget', b: 'SUPER SESSION' },
-                { m: 'DEC', d: '18-19', t: 'THE Production Car Challenge', tr: 'Virginia International Raceway', c: 'PCC Classes', b: '' }
-            ];
-
-            let html = '';
-            events.forEach(e => {
-                let badgeHtml = '';
-                if (e.b === 'TEAM EVENT') badgeHtml = `<span class="badge-team">TEAM EVENT</span>`;
-                if (e.b === 'SUPER SESSION') badgeHtml = `<span class="badge-super">SUPER SESSION</span>`;
+        document.addEventListener("DOMContentLoaded", () => { 
+            // Diese Funktionen liegen jetzt in events.js und ui.js
+            renderIRacingEvents(); 
+            reveal(); 
+            
+            // Datenbank-Initialisierung und Live-Status-Check
+            if(supabaseClient) {
+                checkSystemStatus(); 
                 
-                html += `
-                <div class="iracing-event-card">
-                    <div style="min-width: 80px;">
-                        <span class="iracing-month-label">${e.m}</span>
-                        <span class="iracing-date-label">${e.d}</span>
-                    </div>
-                    <div style="flex: 1; min-width: 200px;">
-                        <div class="iracing-title-label">${e.t}</div>
-                        <div class="iracing-track-label">${e.tr}</div>
-                    </div>
-                    <div class="iracing-cars-container">
-                        ${badgeHtml}
-                        <div class="iracing-cars-label">${e.c}</div>
-                    </div>
-                </div>`;
-            });
-            document.getElementById('iracing-events-container').innerHTML = html;
-        }
-
-        // ================= STINTPLANER FORMEL-HACK =================
-        window.isFormulaEditing = false;
-        window.currentFormulaEditor = null;
-
-        document.addEventListener('mousedown', function(e) {
-            if (window.isFormulaEditing && window.currentFormulaEditor) {
-                if (!document.body.contains(window.currentFormulaEditor) || window.currentFormulaEditor.offsetParent === null) {
-                    window.isFormulaEditing = false;
-                    window.currentFormulaEditor = null;
-                    return;
-                }
-
-                let target = e.target;
-                if (target.nodeType === 3) target = target.parentNode; 
-                let td = target.closest('.jexcel tbody td[data-x]');
-                
-                if (td && !window.currentFormulaEditor.contains(target) && target !== window.currentFormulaEditor) {
-                    e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation();
-
-                    let x = parseInt(td.getAttribute('data-x'));
-                    let y = parseInt(td.getAttribute('data-y'));
-                    let colName = ""; let tempX = x;
-                    while (tempX >= 0) { colName = String.fromCharCode(tempX % 26 + 65) + colName; tempX = Math.floor(tempX / 26) - 1; }
-                    let cellName = colName + (y + 1);
-                    
-                    let editor = window.currentFormulaEditor;
-                    let val = editor.value || "";
-                    let start = typeof editor.selectionStart === 'number' ? editor.selectionStart : val.length;
-                    let end = typeof editor.selectionEnd === 'number' ? editor.selectionEnd : val.length;
-                    
-                    let newVal = val.substring(0, start) + cellName + val.substring(end);
-                    editor.value = newVal;
-                    let newPos = start + cellName.length;
-                    if (typeof editor.setSelectionRange === 'function') editor.setSelectionRange(newPos, newPos);
-                    
-                    let oldBg = td.style.backgroundColor;
-                    td.style.transition = 'background-color 0.2s';
-                    td.style.backgroundColor = 'rgba(23, 162, 184, 0.6)';
-                    setTimeout(() => { td.style.backgroundColor = oldBg; td.style.transition = ''; }, 400);
-
-                    editor.dispatchEvent(new Event('input', { bubbles: true }));
-                    editor.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'a' }));
-                    setTimeout(() => { editor.focus(); }, 10);
-                }
+                supabaseClient.channel('global-system-status')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'system_status' }, payload => { 
+                        applySystemStatus(payload.new); 
+                    }).subscribe();
             }
-        }, true); 
-
-        document.addEventListener('keydown', function(e) {
-            if (window.isFormulaEditing && window.currentFormulaEditor) {
-                if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Tab') {
-                    window.isFormulaEditing = false;
-                    window.currentFormulaEditor.classList.remove('formula-active');
-                    window.currentFormulaEditor = null;
-                    return;
-                }
-                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.stopPropagation();
-            }
-        }, true);
-
-        document.addEventListener('input', function(e) {
-            let target = e.target;
-            if (target && target.tagName && (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT') && target.closest('.jexcel')) {
-                if (target.value && target.value.trim().startsWith('=')) {
-                    target.classList.add('formula-active');
-                    window.isFormulaEditing = true;
-                    window.currentFormulaEditor = target;
-                } else {
-                    target.classList.remove('formula-active');
-                    window.isFormulaEditing = false;
-                    window.currentFormulaEditor = null;
-                }
-            }
-        }, true);
-        
-        document.addEventListener('focusout', function(e) {
-             if (e.target === window.currentFormulaEditor) {
-                 setTimeout(() => {
-                     if (document.activeElement !== window.currentFormulaEditor) {
-                        window.isFormulaEditing = false;
-                        window.currentFormulaEditor = null;
-                     }
-                 }, 100);
-             }
         });
-
-
-        // ================= SUPABASE CONFIGURATION =================
-        const SUPABASE_URL = 'https://upbxznmaviomljfejlyw.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_UQcsVD61MLTZBZ15q7jB1Q_b1UF9IVJ';
-        
-        let supabaseClient = null;
-        if (SUPABASE_URL !== 'DEINE_SUPABASE_URL') {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-
-        // --- State ---
-        let activeUser = null;
-        let presenceChannel = null;
-        let dataSubscriptionChannel = null; 
-        let teamChatChannel = null; // NEU: Separater Channel für den Teamchat
-        let currentOpenTeamId = null;
-        let currentTeamData = null; 
-        let currentMyRole = null; 
-        let currentTeamEvents = []; 
-        let currentEditEventId = null; 
-        let contextTargetUserId = null; 
-        let contextTargetUserName = null; 
-        let idleTimeout = null;
-        let isIdle = false;
-        let eventTickerInterval = null; 
-        let currentSetupFolderId = null;
-        let setupBreadcrumbs = [{id: null, name: 'Root'}];
-        let contextSetupId = null;
-        let currentSetupRemoved = false; 
-        let currentGalleryFolderId = null;
-        let galleryBreadcrumbs = [{id: null, name: 'Root'}];
-        let contextGalleryId = null;
-        let currentStintSheet = null;
-        let currentStintId = null;
-
-        function isDeveloper() { return activeUser && activeUser.is_developer === true; }
-
-        function reveal() {
-            var reveals = document.querySelectorAll(".reveal");
-            for (var i = 0; i < reveals.length; i++) {
-                var windowHeight = window.innerHeight;
-                var elementTop = reveals[i].getBoundingClientRect().top;
-                var elementVisible = 100;
-                if (elementTop < windowHeight - elementVisible && elementTop !== 0) reveals[i].classList.add("active");
-            }
-        }
-        window.addEventListener("scroll", reveal);
-        document.addEventListener("DOMContentLoaded", () => { renderIRacingEvents(); reveal(); });
-
-        function showToast(msg, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = 'toast';
-            if (type === 'error') toast.style.borderLeftColor = '#dc3545';
-            else if (type === 'success') toast.style.borderLeftColor = '#28a745';
-            else toast.style.borderLeftColor = 'var(--primary)';
-            toast.innerText = msg; container.appendChild(toast);
-            setTimeout(() => { toast.style.animation = 'fadeOutUp 0.3s ease forwards'; setTimeout(() => toast.remove(), 300); }, 4000);
-        }
-
-        let pendingConfirmCallback = null;
-        function customConfirm(msg, callback) { document.getElementById('confirm-msg-text').innerText = msg; document.getElementById('custom-confirm').style.display = 'flex'; pendingConfirmCallback = callback; }
-        function closeCustomConfirm(result) { document.getElementById('custom-confirm').style.display = 'none'; if (result && pendingConfirmCallback) pendingConfirmCallback(); pendingConfirmCallback = null; }
-
-        function toggleAuth(mode) { document.getElementById('login-box').style.display = mode === 'login' ? 'block' : 'none'; document.getElementById('register-box').style.display = mode === 'register' ? 'block' : 'none'; }
-        function openAuthView(mode) { openView('view-auth'); toggleAuth(mode); window.scrollTo({ top: 0, behavior: 'smooth' }); }
-
-        function openView(viewId) {
-            const views = document.querySelectorAll('.view');
-            views.forEach(view => view.classList.remove('active'));
-            setTimeout(() => { document.getElementById(viewId).classList.add('active'); reveal(); }, 50);
-            
-            if(viewId === 'view-teams-main') loadMyTeams();
-            if(viewId === 'view-home' && activeUser) loadGlobalChat(); 
-
-            const onlineWidget = document.getElementById('online-users-widget');
-            if (onlineWidget && activeUser) onlineWidget.style.display = viewId === 'view-home' ? 'block' : 'none';
-
-            const iracingWidget = document.getElementById('iracing-widget');
-            if (iracingWidget) iracingWidget.style.display = viewId === 'view-team-calendar' ? 'block' : 'none';
-
-            if (viewId !== 'view-team-calendar') {
-                document.getElementById('member-sidebar').classList.remove('open');
-                if (eventTickerInterval) clearInterval(eventTickerInterval); 
-            }
-        }
-
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(tabId === 'tab-search-team') { document.getElementById('search-result-box').style.display = 'none'; document.getElementById('search-team-code').value = ''; }
-        }
-
-        function switchTeamSubTab(tab) {
-            if ((tab === 'setups' || tab === 'gallery' || tab === 'stint') && currentMyRole === 'Community') { showToast("Keine Berechtigung für diesen Bereich.", "error"); return; }
-            document.getElementById('tab-btn-calendar').classList.remove('active');
-            document.getElementById('tab-btn-setups').classList.remove('active');
-            document.getElementById('tab-btn-gallery').classList.remove('active');
-            document.getElementById('tab-btn-stint').classList.remove('active');
-            document.getElementById('team-calendar-section').style.display = 'none';
-            document.getElementById('team-setups-section').style.display = 'none';
-            document.getElementById('team-gallery-section').style.display = 'none';
-            document.getElementById('team-stint-section').style.display = 'none';
-
-            if(tab === 'calendar') { document.getElementById('tab-btn-calendar').classList.add('active'); document.getElementById('team-calendar-section').style.display = 'block'; if (currentOpenTeamId) loadTeamChat(); } 
-            else if(tab === 'setups') { document.getElementById('tab-btn-setups').classList.add('active'); document.getElementById('team-setups-section').style.display = 'block'; currentSetupFolderId = null; setupBreadcrumbs = [{id: null, name: 'Root'}]; loadTeamSetups(); } 
-            else if(tab === 'gallery') { document.getElementById('tab-btn-gallery').classList.add('active'); document.getElementById('team-gallery-section').style.display = 'block'; currentGalleryFolderId = null; galleryBreadcrumbs = [{id: null, name: 'Root'}]; loadTeamGallery(); } 
-            else if(tab === 'stint') { document.getElementById('tab-btn-stint').classList.add('active'); document.getElementById('team-stint-section').style.display = 'block'; loadTeamStintplanners(); }
-        }
-
-        function toggleMemberSidebar() { document.getElementById('member-sidebar').classList.toggle('open'); }
-        function toggleOnlineWidget() { const list = document.getElementById('online-users-list'); const icon = document.getElementById('online-widget-icon'); list.classList.toggle('collapsed-list'); icon.innerText = list.classList.contains('collapsed-list') ? '▲' : '▼'; }
-
-        document.addEventListener('click', (e) => { if(e.button !== 2) document.getElementById('context-menu').style.display = 'none'; });
-
-        // --- Auth Functions ---
-        async function registerUser() {
-            const fn = document.getElementById('reg-firstname').value.trim(); const ln = document.getElementById('reg-lastname').value.trim();
-            const em = document.getElementById('reg-email').value.trim(); const pw = document.getElementById('reg-password').value;
-            if(!fn || !ln || !em || !pw) return showToast("Bitte alle Felder ausfüllen!", "error");
-            if(!supabaseClient) return showToast("Demo-Modus: Datenbank nicht verbunden.", "error");
-
-            const { data, error } = await supabaseClient.auth.signUp({ email: em, password: pw, options: { data: { first_name: fn, last_name: ln } } });
-            if (error) showToast("Fehler bei der Registrierung: " + error.message, "error");
-            else {
-                if (data.user) await supabaseClient.from('app_users').insert([{ id: data.user.id, first_name: fn, last_name: ln, email: em, password: null }]);
-                showToast("Registrierung erfolgreich! Bitte überprüfe dein E-Mail-Postfach und bestätige deine Adresse.", "success");
-                toggleAuth('login');
-            }
-        }
-
-        async function loginUser() {
-            const fn = document.getElementById('login-firstname').value.trim(); const ln = document.getElementById('login-lastname').value.trim(); const pw = document.getElementById('login-password').value;
-            if(!fn || !ln || !pw) return showToast("Bitte alle Felder ausfüllen!", "error");
-            if(!supabaseClient) { activeUser = { id: 'demo-uuid-123', first_name: fn, last_name: ln, email: 'demo@beispiel.de', is_developer: true }; return processLoginSuccess(); }
-
-            const { data: dbUser, error: dbError } = await supabaseClient.from('app_users').select('*').eq('first_name', fn).eq('last_name', ln).single();
-            if (dbError || !dbUser) return showToast("Vorname oder Nachname nicht gefunden!", "error");
-            if (dbUser.password && dbUser.password === pw) { activeUser = dbUser; return processLoginSuccess(); }
-            if (dbUser.email) {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email: dbUser.email, password: pw });
-                if (error) return showToast(error.message.includes('Email not confirmed') ? "Bitte bestätige zuerst deine E-Mail-Adresse im Postfach!" : "Vorname, Nachname oder Passwort falsch!", "error");
-                activeUser = { id: data.user.id, first_name: dbUser.first_name, last_name: dbUser.last_name, email: dbUser.email, is_developer: dbUser.is_developer };
-                return processLoginSuccess();
-            }
-            showToast("Vorname, Nachname oder Passwort falsch!", "error");
-        }
-
-        function processLoginSuccess() {
-            document.getElementById('profile-name').innerText = `${activeUser.first_name} ${activeUser.last_name}`;
-            document.getElementById('profile-badge').style.display = 'flex';
-            document.getElementById('online-users-widget').style.display = 'block'; 
-            if (isDeveloper()) { const devBtn = document.getElementById('btn-dev-fahrer'); if (devBtn) devBtn.style.display = 'block'; }
-            openView('view-home'); loadGlobalChat(); initPresence(); initDataSubscriptions();
-        }
-
-        function logout() {
-            cleanupPresence(); cleanupDataSubscriptions(); stopIdleTracking();
-            if (teamChatChannel && supabaseClient) { supabaseClient.removeChannel(teamChatChannel); teamChatChannel = null; }
-            activeUser = null; document.getElementById('profile-badge').style.display = 'none'; document.getElementById('online-users-widget').style.display = 'none'; 
-            const devBtn = document.getElementById('btn-dev-fahrer'); if (devBtn) devBtn.style.display = 'none';
-            if (eventTickerInterval) clearInterval(eventTickerInterval);
-            if(supabaseClient) supabaseClient.auth.signOut();
-            openView('view-landing'); 
-        }
-
-        function initDataSubscriptions() {
-            if (!supabaseClient || dataSubscriptionChannel) return; 
-            dataSubscriptionChannel = supabaseClient.channel('db-live-updates')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, payload => {
-                    if (currentOpenTeamId && (payload.new ? payload.new.team_id : payload.old.team_id) === currentOpenTeamId) loadTeamEvents();
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'team_stintplaner' }, payload => {
-                    if (currentOpenTeamId && document.getElementById('team-stint-section').style.display === 'block' && currentStintId === null) loadTeamStintplanners();
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'team_members' }, payload => {
-                    const affectedTeamId = payload.new ? payload.new.team_id : payload.old.team_id;
-                    const affectedUserId = payload.new ? payload.new.user_id : payload.old.user_id;
-                    if (currentOpenTeamId && affectedTeamId === currentOpenTeamId) {
-                        if (affectedUserId === activeUser.id) {
-                            if (payload.eventType === 'DELETE') {
-                                showToast("Du wurdest vom Admin aus dem Team entfernt.", "error"); document.getElementById('member-sidebar').classList.remove('open');
-                                currentOpenTeamId = null; openView('view-teams-main'); return;
-                            } else if (payload.new && payload.new.role) {
-                                currentMyRole = payload.new.role;
-                                const adminControls = document.getElementById('admin-controls'); const btnEditTeam = document.getElementById('btn-edit-team');
-                                if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
-                                    adminControls.style.display = 'flex'; document.getElementById('sidebar-admin-hint').style.display = 'block';
-                                    btnEditTeam.style.display = currentMyRole === 'Admin' ? 'inline-block' : 'none';
-                                    document.getElementById('gallery-action-btns').style.display = 'flex'; document.getElementById('stint-action-btns').style.display = 'flex';
-                                } else {
-                                    adminControls.style.display = 'none'; document.getElementById('sidebar-admin-hint').style.display = 'none';
-                                    document.getElementById('gallery-action-btns').style.display = 'none';
-                                    document.getElementById('stint-action-btns').style.display = currentMyRole === 'Mitglied' ? 'flex' : 'none';
-                                }
-                                document.getElementById('btn-new-event').style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
-                                if (currentMyRole === 'Community') {
-                                    document.getElementById('setup-action-btns').style.display = 'none'; document.getElementById('tab-btn-setups').style.display = 'none';
-                                    document.getElementById('tab-btn-gallery').style.display = 'none'; document.getElementById('tab-btn-stint').style.display = 'none';
-                                    if(document.getElementById('team-setups-section').style.display === 'block' || document.getElementById('team-gallery-section').style.display === 'block' || document.getElementById('team-stint-section').style.display === 'block') switchTeamSubTab('calendar');
-                                } else {
-                                    document.getElementById('setup-action-btns').style.display = 'flex'; document.getElementById('tab-btn-setups').style.display = '';
-                                    document.getElementById('tab-btn-gallery').style.display = ''; document.getElementById('tab-btn-stint').style.display = '';
-                                }
-                                loadTeamEvents(); 
-                            }
-                        }
-                        loadSidebarMembers(currentOpenTeamId); updateRequestBadge(currentOpenTeamId);
-                        if (document.getElementById('requests-modal').style.display === 'flex') openRequestsModal();
-                    }
-                    if (document.getElementById('view-teams-main').classList.contains('active') && affectedUserId === activeUser.id) { loadMyTeams(); if (document.getElementById('search-result-box').style.display === 'block') searchTeam(); }
-                })
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'app_global_chat' }, payload => { 
-                    appendChatMessage(payload.new); 
-                    if (document.getElementById('view-home').classList.contains('active')) scrollToChatBottom(); 
-                })
-                .subscribe();
-        }
-
-        function cleanupDataSubscriptions() { if (dataSubscriptionChannel && supabaseClient) { supabaseClient.removeChannel(dataSubscriptionChannel); dataSubscriptionChannel = null; } }
-
-        // --- NEU: DEDIZIERTER KANAL FÜR TEAMCHAT ---
-        function subscribeToTeamChat(teamId) {
-            if (!supabaseClient) return;
-            if (teamChatChannel) {
-                supabaseClient.removeChannel(teamChatChannel);
-            }
-            teamChatChannel = supabaseClient.channel(`live_team_chat_${teamId}`)
-                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'team_chat', filter: `team_id=eq.${teamId}` }, payload => {
-                    appendTeamChatMessage(payload.new);
-                    if (document.getElementById('team-calendar-section').style.display === 'block') {
-                        scrollToTeamChatBottom();
-                    }
-                })
-                .subscribe();
-        }
-
-        function initPresence() {
-            if (!supabaseClient || !activeUser) return;
-            cleanupPresence();
-            const safeUserId = activeUser.id ? activeUser.id.toString() : 'user_' + Math.floor(Math.random()*1000);
-            presenceChannel = supabaseClient.channel('online_users', { config: { presence: { key: safeUserId } } });
-            presenceChannel.on('presence', { event: 'sync' }, () => { if (presenceChannel) renderOnlineUsers(presenceChannel.presenceState()); })
-                .on('presence', { event: 'join' }, () => { if (presenceChannel) renderOnlineUsers(presenceChannel.presenceState()); })
-                .on('presence', { event: 'leave' }, () => { if (presenceChannel) renderOnlineUsers(presenceChannel.presenceState()); })
-                .subscribe(async (status) => { if (status === 'SUBSCRIBED') { await presenceChannel.track({ user_name: `${activeUser.first_name} ${activeUser.last_name}`, status: 'online' }); startIdleTracking(); } });
-        }
-
-        function startIdleTracking() { stopIdleTracking(); window.addEventListener('mousemove', resetIdleTimer); window.addEventListener('keydown', resetIdleTimer); window.addEventListener('touchstart', resetIdleTimer); window.addEventListener('scroll', resetIdleTimer); resetIdleTimer(); }
-        function stopIdleTracking() { clearTimeout(idleTimeout); window.removeEventListener('mousemove', resetIdleTimer); window.removeEventListener('keydown', resetIdleTimer); window.removeEventListener('touchstart', resetIdleTimer); window.removeEventListener('scroll', resetIdleTimer); }
-        function resetIdleTimer() { if (isIdle) { isIdle = false; updatePresenceStatus('online'); } clearTimeout(idleTimeout); idleTimeout = setTimeout(() => { isIdle = true; updatePresenceStatus('away'); }, 600000); }
-        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && activeUser && presenceChannel) resetIdleTimer(); });
-        async function updatePresenceStatus(newStatus) { if (!presenceChannel || !activeUser) return; await presenceChannel.track({ user_name: `${activeUser.first_name} ${activeUser.last_name}`, status: newStatus }); }
-
-        function renderOnlineUsers(state) {
-            try {
-                const listDiv = document.getElementById('online-users-list'); if(!listDiv) return;
-                listDiv.innerHTML = ''; let count = 0; let onlineCount = 0; let awayCount = 0;
-                for (const id in state) {
-                    const connections = state[id]; if (!connections || connections.length === 0) continue; count++;
-                    let finalStatus = 'away'; let userName = connections[0].user_name || 'Unbekannt';
-                    for (const conn of connections) { if (conn.status === 'online') { finalStatus = 'online'; break; } }
-                    if (finalStatus === 'online') onlineCount++; else awayCount++;
-                    const isAway = finalStatus === 'away'; const dotColor = isAway ? '#ffcc00' : '#00ff00'; const glowColor = isAway ? 'rgba(255, 204, 0, 0.6)' : 'rgba(0, 255, 0, 0.6)';
-                    const statusText = isAway ? '<span style="color: #ffcc00; font-size: 0.8rem; margin-left: 5px;">(Abwesend)</span>' : '';
-                    listDiv.innerHTML += `<div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; color: white; display: flex; align-items: center; gap: 8px;"><span style="display:inline-block; width:8px; height:8px; background:${dotColor}; border-radius:50%; box-shadow: 0 0 8px ${glowColor}; flex-shrink: 0;"></span><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${userName}</span> ${statusText}</div>`;
-                }
-                const titleSpan = document.getElementById('online-status-counts');
-                if(titleSpan) titleSpan.innerHTML = count === 0 ? 'Online Fahrer' : `<span style="color:#00ff00;">${onlineCount} Online</span> <span style="color:#aaa;">|</span> <span style="color:#ffcc00;">${awayCount} Abwesend</span>`;
-                if (count === 0) listDiv.innerHTML = `<span style="color: #aaa; font-size: 0.9rem;">Derzeit niemand online</span>`;
-            } catch(e) { console.error("Fehler beim Rendern der Online-Liste:", e); }
-        }
-
-        function cleanupPresence() { if (presenceChannel) { presenceChannel.untrack(); supabaseClient.removeChannel(presenceChannel); presenceChannel = null; } }
-
-        // ================= GLOBAL CHAT FUNKTIONEN =================
-        async function loadGlobalChat() {
-            const container = document.getElementById('global-chat-messages'); container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Lade Nachrichten...</p>';
-            if (!supabaseClient) return container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Demo-Modus: Keine Datenbankverbindung.</p>';
-            const { data, error } = await supabaseClient.from('app_global_chat').select('*').order('created_at', { ascending: true }).limit(100);
-            if (error) return container.innerHTML = `<p style="color:var(--primary); padding: 20px;">Fehler (Tabelle fehlt?): ${error.message}</p>`;
-            container.innerHTML = '';
-            if (!data || data.length === 0) container.innerHTML = '<p id="no-msg-hint" style="color:#aaa; text-align:center; padding: 20px;">Noch keine Nachrichten. Sei der Erste!</p>';
-            else data.forEach(msg => appendChatMessage(msg));
-            scrollToChatBottom();
-        }
-
-        function appendChatMessage(msg) {
-            const container = document.getElementById('global-chat-messages');
-            if (msg.id && document.getElementById('chat-msg-' + msg.id)) return; 
-            const noMsgHint = document.getElementById('no-msg-hint'); if (noMsgHint) noMsgHint.remove();
-            const isOwn = activeUser && msg.user_id === activeUser.id;
-            const time = new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute:'2-digit' });
-            const div = document.createElement('div'); div.className = `chat-message ${isOwn ? 'own' : ''}`; if (msg.id) div.id = 'chat-msg-' + msg.id;
-            div.innerHTML = `<div style="font-size: 0.85rem; color: ${isOwn ? '#ffaaaa' : '#aaa'}; margin-bottom: 5px; font-weight: bold;">${msg.user_name} <span style="font-weight: normal; color: #777; margin-left: 5px;">${time}</span></div><div style="color: white; line-height: 1.4; word-break: break-word; font-size: 1.05rem;">${msg.message}</div>`;
-            container.appendChild(div);
-        }
-
-        function scrollToChatBottom() { const container = document.getElementById('global-chat-messages'); container.scrollTop = container.scrollHeight; }
-
-        async function sendGlobalChatMessage() {
-            const input = document.getElementById('global-chat-input'); const text = input.value.trim(); if (!text || !activeUser) return;
-            input.value = ''; 
-            if (!supabaseClient) {
-                showToast("Demo-Modus: Chat funktioniert ohne Datenbank nur lokal.", "info");
-                appendChatMessage({ id: 'demo-' + Date.now(), user_id: activeUser.id, user_name: `${activeUser.first_name} ${activeUser.last_name}`, message: text, created_at: new Date().toISOString() });
-                scrollToChatBottom(); return;
-            }
-            const payload = { user_id: activeUser.id, user_name: `${activeUser.first_name} ${activeUser.last_name}`, message: text };
-            const { data, error } = await supabaseClient.from('app_global_chat').insert([payload]).select();
-            if (error) showToast("Fehler beim Senden: " + error.message, "error");
-            else if (data && data.length > 0) { appendChatMessage(data[0]); scrollToChatBottom(); }
-        }
-
-        // ================= TEAM CHAT FUNKTIONEN =================
-        async function loadTeamChat() {
-            const container = document.getElementById('team-chat-messages');
-            container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Lade Chat...</p>';
-            if (!supabaseClient) return container.innerHTML = '<p style="color:#aaa; text-align:center; padding: 20px;">Demo-Modus</p>';
-            
-            const { data, error } = await supabaseClient.from('team_chat').select('*').eq('team_id', currentOpenTeamId).order('created_at', { ascending: true }).limit(100);
-            if (error) return container.innerHTML = `<p style="color:var(--primary); padding: 20px;">Fehler: ${error.message}</p>`;
-            
-            container.innerHTML = '';
-            if (!data || data.length === 0) container.innerHTML = '<p id="no-team-msg-hint" style="color:#aaa; text-align:center; padding: 20px; font-size: 0.9rem;">Noch keine Nachrichten in diesem Team.</p>';
-            else data.forEach(msg => appendTeamChatMessage(msg));
-            scrollToTeamChatBottom();
-        }
-
-        function appendTeamChatMessage(msg) {
-            const container = document.getElementById('team-chat-messages');
-            if (msg.id && document.getElementById('team-chat-msg-' + msg.id)) return;
-            const hint = document.getElementById('no-team-msg-hint'); if (hint) hint.remove();
-            
-            const isOwn = activeUser && msg.user_id === activeUser.id;
-            const time = new Date(msg.created_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute:'2-digit' });
-            
-            const div = document.createElement('div');
-            div.className = `chat-message ${isOwn ? 'own' : ''}`;
-            if (msg.id) div.id = 'team-chat-msg-' + msg.id;
-            div.style.maxWidth = '90%';
-            div.style.padding = '8px 12px';
-            
-            div.innerHTML = `<div style="font-size: 0.75rem; color: ${isOwn ? '#ffaaaa' : '#aaa'}; margin-bottom: 3px; font-weight: bold;">${msg.user_name} <span style="font-weight: normal; color: #777; margin-left: 5px;">${time}</span></div><div style="color: white; line-height: 1.3; word-break: break-word; font-size: 0.95rem;">${msg.message}</div>`;
-            container.appendChild(div);
-        }
-
-        function scrollToTeamChatBottom() {
-            const container = document.getElementById('team-chat-messages');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function sendTeamChatMessage() {
-            const input = document.getElementById('team-chat-input');
-            const text = input.value.trim();
-            if (!text || !activeUser || !currentOpenTeamId) return;
-            input.value = '';
-            
-            if (!supabaseClient) {
-                appendTeamChatMessage({ id: 'demo-' + Date.now(), user_id: activeUser.id, user_name: `${activeUser.first_name} ${activeUser.last_name}`, message: text, created_at: new Date().toISOString() });
-                scrollToTeamChatBottom();
-                return;
-            }
-            
-            const payload = { team_id: currentOpenTeamId, user_id: activeUser.id, user_name: `${activeUser.first_name} ${activeUser.last_name}`, message: text };
-            const { data, error } = await supabaseClient.from('team_chat').insert([payload]).select();
-            if (error) showToast("Fehler beim Senden: " + error.message, "error");
-            else if (data && data.length > 0) { appendTeamChatMessage(data[0]); scrollToTeamChatBottom(); }
-        }
-
-        // ================= NEWS FUNKTIONEN =================
-        async function postToWhatsAppChannel(title, content) {
-            const whatsappWebhookUrl = "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN"; 
-            if (!whatsappWebhookUrl || whatsappWebhookUrl === "HIER_DEINE_WHATSAPP_WEBHOOK_URL_EINTRAGEN") return;
-            try { await fetch(whatsappWebhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: title, message: content }) }); } catch (e) { console.error("Fehler beim WhatsApp-Post:", e); }
-        }
-
-        async function loadNews() {
-            openView('view-news'); const container = document.getElementById('news-list'); container.innerHTML = '<p style="color:#aaa;">Lade News...</p>';
-            document.getElementById('dev-news-controls').style.display = isDeveloper() ? 'block' : 'none';
-            if (!supabaseClient) return container.innerHTML = '<p style="color:#aaa;">Demo-Modus: Keine Datenbankverbindung.</p>';
-            const { data: news, error } = await supabaseClient.from('app_news').select('*').order('created_at', { ascending: false });
-            if (error) return container.innerHTML = `<p style="color:var(--primary);">Fehler (Tabelle 'app_news' existiert vielleicht nicht?): ${error.message}</p>`;
-            if (!news || news.length === 0) return container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Es gibt noch keine Neuigkeiten.</p>';
-            let html = '';
-            news.forEach(n => {
-                const date = new Date(n.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                html += `<div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px;"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;"><h3 style="color: white; margin: 0; font-size: 1.5rem; text-transform: uppercase;">${n.title}</h3><span style="color: #888; font-size: 0.85rem; background: rgba(255,255,255,0.05); padding: 5px 10px; border-radius: 5px;">📅 ${date} | 👤 ${n.author_name}</span></div><div style="color: #ccc; line-height: 1.6; white-space: pre-wrap; font-size: 1.05rem;">${n.content}</div>${isDeveloper() ? `<div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; text-align: right;"><button onclick="deleteNews('${n.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 8px 15px; border-radius: 5px; transition: 0.2s; font-size: 0.9rem; font-weight: bold;">🗑️ Post löschen</button></div>` : ''}</div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function showNewsModal() { document.getElementById('news-title').value = ''; document.getElementById('news-content').value = ''; document.getElementById('news-modal').style.display = 'flex'; }
-        function closeNewsModal() { document.getElementById('news-modal').style.display = 'none'; }
-
-        async function saveNews() {
-            const title = document.getElementById('news-title').value.trim(); const content = document.getElementById('news-content').value.trim();
-            if (!title || !content) return showToast("Titel und Inhalt dürfen nicht leer sein!", "error");
-            if (!supabaseClient) return showToast("Demo-Modus", "info");
-            const { error } = await supabaseClient.from('app_news').insert([{ title: title, content: content, author_name: `${activeUser.first_name} ${activeUser.last_name}` }]);
-            if (error) showToast("Fehler beim Posten: " + error.message, "error");
-            else { postToWhatsAppChannel(title, content); showToast("News erfolgreich gepostet!", "success"); closeNewsModal(); loadNews(); }
-        }
-
-        function deleteNews(id) { customConfirm("Möchtest du diese Ankündigung wirklich löschen?", async () => { if (!supabaseClient) return; const { error } = await supabaseClient.from('app_news').delete().eq('id', id); if (error) showToast("Fehler beim Löschen: " + error.message, "error"); else { showToast("News gelöscht.", "success"); loadNews(); } }); }
-
-        // ================= PATCHLOG FUNKTIONEN =================
-        async function loadPatchlog() {
-            openView('view-patchlog'); const container = document.getElementById('patchlog-list'); container.innerHTML = '<p style="color:#aaa;">Lade Patchlog...</p>';
-            document.getElementById('dev-patchlog-controls').style.display = isDeveloper() ? 'block' : 'none';
-            if (!supabaseClient) return container.innerHTML = '<p style="color:#aaa;">Demo-Modus: Keine Datenbankverbindung.</p>';
-            const { data: logs, error } = await supabaseClient.from('app_patchlog').select('*').order('created_at', { ascending: false });
-            if (error) return container.innerHTML = `<p style="color:var(--primary);">Fehler (Tabelle 'app_patchlog' existiert vielleicht nicht?): ${error.message}</p>`;
-            if (!logs || logs.length === 0) return container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px;">Es gibt noch keine Patchlog-Einträge.</p>';
-
-            const versionOrder = []; const groupedLogs = {};
-            logs.forEach(l => { const v = l.version || 'Sonstige'; if (!groupedLogs[v]) { groupedLogs[v] = []; versionOrder.push(v); } groupedLogs[v].push(l); });
-
-            let html = '';
-            versionOrder.forEach(version => {
-                html += `<div style="margin-bottom: 40px;"><h3 style="color: var(--primary); font-size: 1.8rem; border-bottom: 2px solid var(--primary); padding-bottom: 5px; margin-bottom: 15px; text-transform: uppercase;">Update ${version}</h3><div style="display: flex; flex-direction: column; gap: 15px;">`;
-                groupedLogs[version].forEach(l => {
-                    const date = new Date(l.created_at).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-                    let typeColor = '#ccc'; if(l.type === 'NEU') typeColor = '#28a745'; if(l.type === 'ÄNDERUNG') typeColor = '#ffcc00'; if(l.type === 'FIX') typeColor = '#dc3545';
-                    html += `<div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${typeColor}; padding: 15px; border-radius: 8px;"><div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;"><h4 style="color: white; margin: 0; font-size: 1.2rem;"><span style="color: ${typeColor}; margin-right: 10px; border: 1px solid ${typeColor}; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">${l.type}</span>${l.title}</h4><span style="color: #888; font-size: 0.8rem; background: rgba(255,255,255,0.05); padding: 4px 8px; border-radius: 5px;">📅 ${date}</span></div><div style="color: #ccc; line-height: 1.5; white-space: pre-wrap; font-size: 1rem;">${l.content}</div>${isDeveloper() ? `<div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; text-align: right;"><button onclick="deletePatchlog('${l.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px 12px; border-radius: 5px; transition: 0.2s; font-size: 0.85rem; font-weight: bold;">🗑️ Löschen</button></div>` : ''}</div>`;
-                });
-                html += `</div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function showPatchlogModal() { document.getElementById('patchlog-version').value = 'v3.1.12'; document.getElementById('patchlog-type').value = 'NEU'; document.getElementById('patchlog-title').value = ''; document.getElementById('patchlog-content').value = ''; document.getElementById('patchlog-modal').style.display = 'flex'; }
-        function closePatchlogModal() { document.getElementById('patchlog-modal').style.display = 'none'; }
-
-        async function savePatchlog() {
-            const version = document.getElementById('patchlog-version').value.trim(); const type = document.getElementById('patchlog-type').value;
-            const title = document.getElementById('patchlog-title').value.trim(); const content = document.getElementById('patchlog-content').value.trim();
-            if (!title || !content || !version) return showToast("Version, Titel und Inhalt dürfen nicht leer sein!", "error");
-            if (!supabaseClient) return showToast("Demo-Modus", "info");
-
-            const { error } = await supabaseClient.from('app_patchlog').insert([{ version: version, type: type, title: title, content: content, author_id: activeUser.id }]);
-            if (error) showToast("Fehler beim Speichern: " + error.message, "error");
-            else { showToast("Patchlog erfolgreich gespeichert!", "success"); closePatchlogModal(); loadPatchlog(); }
-        }
-
-        function deletePatchlog(id) { customConfirm("Möchtest du diesen Patchlog-Eintrag wirklich löschen?", async () => { if (!supabaseClient) return; const { error } = await supabaseClient.from('app_patchlog').delete().eq('id', id); if (error) showToast("Fehler beim Löschen: " + error.message, "error"); else { showToast("Eintrag gelöscht.", "success"); loadPatchlog(); } }); }
-
-        // ================= TEAM MANAGEMENT =================
-        function generateInviteCode() { return Math.random().toString(36).substring(2, 7).toUpperCase(); }
-
-        async function createTeam() {
-            const name = document.getElementById('create-team-name').value.trim(); const sim = document.getElementById('create-team-sim').value; const logoInput = document.getElementById('create-team-logo');
-            if(!name) return showToast("Team Name ist erforderlich!", "error");
-            let logoUrl = "https://via.placeholder.com/150/222222/FFFFFF?text=Logo"; 
-
-            if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
-                const file = logoInput.files[0]; const fileExt = file.name.split('.').pop(); const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                const { error: uploadError } = await supabaseClient.storage.from('team-logos').upload(fileName, file);
-                if (uploadError) return showToast("Fehler beim Logo-Upload: " + uploadError.message, "error");
-                const { data: publicUrlData } = supabaseClient.storage.from('team-logos').getPublicUrl(fileName); logoUrl = publicUrlData.publicUrl;
-            }
-
-            const code = generateInviteCode();
-            if(!supabaseClient) return showToast("Demo: Team erstellt.", "info");
-
-            const { data, error } = await supabaseClient.from('teams').insert([{ name: name, logo_url: logoUrl, sim: sim, invite_code: code, admin_id: activeUser.id }]).select();
-            if(error) return showToast("Fehler beim Erstellen: " + error.message, "error");
-
-            const teamId = data[0].id; const userName = `${activeUser.first_name} ${activeUser.last_name}`;
-            await supabaseClient.from('team_members').insert([{ team_id: teamId, user_id: activeUser.id, user_name: userName, role: 'Admin' }]);
-
-            showToast(`Team erfolgreich gegründet!\nDein Einladungscode lautet: ${code}`, "success");
-            document.getElementById('create-team-name').value = ''; document.getElementById('create-team-logo').value = '';
-            openTeamCalendar(teamId);
-        }
-        
-        function openEditTeamModal() {
-            if(!currentTeamData) return;
-            document.getElementById('edit-team-name').value = currentTeamData.name; document.getElementById('edit-team-sim').value = currentTeamData.sim;
-            document.getElementById('edit-team-webhook').value = currentTeamData.discord_webhook_url || ''; document.getElementById('edit-team-logo').value = '';
-            document.getElementById('edit-team-modal').style.display = 'flex';
-        }
-
-        function closeEditTeamModal() { document.getElementById('edit-team-modal').style.display = 'none'; }
-
-        async function saveTeamEdit() {
-            const name = document.getElementById('edit-team-name').value.trim(); const sim = document.getElementById('edit-team-sim').value;
-            const webhookUrl = document.getElementById('edit-team-webhook').value.trim(); const logoInput = document.getElementById('edit-team-logo');
-            if(!name) return showToast("Team Name ist erforderlich!", "error");
-            let logoUrl = currentTeamData.logo_url;
-
-            if (logoInput.files && logoInput.files.length > 0 && supabaseClient) {
-                const file = logoInput.files[0]; const fileExt = file.name.split('.').pop(); const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
-                const { error: uploadError } = await supabaseClient.storage.from('team-logos').upload(fileName, file);
-                if (uploadError) return showToast("Fehler beim Logo-Upload: " + uploadError.message, "error");
-                const { data: publicUrlData } = supabaseClient.storage.from('team-logos').getPublicUrl(fileName); logoUrl = publicUrlData.publicUrl;
-            }
-
-            if(!supabaseClient) { showToast("Demo: Team gespeichert.", "info"); return closeEditTeamModal(); }
-
-            const { error } = await supabaseClient.from('teams').update({ name: name, sim: sim, logo_url: logoUrl, discord_webhook_url: webhookUrl }).eq('id', currentOpenTeamId);
-            if(error) return showToast("Fehler beim Speichern: " + error.message, "error");
-
-            showToast("Team erfolgreich aktualisiert!", "success"); closeEditTeamModal();
-            currentTeamData.name = name; currentTeamData.sim = sim; currentTeamData.logo_url = logoUrl; currentTeamData.discord_webhook_url = webhookUrl;
-            document.getElementById('calendar-team-name').innerText = name;
-        }
-
-        async function loadMyTeams() {
-            const container = document.getElementById('grid-my-teams');
-            if(!supabaseClient) return container.innerHTML = `<p>Demo-Modus</p>`;
-            container.innerHTML = `<p style="color:#aaa;">Lade Teams...</p>`;
-
-            const { data: memberships, error } = await supabaseClient.from('team_members').select('role, teams(*)').eq('user_id', activeUser.id).neq('role', 'Anfrage');
-            if(error) return container.innerHTML = `<p>Fehler beim Laden.</p>`;
-            if(!memberships || memberships.length === 0) return container.innerHTML = `<p style="color:#aaa; grid-column: 1/-1; text-align: center;">Du bist noch in keinem Team.<br>Gründe ein neues oder suche nach einer ID.</p>`;
-
-            let html = '';
-            memberships.forEach(m => {
-                const team = m.teams;
-                html += `<div class="team-card" onclick="openTeamCalendar('${team.id}')"><div class="team-badge">${m.role}</div>${team.logo_url ? `<img src="${team.logo_url}" class="team-logo" alt="Logo">` : ''}<div class="team-title">${team.name}</div><div style="color: #aaa; font-size: 0.9rem;">🎮 Simulator: ${team.sim}</div><div style="margin-top: 15px; color: var(--primary); font-size: 0.9rem; font-weight: bold;">➜ Zum Kalender klicken</div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        async function searchTeam() {
-            const code = document.getElementById('search-team-code').value.trim().toUpperCase();
-            if(!code) return showToast("Bitte Code eingeben.", "error");
-            const resBox = document.getElementById('search-result-box'); if(!supabaseClient) return;
-
-            const { data: team, error } = await supabaseClient.from('teams').select('*').eq('invite_code', code).single();
-            if(error || !team) { resBox.style.display = 'block'; resBox.innerHTML = `<p style="color: var(--primary); font-weight: bold;">Kein Team mit diesem Code gefunden.</p>`; return; }
-
-            const { data: existing } = await supabaseClient.from('team_members').select('role').eq('team_id', team.id).eq('user_id', activeUser.id).single();
-            let btnHtml = `<button class="btn-submit" onclick="sendJoinRequest('${team.id}')">Beitrittsanfrage senden</button>`;
-            if(existing) btnHtml = existing.role === 'Anfrage' ? `<div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; color: #ffcc00; text-align: center; font-weight: bold;">⏳ Deine Anfrage ist ausstehend.</div>` : `<div style="background: rgba(0,255,0,0.1); padding: 10px; border-radius: 8px; color: #00ff00; text-align: center; font-weight: bold;">✔ Du bist bereits in diesem Team.</div>`;
-
-            resBox.style.display = 'block';
-            resBox.innerHTML = `<div style="display:flex; align-items:center; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px;"><img src="${team.logo_url}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #444;"><div><h3 style="color: white; margin: 0; font-size: 1.5rem;">${team.name}</h3><p style="color: #aaa; margin: 0; font-size: 0.9rem;">🎮 Simulator: ${team.sim}</p></div></div>${btnHtml}`;
-        }
-
-        async function sendJoinRequest(teamId) {
-            const userName = `${activeUser.first_name} ${activeUser.last_name}`;
-            const { error } = await supabaseClient.from('team_members').insert([{ team_id: teamId, user_id: activeUser.id, user_name: userName, role: 'Anfrage' }]);
-            if(error) showToast("Fehler: " + error.message, "error");
-            else { showToast("Deine Beitrittsanfrage wurde an den Admin gesendet!", "success"); searchTeam(); }
-        }
-
-        function leaveCurrentTeam() {
-            customConfirm("Möchtest du dieses Team wirklich verlassen?\nWenn du wieder eintreten möchtest, musst du eine neue Beitrittsanfrage stellen.", async () => {
-                if (!supabaseClient) return showToast("Demo-Modus.", "info");
-                const { error } = await supabaseClient.from('team_members').delete().eq('team_id', currentOpenTeamId).eq('user_id', activeUser.id).select();
-                if (error) return showToast("Fehler beim Verlassen des Teams: " + error.message, "error");
-                showToast("Du hast das Team erfolgreich verlassen.", "success");
-                
-                if (teamChatChannel && supabaseClient) { supabaseClient.removeChannel(teamChatChannel); teamChatChannel = null; }
-
-                document.getElementById('member-sidebar').classList.remove('open'); currentOpenTeamId = null; openView('view-teams-main');
-            });
-        }
-
-        async function openTeamCalendar(teamId) {
-            currentOpenTeamId = teamId;
-            switchTeamSubTab('calendar');
-            
-            const { data: memberData } = await supabaseClient.from('team_members').select('role, teams(*)').eq('user_id', activeUser.id).eq('team_id', teamId).single();
-            if(!memberData) return showToast("Fehler beim Laden des Teams.", "error");
-
-            currentTeamData = memberData.teams; currentMyRole = memberData.role; 
-            document.getElementById('calendar-team-name').innerText = currentTeamData.name;
-            
-            const adminControls = document.getElementById('admin-controls'); const btnEditTeam = document.getElementById('btn-edit-team'); const btnNewEvent = document.getElementById('btn-new-event');
-            btnNewEvent.style.display = currentMyRole === 'Community' ? 'none' : 'inline-block';
-
-            if(currentMyRole === 'Admin' || currentMyRole === 'Manager') {
-                adminControls.style.display = 'flex'; document.getElementById('calendar-team-id').innerText = currentTeamData.invite_code; document.getElementById('sidebar-admin-hint').style.display = 'block'; updateRequestBadge(teamId);
-                btnEditTeam.style.display = currentMyRole === 'Admin' ? 'inline-block' : 'none';
-                document.getElementById('gallery-action-btns').style.display = 'flex'; document.getElementById('stint-action-btns').style.display = 'flex';
-            } else {
-                adminControls.style.display = 'none'; document.getElementById('sidebar-admin-hint').style.display = 'none';
-                document.getElementById('gallery-action-btns').style.display = 'none'; document.getElementById('stint-action-btns').style.display = currentMyRole === 'Mitglied' ? 'flex' : 'none';
-            }
-
-            if (currentMyRole === 'Community') {
-                document.getElementById('setup-action-btns').style.display = 'none'; document.getElementById('tab-btn-setups').style.display = 'none'; document.getElementById('tab-btn-gallery').style.display = 'none'; document.getElementById('tab-btn-stint').style.display = 'none';
-            } else {
-                document.getElementById('setup-action-btns').style.display = 'flex'; document.getElementById('tab-btn-setups').style.display = ''; document.getElementById('tab-btn-gallery').style.display = ''; document.getElementById('tab-btn-stint').style.display = '';
-            }
-
-            loadSidebarMembers(teamId); 
-            loadTeamEvents(); 
-            openView('view-team-calendar');
-            
-            loadTeamChat(); 
-            subscribeToTeamChat(teamId); 
-        }
-
-        // --- Admin Rechteverwaltung ---
-        function showContextMenu(e, userId, userName, role) {
-            e.preventDefault(); contextTargetUserId = userId; contextTargetUserName = userName;
-            const menu = document.getElementById('context-menu');
-            let html = `<div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;" id="context-user-name-display">Aktion für: ${userName}</div><hr>`;
-            if (currentMyRole === 'Admin') html += `<div onclick="updateMemberRole('Admin')">👑 Admin</div>`;
-            html += `<div onclick="updateMemberRole('Manager')">🛠️ Manager</div><div onclick="updateMemberRole('Mitglied')">👤 Mitglied</div><div onclick="updateMemberRole('Community')">👋 Community</div><hr style="border-color:#555;"><div style="color:#dc3545;" onclick="kickTargetMember()">🚫 Aus Team entfernen</div>`;
-            menu.innerHTML = html; menu.style.display = 'block';
-            let x = e.clientX; let y = e.clientY;
-            if (x + 200 > window.innerWidth) x -= 200; if (y + 250 > window.innerHeight) y -= 250;
-            menu.style.left = x + 'px'; menu.style.top = y + 'px';
-        }
-
-        async function updateMemberRole(newRole) {
-            document.getElementById('context-menu').style.display = 'none'; if (!supabaseClient) return;
-            const { data, error } = await supabaseClient.from('team_members').update({ role: newRole }).eq('team_id', currentOpenTeamId).eq('user_id', contextTargetUserId).select();
-            if (error) showToast("Fehler beim Aktualisieren der Rolle: " + error.message, "error");
-            else if (data && data.length === 0) showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
-            else { loadSidebarMembers(currentOpenTeamId); showToast(`Rolle erfolgreich auf ${newRole} geändert.`, "success"); }
-        }
-
-        function kickTargetMember() {
-            document.getElementById('context-menu').style.display = 'none';
-            customConfirm(`Möchtest du ${contextTargetUserName} wirklich aus dem Team entfernen?`, async () => {
-                if (!supabaseClient) return;
-                const { data, error } = await supabaseClient.from('team_members').delete().eq('team_id', currentOpenTeamId).eq('user_id', contextTargetUserId).select();
-                if (error) showToast("Fehler beim Entfernen: " + error.message, "error");
-                else if (data && data.length === 0) showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
-                else { loadSidebarMembers(currentOpenTeamId); showToast("Mitglied erfolgreich entfernt.", "success"); }
-            });
-        }
-
-        async function loadSidebarMembers(teamId) {
-            const { data: members } = await supabaseClient.from('team_members').select('user_id, user_name, role').eq('team_id', teamId).neq('role', 'Anfrage').order('role', { ascending: true }); 
-            let html = '';
-            members.forEach(m => {
-                let color = '#aaa'; if(m.role === 'Admin') color = 'var(--primary)'; if(m.role === 'Manager') color = '#ffcc00'; if(m.role === 'Mitglied') color = '#28a745'; if(m.role === 'Community') color = '#17a2b8';
-                const isSelf = m.user_id === activeUser.id; const targetIsAdmin = m.role === 'Admin'; let canManageUser = false;
-                if (currentMyRole === 'Admin' && !isSelf) canManageUser = true; if (currentMyRole === 'Manager' && !isSelf && !targetIsAdmin) canManageUser = true;
-                const isAdminHoverClass = canManageUser ? 'admin-hover' : ''; const contextAttr = canManageUser ? `oncontextmenu="showContextMenu(event, '${m.user_id}', '${m.user_name}', '${m.role}')"` : '';
-                html += `<div class="member-item ${isAdminHoverClass}" ${contextAttr}><div style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem;">${m.user_name.charAt(0)}</div><div><div style="color: white; font-size: 1.1rem; font-weight: 500;">${m.user_name}</div><div style="color: ${color}; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">${m.role}</div></div>${canManageUser ? '<div style="margin-left: auto; color: #555; font-size: 0.8rem;">⚙️</div>' : ''}</div>`;
-            });
-            document.getElementById('sidebar-member-list').innerHTML = html;
-        }
-
-        async function updateRequestBadge(teamId) {
-            const { count } = await supabaseClient.from('team_members').select('*', { count: 'exact', head: true }).eq('team_id', teamId).eq('role', 'Anfrage');
-            const badge = document.getElementById('request-count-badge'); badge.innerText = count || 0; badge.style.display = count > 0 ? 'flex' : 'none';
-        }
-
-        async function openRequestsModal() {
-            document.getElementById('requests-modal').style.display = 'flex'; const container = document.getElementById('requests-list'); container.innerHTML = '<p style="color:#aaa;">Lade Anfragen...</p>';
-            const { data: requests } = await supabaseClient.from('team_members').select('user_id, user_name').eq('team_id', currentOpenTeamId).eq('role', 'Anfrage');
-            if(!requests || requests.length === 0) return container.innerHTML = '<p style="color:#aaa; text-align: center; margin-top: 20px;">Keine offenen Beitrittsanfragen.</p>';
-            let html = '';
-            requests.forEach(req => {
-                html += `<div style="display:flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 8px; border-left: 3px solid var(--primary); flex-wrap: wrap; gap: 10px;"><span style="color:white; font-size: 1.1rem; font-weight: 500;">${req.user_name}</span><div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;"><select id="role-select-${req.user_id}" style="padding: 8px; border-radius: 5px; background: rgba(0,0,0,0.5); color: white; border: 1px solid rgba(255,255,255,0.2); outline: none;"><option value="Mitglied">Mitglied</option><option value="Manager">Manager</option><option value="Admin">Admin</option><option value="Community">Community</option></select><button onclick="handleRequest('${req.user_id}', 'accept')" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✓ Annehmen</button><button onclick="handleRequest('${req.user_id}', 'decline')" style="background: transparent; color: #dc3545; border: 1px solid #dc3545; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">✕ Ablehnen</button></div></div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        async function handleRequest(userId, action) {
-            if (!supabaseClient) return; let result;
-            if(action === 'accept') { const roleSelect = document.getElementById(`role-select-${userId}`); const selectedRole = roleSelect ? roleSelect.value : 'Mitglied'; result = await supabaseClient.from('team_members').update({ role: selectedRole }).eq('team_id', currentOpenTeamId).eq('user_id', userId).select(); } 
-            else if(action === 'decline') { result = await supabaseClient.from('team_members').delete().eq('team_id', currentOpenTeamId).eq('user_id', userId).select(); }
-            if (result && result.error) return showToast("Fehler bei der Aktion: " + result.error.message, "error");
-            else if (result && result.data && result.data.length === 0) return showToast("Blockiert! Dir fehlen die Datenbank-Rechte (Supabase RLS).", "error");
-            openRequestsModal(); updateRequestBadge(currentOpenTeamId); loadSidebarMembers(currentOpenTeamId);
-        }
-
-        function closeRequestsModal() { document.getElementById('requests-modal').style.display = 'none'; }
-
-        // ================= STINTPLANER FUNKTIONEN =================
-        
-        async function loadTeamStintplanners() {
-            const container = document.getElementById('team-stint-list'); container.innerHTML = '<p style="color:#aaa;">Lade Stintpläne...</p>';
-            document.getElementById('team-stint-list').style.display = 'grid'; document.getElementById('team-stint-editor').style.display = 'none';
-            document.getElementById('stint-action-btns').style.display = currentMyRole === 'Community' ? 'none' : 'flex';
-            if (!supabaseClient) return;
-
-            const { data, error } = await supabaseClient.from('team_stintplaner').select('*').eq('team_id', currentOpenTeamId).order('created_at', { ascending: false });
-            if (error) return container.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
-            if (data.length === 0) return container.innerHTML = `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Stintpläne vorhanden.</p>`;
-
-            let html = '';
-            data.forEach(plan => {
-                html += `<div style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid #17a2b8; padding: 20px; border-radius: 8px; transition: 0.3s; position: relative;"><h4 style="color: white; margin: 0 0 10px 0; font-size: 1.2rem;">📊 ${plan.name}</h4><p style="color: #888; font-size: 0.8rem; margin-bottom: 15px;">Erstellt von: ${plan.created_by_name || 'Unbekannt'}</p><div style="display: flex; gap: 10px;"><button class="btn-submit" style="padding: 6px 12px; font-size: 0.9rem; flex: 1;" onclick="openStintEditor('${plan.id}')">Öffnen / Bearbeiten</button></div>${(currentMyRole === 'Admin' || currentMyRole === 'Manager' || plan.created_by === activeUser.id) ? `<div style="position: absolute; top: 15px; right: 15px; cursor: pointer; color: #dc3545;" onclick="deleteStintPlan('${plan.id}')">🗑️</div>` : ''}</div>`;
-            });
-            container.innerHTML = html;
-        }
-
-        async function createNewStintPlan() {
-            if(currentMyRole === 'Community') return;
-            const name = prompt("Name für den neuen Stintplan (z.B. Nürburgring 24h):"); if (!name || name.trim() === '') return;
-            const defaultData = {
-                data: [ [1, "Max Mustermann", "15:00", 60, 7, 110, "Soft", "Sonnig", "Startstint", "=D1*E1"], [2, "", "", "", "", "", "", "", "", ""], [3, "", "", "", "", "", "", "", "", ""], [4, "", "", "", "", "", "", "", "", ""], [5, "", "", "", "", "", "", "", "", ""] ],
-                columns: [ { type: 'text', title: 'Stint', width: 60, align: 'center' }, { type: 'text', title: 'Fahrer', width: 150 }, { type: 'text', title: 'Startzeit', width: 100, align: 'center' }, { type: 'numeric', title: 'Dauer (Min)', width: 100, align: 'center' }, { type: 'numeric', title: 'Runden', width: 80, align: 'center' }, { type: 'numeric', title: 'Tank (L)', width: 80, align: 'center' }, { type: 'text', title: 'Reifen', width: 100, align: 'center' }, { type: 'text', title: 'Wetter', width: 100, align: 'center' }, { type: 'text', title: 'Bemerkung', width: 250 }, { type: 'text', title: 'Berechnung', width: 100, align: 'center' } ],
-                style: {}
-            };
-            const { error } = await supabaseClient.from('team_stintplaner').insert([{ team_id: currentOpenTeamId, name: name.trim(), data: defaultData, created_by: activeUser.id, created_by_name: `${activeUser.first_name} ${activeUser.last_name}` }]);
-            if (error) showToast("Fehler beim Erstellen: " + error.message, "error"); else { showToast("Stintplan erstellt!", "success"); loadTeamStintplanners(); }
-        }
-
-        async function openStintEditor(id) {
-            currentStintId = id; document.getElementById('team-stint-list').style.display = 'none'; document.getElementById('stint-action-btns').style.display = 'none'; document.getElementById('team-stint-editor').style.display = 'block'; document.getElementById('spreadsheet').innerHTML = ''; 
-            const { data: plan, error } = await supabaseClient.from('team_stintplaner').select('*').eq('id', id).single();
-            if (error) { showToast("Fehler beim Laden: " + error.message, "error"); closeStintEditor(); return; }
-            document.getElementById('stint-editor-title').innerText = `Bearbeite: ${plan.name}`;
-            let config = plan.data || {};
-            currentStintSheet = jspreadsheet(document.getElementById('spreadsheet'), {
-                data: config.data || [['','',''], ['','','']], columns: config.columns || [], style: config.style || {},
-                parseFormulas: true, minDimensions: [15, 30], defaultColWidth: 100, tableOverflow: true, tableWidth: "100%", tableHeight: "600px", freezeColumns: 2, search: true, allowInsertRow: true, allowManualInsertColumn: true, allowInsertColumn: true, allowDeleteRow: true, allowDeleteColumn: true, allowRenameColumn: true, wordWrap: true,
-                toolbar: [ { type: 'i', content: 'undo', onclick: function() { currentStintSheet.undo(); } }, { type: 'i', content: 'redo', onclick: function() { currentStintSheet.redo(); } }, { type: 'i', content: 'save', onclick: function() { saveStintPlan(); } }, { type: 'i', content: 'format_align_left', k: 'text-align', v: 'left' }, { type: 'i', content: 'format_align_center', k: 'text-align', v: 'center' }, { type: 'i', content: 'format_align_right', k: 'text-align', v: 'right' }, { type: 'i', content: 'format_bold', k: 'font-weight', v: 'bold' }, { type: 'color', content: 'format_color_text', k: 'color' }, { type: 'color', content: 'format_color_fill', k: 'background-color' } ]
-            });
-            if (currentMyRole === 'Community') { document.getElementById('stint-save-btn').style.display = 'none'; showToast("Du bist im Lese-Modus (Community).", "info"); } else { document.getElementById('stint-save-btn').style.display = 'block'; }
-        }
-
-        function closeStintEditor() {
-            document.getElementById('team-stint-editor').style.display = 'none'; document.getElementById('team-stint-list').style.display = 'grid'; document.getElementById('stint-action-btns').style.display = currentMyRole === 'Community' ? 'none' : 'flex';
-            if (currentStintSheet) { jspreadsheet.destroy(document.getElementById('spreadsheet')); currentStintSheet = null; }
-            currentStintId = null;
-        }
-
-        async function saveStintPlan() {
-            if (!currentStintSheet || !currentStintId) return; showToast("Speichere...", "info");
-            try {
-                let colConfig = []; let cols = currentStintSheet.options.columns ? currentStintSheet.options.columns.length : currentStintSheet.headers.length;
-                for(let i=0; i<cols; i++) { let optCol = currentStintSheet.options.columns[i] || {}; colConfig.push({ width: currentStintSheet.getWidth(i), title: currentStintSheet.getHeader(i), type: optCol.type || 'text', align: optCol.align || 'center' }); }
-                let rawData = []; let sourceData = currentStintSheet.options.data;
-                for(let j=0; j<sourceData.length; j++) { let row = []; for(let i=0; i<cols; i++) { let val = sourceData[j][i]; row.push(val !== undefined && val !== null ? val : ""); } rawData.push(row); }
-                const saveData = { data: rawData, style: currentStintSheet.getStyle(), columns: colConfig };
-                const { error } = await supabaseClient.from('team_stintplaner').update({ data: saveData }).eq('id', currentStintId);
-                if (error) { showToast("Fehler beim Speichern in DB: " + error.message, "error"); console.error("DB Error:", error); } else { showToast("Erfolgreich gespeichert!", "success"); }
-            } catch (e) { console.error("Save Error:", e); showToast("Interner Fehler beim Speichern! Konsole prüfen.", "error"); }
-        }
-
-        async function deleteStintPlan(id) { customConfirm("Möchtest du diesen Stintplan wirklich löschen?", async () => { const { error } = await supabaseClient.from('team_stintplaner').delete().eq('id', id); if (error) showToast("Fehler beim Löschen: " + error.message, "error"); else { showToast("Stintplan gelöscht.", "success"); loadTeamStintplanners(); } }); }
-
-
-        // ================= SETUP FUNKTIONEN =================
-        function renderSetupBreadcrumbs() {
-            const bc = document.getElementById('setup-breadcrumb'); let html = '📂 ';
-            setupBreadcrumbs.forEach((crumb, index) => { if (index === setupBreadcrumbs.length - 1) { html += `<span style="color: white;">${crumb.name}</span>`; } else { html += `<span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="navigateToBreadcrumb(${index})">${crumb.name}</span> / `; } });
-            bc.innerHTML = html;
-        }
-
-        async function loadTeamSetups() {
-            const container = document.getElementById('team-setups-list'); container.innerHTML = '<p style="color:#aaa;">Lade Setups...</p>';
-            let query = supabaseClient.from('team_setups').select('*').eq('team_id', currentOpenTeamId); query = currentSetupFolderId === null ? query.is('parent_id', null) : query.eq('parent_id', currentSetupFolderId);
-            const { data, error } = await query.order('is_folder', { ascending: false }).order('name', { ascending: true });
-            if (error) return container.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
-            renderSetupBreadcrumbs(); let html = '';
-            if (currentSetupFolderId !== null) html += `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px dashed #555;" onclick="navigateSetupUp()"><div style="font-size: 2.5rem;">⬆️</div><div style="margin-top: 10px; font-weight: bold; color: #aaa;">Zurück</div></div>`;
-            if (data.length === 0 && currentSetupFolderId === null) html += `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Setups oder Ordner vorhanden.</p>`;
-            data.forEach(item => {
-                if (item.is_folder) { html += `<div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px solid var(--primary); transition: 0.2s;" onclick="openSetupFolder('${item.id}', '${item.name}')" oncontextmenu="showSetupContext(event, '${item.id}', true)"><div style="font-size: 2.5rem; color: #ffcc00;">📁</div><div style="margin-top: 10px; font-weight: bold; color: white;">${item.name}</div></div>`; } 
-                else { html += `<div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.1); position: relative;" oncontextmenu="showSetupContext(event, '${item.id}', false)"><div style="font-size: 2.5rem; color: #aaa;">📄</div><div style="margin-top: 10px; font-weight: bold; color: white; word-break: break-all; font-size: 0.9rem;">${item.name}</div><a href="${item.file_url}?download=" download="${item.name}" target="_blank" class="btn-submit" style="display: block; margin-top: 15px; padding: 6px; font-size: 0.85rem; background: #28a745;">💾 Download</a></div>`; }
-            });
-            container.innerHTML = html;
-        }
-
-        function openSetupFolder(id, name) { currentSetupFolderId = id; setupBreadcrumbs.push({id, name}); loadTeamSetups(); }
-        function navigateSetupUp() { setupBreadcrumbs.pop(); currentSetupFolderId = setupBreadcrumbs[setupBreadcrumbs.length - 1].id; loadTeamSetups(); }
-        function navigateToBreadcrumb(index) { setupBreadcrumbs = setupBreadcrumbs.slice(0, index + 1); currentSetupFolderId = setupBreadcrumbs[setupBreadcrumbs.length - 1].id; loadTeamSetups(); }
-
-        async function createSetupFolder() {
-            const name = prompt("Name des neuen Ordners:"); if (!name || name.trim() === '') return;
-            const { error } = await supabaseClient.from('team_setups').insert([{ team_id: currentOpenTeamId, parent_id: currentSetupFolderId, name: name.trim(), is_folder: true }]);
-            if (error) showToast("Fehler beim Erstellen: " + error.message, "error"); else loadTeamSetups();
-        }
-
-        async function uploadSetupFile(event) {
-            const file = event.target.files[0]; if (!file) return;
-            if (!file.name.toLowerCase().endsWith('.sto')) { showToast("Bitte nur .sto Dateien hochladen!", "error"); event.target.value = ''; return; }
-            const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; showToast("Lade Setup hoch...", "info");
-            const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('setups').upload(fileName, file);
-            if (uploadError) { showToast("Fehler beim Upload: " + uploadError.message, "error"); event.target.value = ''; return; }
-            const { data: publicUrlData } = supabaseClient.storage.from('setups').getPublicUrl(fileName);
-            const { error: dbError } = await supabaseClient.from('team_setups').insert([{ team_id: currentOpenTeamId, parent_id: currentSetupFolderId, name: file.name, is_folder: false, file_url: publicUrlData.publicUrl }]);
-            if (dbError) showToast("Fehler beim Speichern in der Datenbank: " + dbError.message, "error"); else showToast("Setup erfolgreich hochgeladen!", "success");
-            event.target.value = ''; loadTeamSetups();
-        }
-
-        function showSetupContext(e, id, isFolder) {
-            e.preventDefault(); e.stopPropagation(); if (currentMyRole !== 'Admin' && currentMyRole !== 'Manager') return;
-            contextSetupId = id; const menu = document.getElementById('context-menu');
-            menu.innerHTML = `<div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;">Aktion für ${isFolder ? 'Ordner' : 'Setup'}</div><hr><div style="color:#dc3545;" onclick="deleteSetupItem()">🗑️ Löschen</div>`;
-            menu.style.display = 'block'; let x = e.clientX; let y = e.clientY; if (x + 200 > window.innerWidth) x -= 200; if (y + 250 > window.innerHeight) y -= 250; menu.style.left = x + 'px'; menu.style.top = y + 'px';
-        }
-
-        async function deleteSetupItem() { document.getElementById('context-menu').style.display = 'none'; if(!contextSetupId) return; customConfirm("Möchtest du dieses Element wirklich löschen?\nAlle darin enthaltenen Daten werden unwiderruflich entfernt.", async () => { const { error } = await supabaseClient.from('team_setups').delete().eq('id', contextSetupId); if (error) showToast("Fehler beim Löschen: " + error.message, "error"); else { showToast("Erfolgreich gelöscht.", "success"); loadTeamSetups(); } }); }
-
-        // ================= GALERIE FUNKTIONEN =================
-        function renderGalleryBreadcrumbs() {
-            const bc = document.getElementById('gallery-breadcrumb'); let html = '📂 ';
-            galleryBreadcrumbs.forEach((crumb, index) => { if (index === galleryBreadcrumbs.length - 1) { html += `<span style="color: white;">${crumb.name}</span>`; } else { html += `<span style="color: var(--primary); cursor: pointer; text-decoration: underline;" onclick="navigateToGalleryBreadcrumb(${index})">${crumb.name}</span> / `; } });
-            bc.innerHTML = html;
-        }
-
-        async function loadTeamGallery() {
-            const foldersContainer = document.getElementById('team-gallery-folders'); const imagesContainer = document.getElementById('team-gallery-images');
-            foldersContainer.innerHTML = '<p style="color:#aaa;">Lade Ordner...</p>'; imagesContainer.innerHTML = '';
-            let query = supabaseClient.from('team_gallery').select('*').eq('team_id', currentOpenTeamId); query = currentGalleryFolderId === null ? query.is('parent_id', null) : query.eq('parent_id', currentGalleryFolderId);
-            const { data, error } = await query.order('is_folder', { ascending: false }).order('name', { ascending: true });
-            if (error) return foldersContainer.innerHTML = `<p style="color:var(--primary);">Fehler: ${error.message}</p>`;
-            renderGalleryBreadcrumbs(); let foldersHtml = ''; let imagesHtml = '';
-            if (currentGalleryFolderId !== null) foldersHtml += `<div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px dashed #555;" onclick="navigateGalleryUp()"><div style="font-size: 2.5rem;">⬆️</div><div style="margin-top: 10px; font-weight: bold; color: #aaa;">Zurück</div></div>`;
-            if (data.length === 0 && currentGalleryFolderId === null) foldersHtml += `<p style="color:#aaa; grid-column: 1/-1;">Noch keine Bilder oder Ordner vorhanden.</p>`;
-            data.forEach(item => {
-                if (item.is_folder) { foldersHtml += `<div style="background: rgba(20,20,20,0.8); padding: 15px; border-radius: 8px; cursor: pointer; text-align: center; border: 1px solid var(--primary); transition: 0.2s;" onclick="openGalleryFolder('${item.id}', '${item.name}')" oncontextmenu="showGalleryContext(event, '${item.id}', true)"><div style="font-size: 2.5rem; color: #ffcc00;">📁</div><div style="margin-top: 10px; font-weight: bold; color: white;">${item.name}</div></div>`; } 
-                else { imagesHtml += `<div class="masonry-item" oncontextmenu="showGalleryContext(event, '${item.id}', false)"><a href="${item.file_url}" target="_blank"><img src="${item.file_url}" alt="${item.name}"></a><div style="margin-top: 5px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.5); padding: 8px; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,0.05); border-top: none;"><span style="color: #ccc; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">${item.name}</span><a href="${item.file_url}?download=" download="${item.name}" target="_blank" style="color: white; text-decoration: none; background: var(--primary); padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;" title="Herunterladen">💾</a></div></div>`; }
-            });
-            foldersContainer.innerHTML = foldersHtml; imagesContainer.innerHTML = imagesHtml;
-        }
-
-        function openGalleryFolder(id, name) { currentGalleryFolderId = id; galleryBreadcrumbs.push({id, name}); loadTeamGallery(); }
-        function navigateGalleryUp() { galleryBreadcrumbs.pop(); currentGalleryFolderId = galleryBreadcrumbs[galleryBreadcrumbs.length - 1].id; loadTeamGallery(); }
-        function navigateToGalleryBreadcrumb(index) { galleryBreadcrumbs = galleryBreadcrumbs.slice(0, index + 1); currentGalleryFolderId = galleryBreadcrumbs[galleryBreadcrumbs.length - 1].id; loadTeamGallery(); }
-
-        async function createGalleryFolder() {
-            const name = prompt("Name des neuen Ordners:"); if (!name || name.trim() === '') return;
-            const { error } = await supabaseClient.from('team_gallery').insert([{ team_id: currentOpenTeamId, parent_id: currentGalleryFolderId, name: name.trim(), is_folder: true }]);
-            if (error) showToast("Fehler beim Erstellen: " + error.message, "error"); else loadTeamGallery();
-        }
-
-        async function uploadGalleryImage(event) {
-            const files = event.target.files; if (!files || files.length === 0) return; showToast(`Lade ${files.length} Bild(er) hoch...`, "info");
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]; if (!file.type.startsWith('image/')) { showToast(`Überspringe ${file.name} (kein Bild)`, "error"); continue; }
-                const fileName = `${Date.now()}_${i}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-                const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('gallery').upload(fileName, file);
-                if (uploadError) { showToast(`Fehler bei ${file.name}: ` + uploadError.message, "error"); continue; }
-                const { data: publicUrlData } = supabaseClient.storage.from('gallery').getPublicUrl(fileName);
-                const { error: dbError } = await supabaseClient.from('team_gallery').insert([{ team_id: currentOpenTeamId, parent_id: currentGalleryFolderId, name: file.name, is_folder: false, file_url: publicUrlData.publicUrl }]);
-                if (dbError) showToast(`Fehler beim Speichern von ${file.name}: ` + dbError.message, "error");
-            }
-            showToast("Bilder-Upload abgeschlossen!", "success"); event.target.value = ''; loadTeamGallery();
-        }
-
-        function showGalleryContext(e, id, isFolder) {
-            e.preventDefault(); e.stopPropagation(); if (currentMyRole !== 'Admin' && currentMyRole !== 'Manager') return;
-            contextGalleryId = id; const menu = document.getElementById('context-menu');
-            menu.innerHTML = `<div style="font-size: 0.8rem; color: #888; cursor: default; padding-bottom: 5px;">Aktion für ${isFolder ? 'Ordner' : 'Bild'}</div><hr><div style="color:#dc3545;" onclick="deleteGalleryItem()">🗑️ Löschen</div>`;
-            menu.style.display = 'block'; let x = e.clientX; let y = e.clientY; if (x + 200 > window.innerWidth) x -= 200; if (y + 250 > window.innerHeight) y -= 250; menu.style.left = x + 'px'; menu.style.top = y + 'px';
-        }
-
-        async function deleteGalleryItem() { document.getElementById('context-menu').style.display = 'none'; if(!contextGalleryId) return; customConfirm("Möchtest du dieses Bild/Diesen Ordner wirklich löschen?", async () => { const { error } = await supabaseClient.from('team_gallery').delete().eq('id', contextGalleryId); if (error) showToast("Fehler beim Löschen: " + error.message, "error"); else { showToast("Erfolgreich gelöscht.", "success"); loadTeamGallery(); } }); }
-
-        // ================= EVENT / KALENDER FUNKTIONEN =================
-        async function sendDiscordWebhook(webhookUrl, payload) { try { const res = await fetch(webhookUrl + "?wait=true", { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (res.ok) { const data = await res.json(); return data.id; } } catch (e) { console.error("Discord Webhook Error:", e); } return null; }
-        async function editDiscordWebhook(webhookUrl, messageId, payload) { try { await fetch(`${webhookUrl}/messages/${messageId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); } catch (e) { console.error("Discord Webhook Edit Error:", e); } }
-        async function deleteDiscordWebhook(webhookUrl, messageId) { try { await fetch(`${webhookUrl}/messages/${messageId}`, { method: 'DELETE' }); } catch (e) { console.error("Discord Webhook Delete Error:", e); } }
-        async function sendDiscordReminderWebhook(webhookUrl, payload) {
-            let streamsText = ""; if (payload.streams) { try { let parsed = JSON.parse(payload.streams); if(parsed.length > 0) { let streamLinks = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join(' | '); streamsText = `\n📺 **Streams:** ${streamLinks}`; } } catch(e){} }
-            const embed = { content: "⏳ **Erinnerung:** Ein Event startet in Kürze!", embeds: [{ title: `[${payload.event_type || 'Event'}] ${payload.name}`, description: `Das Event beginnt in **1 Stunde**!\n\n🎮 **Simulator:** ${payload.simulator || '-'}\n🏎️ **Fahrzeug:** ${payload.car || '-'}\n🏁 **Strecke:** ${payload.track || '-'}${streamsText}`, color: 16763904 }] };
-            try { await fetch(webhookUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(embed) }); } catch (e) { console.error("Discord Reminder Webhook Error:", e); }
-        }
-
-        function buildDiscordEmbed(payload, ev) {
-            let color = 2664261; if (payload.status === 'Unklar') color = 16763904; if (payload.status === 'Entfällt') color = 14431557;
-            let dateDisplay = payload.date ? formatDateGerman(payload.date) : 'Nicht festgelegt'; if (payload.date && payload.date_end && payload.date !== payload.date_end) { dateDisplay = `${formatDateGerman(payload.date)} bis ${formatDateGerman(payload.date_end)}`; }
-            let timeDisplay = payload.is_all_day ? 'Ganztägig' : `${payload.time_start || '?'} Uhr - ${payload.time_end || '?'} Uhr`;
-            const creatorName = ev && ev.creator_name ? ev.creator_name : payload.creator_name || 'Unbekannt';
-            let streamsText = "-"; if (payload.streams) { try { let parsed = JSON.parse(payload.streams); if(parsed.length > 0) { streamsText = parsed.map(s => `[${s.platform}](${s.url.startsWith('http') ? s.url : 'https://'+s.url})`).join('\n'); } } catch(e){} }
-            let setupText = "-"; if (payload.setup_file_url) { setupText = `[${payload.setup_file_name || 'Download'}](${payload.setup_file_url})`; }
-            return { embeds: [{ title: `[${payload.event_type || 'Event'}] ${payload.name}`, color: color, fields: [ { name: "📅 Datum", value: dateDisplay, inline: true }, { name: "🕒 Zeit", value: timeDisplay, inline: true }, { name: "🚦 Status", value: payload.status, inline: true }, { name: "🎮 Simulator", value: payload.simulator || '-', inline: true }, { name: "🏎️ Fahrzeug", value: payload.car || '-', inline: true }, { name: "🏁 Strecke", value: payload.track || '-', inline: true }, { name: "💾 Setup", value: setupText, inline: true }, { name: "📺 Streams", value: streamsText, inline: false } ], footer: { text: `Erstellt von: ${creatorName}` } }] };
-        }
-
-        function addStreamInput(platform = 'Twitch', url = '') {
-            const container = document.getElementById('streams-container'); const row = document.createElement('div'); row.style.display = 'flex'; row.style.gap = '10px'; row.style.marginBottom = '10px'; row.className = 'stream-input-row';
-            row.innerHTML = `<select class="stream-platform" style="padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem; width: 120px;"><option value="Twitch" ${platform==='Twitch'?'selected':''}>Twitch</option><option value="YouTube" ${platform==='YouTube'?'selected':''}>YouTube</option><option value="Instagram" ${platform==='Instagram'?'selected':''}>Instagram</option><option value="TikTok" ${platform==='TikTok'?'selected':''}>TikTok</option><option value="Facebook" ${platform==='Facebook'?'selected':''}>Facebook</option></select><input type="text" class="stream-url" placeholder="z.B. twitch.tv/deinkanal" value="${url}" style="flex: 1; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem;"><button type="button" onclick="this.parentElement.remove()" style="background: transparent; border: 1px solid #dc3545; color: #dc3545; padding: 0 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 1.2rem;">×</button>`;
-            container.appendChild(row);
-        }
-
-        function toggleTimeInputs() { const isAllDay = document.getElementById('ev-all-day').checked; document.getElementById('time-inputs-container').style.display = isAllDay ? 'none' : 'grid'; }
-        function toggleDateInputs() {
-            const isMultiDay = document.getElementById('ev-multi-day').checked; const grid = document.getElementById('date-inputs-grid'); const endGroup = document.getElementById('end-date-group'); const dateLabel = document.getElementById('ev-date-label');
-            if (isMultiDay) { grid.style.gridTemplateColumns = '1fr 1fr'; endGroup.style.display = 'block'; dateLabel.innerText = 'Startdatum'; } else { grid.style.gridTemplateColumns = '1fr'; endGroup.style.display = 'none'; dateLabel.innerText = 'Datum'; document.getElementById('ev-date-end').value = ''; }
-        }
-
-        async function loadTeamEvents() {
-            const container = document.getElementById('team-events-list'); container.innerHTML = '<p style="color:#aaa;">Lade Termine...</p>';
-            if (!supabaseClient) return;
-            const { data: events, error } = await supabaseClient.from('events').select('*').eq('team_id', currentOpenTeamId).order('date', { ascending: true }).order('time_start', { ascending: true });
-            if (error) return container.innerHTML = `<p style="color:var(--primary);">Fehler beim Laden der Termine: ${error.message}</p>`;
-
-            const now = new Date(); let validEvents = []; let idsToDelete = [];
-            (events || []).forEach(ev => {
-                if (ev.date) {
-                    let endTime = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59'); let timeDiff = now.getTime() - endTime.getTime(); let hoursDiff = timeDiff / (1000 * 60 * 60);
-                    if (hoursDiff > 24) idsToDelete.push(ev.id); else validEvents.push(ev);
-                } else validEvents.push(ev);
-            });
-
-            if (idsToDelete.length > 0 && (currentMyRole === 'Admin' || currentMyRole === 'Manager')) supabaseClient.from('events').delete().in('id', idsToDelete).then();
-            currentTeamEvents = validEvents; 
-
-            if (currentTeamEvents.length === 0) return container.innerHTML = '<p style="color:#aaa; text-align: center; padding: 20px; border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; grid-column: 1/-1;">Noch keine Termine vorhanden.</p>';
-
-            let html = '';
-            currentTeamEvents.forEach(ev => {
-                let statusColor = '#28a745'; if (ev.status === 'Unklar') statusColor = '#ffcc00'; if (ev.status === 'Entfällt') statusColor = '#dc3545'; 
-                let dateDisplay = ev.date ? formatDateGerman(ev.date) : 'Nicht festgelegt'; if (ev.date && ev.date_end && ev.date !== ev.date_end) dateDisplay = `${formatDateGerman(ev.date)} bis ${formatDateGerman(ev.date_end)}`;
-                let timeDisplay = ev.is_all_day ? 'Ganztägig' : `${ev.time_start || '?'} Uhr - ${ev.time_end || '?'} Uhr`;
-                
-                let canEdit = false; let canDelete = false;
-                if (currentMyRole === 'Admin') { canEdit = true; canDelete = true; } else if (currentMyRole === 'Manager') { canEdit = true; canDelete = (ev.creator_id === activeUser.id); } else if (currentMyRole === 'Mitglied') { canEdit = (ev.creator_id === activeUser.id); canDelete = (ev.creator_id === activeUser.id); }
-
-                let actionsHtml = '';
-                if (canEdit || canDelete) {
-                    actionsHtml = `<div style="display:flex; gap: 8px; margin-top: 15px;">`;
-                    if (canEdit) actionsHtml += `<button onclick="showEventModal('${ev.id}')" style="background: rgba(255,255,255,0.1); border:1px solid #aaa; color:#fff; cursor:pointer; padding: 6px; border-radius: 5px; transition: 0.2s; flex: 1; font-size: 0.85rem;">✏️ Bearbeiten</button>`;
-                    if (canDelete) actionsHtml += `<button onclick="deleteEvent('${ev.id}')" style="background: rgba(220,53,69,0.1); border:1px solid #dc3545; color:#dc3545; cursor:pointer; padding: 6px; border-radius: 5px; transition: 0.2s; flex: 1; font-size: 0.85rem;">🗑️ Löschen</button>`;
-                    actionsHtml += `</div>`;
-                }
-
-                let streamsHtml = '';
-                if (ev.streams) {
-                    let streamsData = []; try { streamsData = JSON.parse(ev.streams); } catch(e) { streamsData = [{platform: 'Stream', url: ev.streams}]; }
-                    if (streamsData.length > 0) {
-                        streamsHtml = '<div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">';
-                        streamsData.forEach(s => {
-                            let url = s.url.startsWith('http') ? s.url : 'https://' + s.url; let icon = '📺'; let color = 'var(--primary)'; let bg = 'rgba(209,18,18,0.2)';
-                            if (s.platform === 'Twitch') { icon = '🟪'; color = '#a970ff'; bg = 'rgba(169,112,255,0.15)'; } else if (s.platform === 'YouTube') { icon = '🟥'; color = '#ff0000'; bg = 'rgba(255,0,0,0.15)'; } else if (s.platform === 'Instagram') { icon = '📸'; color = '#E1306C'; bg = 'rgba(225,48,108,0.15)'; } else if (s.platform === 'TikTok') { icon = '🎵'; color = '#00f2fe'; bg = 'rgba(0,242,254,0.15)'; } else if (s.platform === 'Facebook') { icon = '🟦'; color = '#1877F2'; bg = 'rgba(24,119,242,0.15)'; }
-                            streamsHtml += `<a href="${url}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: ${bg}; color: ${color}; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px solid ${color}; font-size: 0.85rem; transition: 0.2s;">${icon} ${s.platform} ansehen</a>`;
-                        });
-                        streamsHtml += '</div>';
-                    }
-                }
-
-                let setupHtml = '';
-                if (ev.setup_file_url && currentMyRole !== 'Community') setupHtml = `<a href="${ev.setup_file_url}?download=" download="${ev.setup_file_name || 'setup.sto'}" target="_blank" class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="display: block; text-align: center; background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; border-radius: 5px; text-decoration: none; font-weight: bold; border: 1px dashed #aaa; font-size: 0.85rem; transition: 0.2s; margin-top: 10px;">💾 Setup Download (.sto)</a>`;
-
-                html += `
-                    <div id="event-card-${ev.id}" class="${ev.status === 'Entfällt' ? 'event-canceled' : ''}" style="background: rgba(20,20,20,0.8); border: 1px solid rgba(255,255,255,0.05); border-left: 5px solid ${statusColor}; padding: 20px; border-radius: 8px; transition: 0.3s; display: flex; flex-direction: column; height: 100%;">
-                        <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;"><h4 class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: white; font-size: 1.2rem; margin-bottom: 0; text-transform: uppercase;"><span style="color: var(--primary); margin-right: 5px; font-size: 0.9rem; display:block;">[${ev.event_type || 'Event'}]</span>${ev.name}</h4><span id="status-badge-${ev.id}" style="background: ${statusColor}15; color: ${statusColor}; padding: 4px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; border: 1px solid ${statusColor}; text-transform: uppercase; white-space: nowrap;">${ev.status}</span></div>
-                        <div class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: #bbb; font-size: 0.95rem; line-height: 1.6; flex-grow: 1;">📅 <strong>Datum:</strong> ${dateDisplay} <br>🕒 <strong>Zeit:</strong> ${timeDisplay} <br>🎮 <strong>Sim:</strong> ${ev.simulator || '-'} <br>🏎️ <strong>Car:</strong> ${ev.car || '-'} <br>🏁 <strong>Track:</strong> ${ev.track || '-'}</div>
-                        ${streamsHtml}${setupHtml}
-                        <div id="countdown-${ev.id}" style="font-size: 0.95rem; margin-top: 15px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.05); color: #ccc;">Lade Countdown...</div>
-                        <div class="${ev.status === 'Entfällt' ? 'event-canceled-text' : ''}" style="color: #666; font-size: 0.8rem; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 10px;">Erstellt von: ${ev.creator_name || 'Unbekannt'}</div>
-                        ${actionsHtml}
-                    </div>
-                `;
-            });
-            container.innerHTML = html; startEventTicker();
-        }
-
-        // --- TICKER & COUNTDOWN LOGIK ---
-        function parseEventDate(dateStr, timeStr, defaultTime) { if (!dateStr) return null; let t = timeStr || defaultTime; if (t.split(':').length === 2) t += ':00'; return new Date(`${dateStr}T${t}`); }
-
-        function startEventTicker() { if (eventTickerInterval) clearInterval(eventTickerInterval); updateCountdowns(); eventTickerInterval = setInterval(updateCountdowns, 1000); }
-
-        function updateCountdowns() {
-            const now = new Date();
-            currentTeamEvents.forEach(ev => {
-                const card = document.getElementById(`event-card-${ev.id}`); const cd = document.getElementById(`countdown-${ev.id}`); const badge = document.getElementById(`status-badge-${ev.id}`);
-                if (!card || !cd) return;
-                if (ev.status === 'Entfällt') { cd.innerHTML = '<span style="color: #dc3545; font-weight: bold;">Kein Countdown (Entfällt)</span>'; return; }
-                if (!ev.date) { cd.innerHTML = '<span style="color: #aaa;">Kein Datum hinterlegt</span>'; return; }
-
-                let startTime = parseEventDate(ev.date, ev.time_start, '00:00:00'); let endTime = parseEventDate(ev.date_end || ev.date, ev.time_end, '23:59:59');
-
-                if (now < startTime) {
-                    card.classList.remove('live-glow'); let diff = startTime - now;
-                    let days = Math.floor(diff / (1000 * 60 * 60 * 24)); let hours = Math.floor((diff / (1000 * 60 * 60)) % 24); let mins = Math.floor((diff / 1000 / 60) % 60); let secs = Math.floor((diff / 1000) % 60);
-                    let hStr = hours.toString().padStart(2, '0'); let mStr = mins.toString().padStart(2, '0'); let sStr = secs.toString().padStart(2, '0');
-                    let cdText = days > 0 ? `${days}d ${hStr}:${mStr}:${sStr}` : `${hStr}:${mStr}:${sStr}`;
-                    cd.innerHTML = `⏳ Startet in: <strong style="color: white; font-family: monospace; font-size: 1.05rem;">${cdText}</strong>`;
-                    if (badge && badge.innerText === 'LIVE') { badge.innerText = ev.status; let color = ev.status === 'Unklar' ? '#ffcc00' : '#28a745'; badge.style.background = `${color}15`; badge.style.color = color; badge.style.borderColor = color; }
-
-                    if (diff <= 3600000 && diff > 3598000 && !ev._reminderSentLocally) {
-                        ev._reminderSentLocally = true; 
-                        if ((currentMyRole === 'Admin' || currentMyRole === 'Manager') && currentTeamData && currentTeamData.discord_webhook_url) sendDiscordReminderWebhook(currentTeamData.discord_webhook_url, ev);
-                    }
-                } else if (now >= startTime && now <= endTime) {
-                    card.classList.add('live-glow'); cd.innerHTML = `<span style="color: #ff0000; font-weight: bold; animation: textPulse 1.5s infinite; display: inline-block;">🔴 Event läuft gerade!</span>`;
-                    if (badge && badge.innerText !== 'LIVE') { badge.innerText = 'LIVE'; badge.style.background = 'rgba(255,0,0,0.15)'; badge.style.color = '#ff0000'; badge.style.borderColor = '#ff0000'; }
-                } else {
-                    card.classList.remove('live-glow'); cd.innerHTML = `<span style="color: #aaa;">🏁 Event ist beendet</span>`;
-                    if (ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) {
-                        if (currentMyRole === 'Admin' || currentMyRole === 'Manager') {
-                            deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
-                            if (supabaseClient) supabaseClient.from('events').update({ discord_message_id: null }).eq('id', ev.id).then();
-                        }
-                        ev.discord_message_id = null; 
-                    }
-                }
-            });
-        }
-
-        function formatDateGerman(dateString) { if(!dateString) return ''; const parts = dateString.split('-'); if(parts.length === 3) return `${parts[2]}.${parts[1]}.${parts[0]}`; return dateString; }
-
-        function removeCurrentSetup() { currentSetupRemoved = true; document.getElementById('ev-setup-current').style.display = 'none'; document.getElementById('ev-setup').value = ''; }
-
-        function showEventModal(eventId = null) {
-            document.getElementById('event-modal').style.display = 'flex'; document.getElementById('ev-setup').value = ''; currentSetupRemoved = false;
-            
-            if (eventId) {
-                document.getElementById('event-modal-title').innerText = "Termin bearbeiten"; currentEditEventId = eventId;
-                const ev = currentTeamEvents.find(e => e.id === eventId);
-                if(ev) {
-                    document.getElementById('ev-name').value = ev.name || ''; document.getElementById('ev-type').value = ev.event_type || 'Training';
-                    document.getElementById('ev-date').value = ev.date || ''; document.getElementById('ev-date-end').value = ev.date_end || ''; 
-                    document.getElementById('ev-all-day').checked = !!ev.is_all_day; document.getElementById('ev-multi-day').checked = !!(ev.date_end && ev.date !== ev.date_end);  
-                    document.getElementById('ev-status').value = ev.status || 'Findet statt'; document.getElementById('ev-start').value = ev.time_start || '';
-                    document.getElementById('ev-end').value = ev.time_end || ''; document.getElementById('ev-sim').value = ev.simulator || 'iRacing';
-                    document.getElementById('ev-car').value = ev.car || ''; document.getElementById('ev-track').value = ev.track || '';
-
-                    if (ev.setup_file_name) { document.getElementById('ev-setup-current').style.display = 'block'; document.getElementById('ev-setup-name').innerText = ev.setup_file_name; } else { document.getElementById('ev-setup-current').style.display = 'none'; }
-                    document.getElementById('streams-container').innerHTML = '';
-                    if (ev.streams) { try { const parsed = JSON.parse(ev.streams); parsed.forEach(s => addStreamInput(s.platform, s.url)); } catch(e) { addStreamInput('Andere', ev.streams); } }
-                    if (document.getElementById('streams-container').children.length === 0) addStreamInput();
-                }
-            } else {
-                document.getElementById('event-modal-title').innerText = "Neuen Termin erstellen"; currentEditEventId = null;
-                document.getElementById('ev-name').value = ''; document.getElementById('ev-type').value = 'Training'; document.getElementById('ev-date').value = '';
-                document.getElementById('ev-date-end').value = ''; document.getElementById('ev-all-day').checked = false; document.getElementById('ev-multi-day').checked = false;
-                document.getElementById('ev-status').value = 'Findet statt'; document.getElementById('ev-start').value = ''; document.getElementById('ev-end').value = '';
-                document.getElementById('ev-sim').value = 'iRacing'; document.getElementById('ev-car').value = ''; document.getElementById('ev-track').value = '';
-                document.getElementById('ev-setup-current').style.display = 'none'; document.getElementById('streams-container').innerHTML = ''; addStreamInput();
-            }
-            toggleTimeInputs(); toggleDateInputs();
-        }
-
-        function closeEventModal() { document.getElementById('event-modal').style.display = 'none'; currentEditEventId = null; }
-
-        async function saveEvent() {
-            if (!supabaseClient) return showToast("Demo-Modus", "info");
-            if (currentMyRole === 'Community') return showToast("Keine Berechtigung!", "error");
-
-            const isAllDay = document.getElementById('ev-all-day').checked; const isMultiDay = document.getElementById('ev-multi-day').checked;
-            const streamRows = document.querySelectorAll('.stream-input-row'); let streamsArray = [];
-            streamRows.forEach(row => { const plat = row.querySelector('.stream-platform').value; const url = row.querySelector('.stream-url').value.trim(); if (url) streamsArray.push({ platform: plat, url: url }); });
-            const streamsJson = streamsArray.length > 0 ? JSON.stringify(streamsArray) : null;
-
-            let oldEvent = currentEditEventId ? currentTeamEvents.find(e => e.id === currentEditEventId) : null;
-            let setupUrl = oldEvent ? oldEvent.setup_file_url : null; let setupName = oldEvent ? oldEvent.setup_file_name : null;
-            if (currentSetupRemoved) { setupUrl = null; setupName = null; }
-
-            const setupInput = document.getElementById('ev-setup');
-            if (setupInput.files && setupInput.files.length > 0) {
-                const file = setupInput.files[0]; if (!file.name.toLowerCase().endsWith('.sto')) return showToast("Bitte nur .sto Dateien für das Setup hochladen!", "error");
-                const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; showToast("Lade Setup hoch...", "info");
-                const { data: uploadData, error: uploadError } = await supabaseClient.storage.from('setups').upload(fileName, file);
-                if (uploadError) return showToast("Fehler beim Setup-Upload: " + uploadError.message, "error");
-                const { data: publicUrlData } = supabaseClient.storage.from('setups').getPublicUrl(fileName); setupUrl = publicUrlData.publicUrl; setupName = file.name;
-            }
-
-            const payload = {
-                team_id: currentOpenTeamId, name: document.getElementById('ev-name').value.trim(), event_type: document.getElementById('ev-type').value,
-                date: document.getElementById('ev-date').value || null, date_end: isMultiDay ? (document.getElementById('ev-date-end').value || null) : null,
-                is_all_day: isAllDay, status: document.getElementById('ev-status').value, time_start: isAllDay ? null : (document.getElementById('ev-start').value || null),
-                time_end: isAllDay ? null : (document.getElementById('ev-end').value || null), simulator: document.getElementById('ev-sim').value.trim(),
-                car: document.getElementById('ev-car').value.trim(), track: document.getElementById('ev-track').value.trim(), streams: streamsJson, setup_file_url: setupUrl, setup_file_name: setupName
-            };
-
-            if (!payload.name) return showToast("Bitte gib dem Event mindestens einen Namen!", "error");
-            let msgId = oldEvent ? oldEvent.discord_message_id : null;
-
-            if (currentTeamData && currentTeamData.discord_webhook_url) {
-                const embedPayload = buildDiscordEmbed(payload, oldEvent);
-                if (currentEditEventId && msgId) await editDiscordWebhook(currentTeamData.discord_webhook_url, msgId, embedPayload);
-                else { const newMsgId = await sendDiscordWebhook(currentTeamData.discord_webhook_url, embedPayload); if (newMsgId) payload.discord_message_id = newMsgId; }
-            }
-
-            if (currentEditEventId) {
-                const { error } = await supabaseClient.from('events').update(payload).eq('id', currentEditEventId);
-                if (error) showToast("Fehler beim Aktualisieren: " + error.message, "error"); else showToast("Termin aktualisiert.", "success");
-            } else {
-                payload.creator_name = `${activeUser.first_name} ${activeUser.last_name}`; if (activeUser.id) payload.creator_id = activeUser.id; 
-                const { error } = await supabaseClient.from('events').insert([payload]);
-                if (error) showToast("Fehler beim Erstellen: " + error.message, "error"); else showToast("Termin erstellt.", "success");
-            }
-            closeEventModal(); loadTeamEvents(); updateLiveCalendar(currentOpenTeamId); 
-        }
-
-        function deleteEvent(id) {
-            customConfirm("Möchtest du diesen Termin wirklich unwiderruflich löschen?", async () => {
-                if (!supabaseClient) return;
-                const ev = currentTeamEvents.find(e => e.id === id);
-                if (ev && ev.discord_message_id && currentTeamData && currentTeamData.discord_webhook_url) await deleteDiscordWebhook(currentTeamData.discord_webhook_url, ev.discord_message_id);
-                const { error } = await supabaseClient.from('events').delete().eq('id', id);
-                if (error) showToast("Fehler beim Löschen: " + error.message, "error");
-                else { showToast("Termin gelöscht.", "success"); loadTeamEvents(); updateLiveCalendar(currentOpenTeamId); }
-            });
-        }
-
     </script>
 </body>
 </html>
