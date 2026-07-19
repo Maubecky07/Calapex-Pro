@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calapex | Simracing Management</title>
+    
+    <link rel="icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.png" type="image/png">
+    <link rel="shortcut icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.png">
+    <meta name="theme-color" content="#d11212">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsuites@4/dist/jsuites.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsuites@4/dist/jsuites.css" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/index.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jspreadsheet-ce@4/dist/jspreadsheet.css" type="text/css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="maintenance-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.95); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 20px; backdrop-filter: blur(10px);">
+        <h1 style="color: #e30613; font-size: 3.5rem; margin-bottom: 20px; text-transform: uppercase;">Wartungsarbeiten</h1>
+        <p style="font-size: 1.3rem; color: #ccc; max-width: 600px; line-height: 1.5;">Das Calapex-System wird derzeit gewartet und ist vorübergehend offline. Bitte versuche es später noch einmal.</p>
+    </div>
+
+    <div class="background-wrapper">
+        <div class="bg-gradient"></div>
+        <div class="bg-pattern"></div>
+        <div class="bg-logo"></div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <div id="custom-confirm" class="modal-overlay">
+        <div class="confirm-box">
+            <div id="confirm-msg-text" class="confirm-msg">Bist du sicher?</div>
+            <div class="confirm-btns">
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeCustomConfirm(false)">Abbrechen</button>
+                <button class="btn-submit" style="background: var(--primary);" onclick="closeCustomConfirm(true)">Bestätigen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="sync-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Live-Kalender Synchronisation</h2>
+            <p style="color: #ccc; margin-bottom: 20px; line-height: 1.5;">Kopiere diesen Link und füge ihn als "Kalender abonnieren" (WebCal / URL) in deinen Kalender ein. Er aktualisiert sich ab sofort vollautomatisch!</p>
+            <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <input type="text" id="sync-url-input" readonly style="flex: 1; min-width: 250px; padding: 12px; background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--primary); border-radius: 5px; font-family: monospace; font-size: 0.95rem;">
+                <button class="btn-submit" style="width: auto; margin-top: 0; padding: 12px 25px; font-size: 1.1rem; background: #28a745;" onclick="copySyncUrl()">📋 Kopieren</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeSyncModal()">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="news-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">News erstellen</h2>
+            <div class="form-group"><label>Titel</label><input type="text" id="news-title" placeholder="Titel der Ankündigung..."></div>
+            <div class="form-group"><label>Inhalt</label><textarea id="news-content" placeholder="Was gibt's Neues?..."></textarea></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveNews()">Posten</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeNewsModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="patchlog-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Patchlog Eintrag erstellen</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Version</label><input type="text" id="patchlog-version" placeholder="z.B. v0.7.0"></div>
+                <div class="form-group"><label>Typ</label><select id="patchlog-type"><option value="NEU">NEU</option><option value="ÄNDERUNG">ÄNDERUNG</option><option value="FIX">FIX</option></select></div>
+            </div>
+            <div class="form-group"><label>Titel</label><input type="text" id="patchlog-title" placeholder="Kurze Beschreibung..."></div>
+            <div class="form-group"><label>Inhalt</label><textarea id="patchlog-content" placeholder="Details zum Update oder Fix..."></textarea></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="savePatchlog()">Eintragen</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closePatchlogModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="edit-team-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Team bearbeiten</h2>
+            <div class="form-group"><label>Team Name</label><input type="text" id="edit-team-name" placeholder="Team Name"></div>
+            <div class="form-group"><label>Allgemeininformationen</label><textarea id="edit-team-desc" placeholder="Beschreibe dein Team kurz für zukünftige Bewerber..."></textarea></div>
+            <div class="form-group"><label>Neues Teamlogo (optional)</label><input type="file" id="edit-team-logo" accept="image/*"></div>
+            <div class="form-group">
+                <label>Haupt-Simulator</label>
+                <select id="edit-team-sim">
+                    <option>iRacing</option><option>Assetto Corsa Competizione</option><option>rFactor 2</option><option>Multi-Sim</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Discord Webhook URL (optional)</label><input type="text" id="edit-team-webhook" placeholder="https://discord.com/api/webhooks/..."></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveTeamEdit()">Speichern</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeEditTeamModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="context-menu" class="context-menu"></div>
+
+    <div id="profile-badge">
+        <span style="color: #ccc; font-size: 1.1rem;">👤 <strong id="profile-name" style="color: white; margin-left: 5px;">Name</strong></span>
+        <button id="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <div id="iracing-widget" style="display: none; position: fixed; top: 80px; right: 20px; width: 320px; max-width: calc(100vw - 40px); background: rgba(15, 15, 15, 0.95); border: 1px solid #ff0000; border-radius: 12px; z-index: 1000; box-shadow: 0 5px 20px rgba(0,0,0,0.8); backdrop-filter: blur(10px);">
+        <div onclick="toggleIRacingWidget()" style="cursor: pointer; padding: 12px 20px; background: linear-gradient(90deg, rgba(255,0,0,0.2), transparent); border-radius: 12px; display: flex; align-items: center; justify-content: space-between; user-select: none;">
+            <span style="color: white; font-weight: bold; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 1px;">🔴 iRacing 2026</span>
+            <span id="iracing-widget-icon" style="color: #ff0000; font-size: 1rem; transition: 0.3s;">▼</span>
+        </div>
+        <div id="iracing-widget-content" style="display: none; padding: 15px; max-height: calc(100vh - 160px); overflow-y: auto; border-top: 1px solid rgba(255,0,0,0.3);">
+            <h4 style="color: white; border-bottom: 1px solid #ff0000; padding-bottom: 8px; margin-bottom: 15px; font-size: 1.1rem; text-transform: uppercase;">Spezial Events Kalender</h4>
+            <div id="iracing-events-container"></div>
+        </div>
+    </div>
+
+    <div id="online-users-widget">
+        <h3 onclick="toggleOnlineWidget()" style="cursor: pointer; user-select: none; color: white; margin-bottom: 10px; font-size: 1.1rem; text-transform: uppercase; border-bottom: 1px solid var(--primary); padding-bottom: 5px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="display: flex; align-items: center; gap: 8px;"><span style="display:inline-block; width:10px; height:10px; background:#00ff00; border-radius:50%; box-shadow: 0 0 8px #00ff00;"></span> <span id="online-status-counts">Online Fahrer</span></span>
+            <span id="online-widget-icon" style="font-size: 0.9rem;">▼</span>
+        </h3>
+        <div id="online-users-list" style="display: flex; flex-direction: column; gap: 8px;"><span style="color: #aaa; font-size: 0.9rem;">Lade...</span></div>
+    </div>
+
+    <div id="member-sidebar">
+        <div>
+            <button class="sidebar-close" onclick="toggleMemberSidebar()">×</button>
+            <h2 style="color: white; margin-bottom: 20px; text-transform: uppercase; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Fahrerliste</h2>
+            <p style="font-size: 0.8rem; color: #aaa; margin-top: -10px; margin-bottom: 15px;" id="sidebar-admin-hint">Rechtsklick auf Fahrer für Aktionen</p>
+        </div>
+        <div id="sidebar-member-list"></div>
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <button class="btn-submit" style="background: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545;" onclick="leaveCurrentTeam()">🚪 Team verlassen</button>
+        </div>
+    </div>
+
+    <div id="requests-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Offene Anfragen</h2>
+            <div id="requests-list" style="max-height: 300px; overflow-y: auto;"></div>
+            <button class="btn-submit" style="background: #333; border: 1px solid #555; margin-top: 20px;" onclick="closeRequestsModal()">Schließen</button>
+        </div>
+    </div>
+
+    <div id="event-modal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h2 id="event-modal-title" style="color: white; margin-bottom: 20px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">Termin erstellen</h2>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Event Name</label><input type="text" id="ev-name" placeholder="z.B. Nürburgring 24h Training"></div>
+                <div class="form-group">
+                    <label>Event Typ</label>
+                    <select id="ev-type"><option value="Training">Training</option><option value="Qualifying">Qualifying</option><option value="Rennen">Rennen</option><option value="Liga-Event">Liga-Event</option><option value="Sonstiges">Sonstiges</option></select>
+                </div>
+            </div>
+            <div id="date-inputs-grid" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+                <div class="form-group"><label id="ev-date-label">Datum</label><input type="date" id="ev-date"></div>
+                <div class="form-group" id="end-date-group" style="display: none;"><label>Enddatum</label><input type="date" id="ev-date-end"></div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 15px;">
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="custom-checkbox-container"><input type="checkbox" id="ev-all-day" onchange="toggleTimeInputs()"><label for="ev-all-day">Ganztägig</label></div>
+                    <div class="custom-checkbox-container"><input type="checkbox" id="ev-multi-day" onchange="toggleDateInputs()"><label for="ev-multi-day">Mehrtägig</label></div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0; min-width: 150px;">
+                    <label style="display: inline-block; margin-right: 10px;">Status</label>
+                    <select id="ev-status" style="display: inline-block; width: auto; padding: 8px;"><option value="Findet statt">Findet statt</option><option value="Unklar">Unklar</option><option value="Entfällt">Entfällt</option></select>
+                </div>
+            </div>
+            <div id="time-inputs-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Startzeit</label><input type="time" id="ev-start"></div>
+                <div class="form-group"><label>Endzeit</label><input type="time" id="ev-end"></div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                    <label>Simulator</label>
+                    <select id="ev-sim"><option value="iRacing">iRacing</option><option value="Assetto Corsa Competizione">Assetto Corsa Competizione</option><option value="Le Mans Ultimate">Le Mans Ultimate</option><option value="rFactor 2">rFactor 2</option><option value="Automobilista 2">Automobilista 2</option><option value="Assetto Corsa EVO">Assetto Corsa EVO</option><option value="RaceRoom">RaceRoom</option></select>
+                </div>
+                <div class="form-group"><label>Fahrzeug</label><input type="text" id="ev-car" placeholder="z.B. Porsche 911 GT3 R"></div>
+            </div>
+            <div class="form-group"><label>Strecke</label><input type="text" id="ev-track" placeholder="z.B. Nordschleife"></div>
+            <div class="form-group" id="ev-setup-container">
+                <label>Setup anhängen (.sto) - Optional</label>
+                <input type="file" id="ev-setup" accept=".sto">
+                <div id="ev-setup-current" style="display:none; color: var(--primary); margin-top: 5px; font-size: 0.9rem;">Aktuelles Setup: <span id="ev-setup-name" style="color: white;"></span><button type="button" onclick="removeCurrentSetup()" style="background: transparent; border: 1px solid #dc3545; color: #dc3545; margin-left: 10px; padding: 2px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; font-weight: bold; transition: 0.2s;">Entfernen</button></div>
+            </div>
+            <div class="form-group">
+                <label>Stream Link(s)</label>
+                <div id="streams-container"></div>
+                <button type="button" onclick="addStreamInput()" style="background: rgba(255,255,255,0.1); border: 1px dashed #aaa; color: #ccc; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; width: 100%; margin-top: 5px;">+ Weiteren Stream hinzufügen</button>
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-submit" onclick="saveEvent()">Speichern</button>
+                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc;" onclick="closeEventModal()">Abbrechen</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <main id="view-landing" class="view active" style="position: relative;">
+            <div class="landing-side-images">
+                <div class="landing-side-col left">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild7.png" alt="Simracing 1">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild8.png" alt="Simracing 2">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild3.png" alt="Simracing 3">
+                </div>
+                <div class="landing-side-col right">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild4.png" alt="Simracing 4">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild5.png" alt="Simracing 5">
+                    <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Simracing_Bild6.png" alt="Simracing 6">
+                </div>
+            </div>
+
+            <div class="landing-hero reveal">
+                <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 90%; height: 150px; object-fit: contain; margin-bottom: 20px;">
+                <h1>Das Simracing-Portal</h1>
+                <p>Willkommen bei Calapex, der ultimativen Management-Plattform für Simracing-Enthusiasten, Teams und Organisatoren. Ob iRacing, Assetto Corsa Competizione oder rFactor 2 – wir bringen Struktur in deine virtuelle Rennfahrer-Karriere.</p>
+                <div class="auth-buttons-container">
+                    <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem;" onclick="openAuthView('login')">Log-In</button>
+                    <button class="btn-submit" style="width: auto; padding: 15px 40px; font-size: 1.3rem; background: rgba(0,0,0,0.5); border: 2px solid var(--primary); color: white;" onclick="openAuthView('register')">Registrieren</button>
+                </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; max-width: 800px; margin: 0 auto;">
+                    <h3 style="color: white; margin-bottom: 20px; font-size: 1.5rem; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,255,255,0.2);">Live Racing entdecken</h3>
+                    <div class="auth-buttons-container">
+                        <button class="btn-submit" style="width: auto; padding: 12px 30px; font-size: 1.2rem; background: #ff4500; border: 1px solid #cc3700; color: white; box-shadow: 0 0 15px rgba(255, 69, 0, 0.4);" onclick="openStreamCenter('official')">📺 Offizielle Serien</button>
+                        <button class="btn-submit" style="width: auto; padding: 12px 30px; font-size: 1.2rem; background: #a970ff; border: 1px solid #8c52ff; color: white; box-shadow: 0 0 15px rgba(169, 112, 255, 0.4);" onclick="openStreamCenter('community')">🎮 Community Live</button>
+                    </div>
+            </div>
+
+            <div class="landing-section reveal">
+                <h2>Was ist Calapex?</h2>
+                <p>Calapex ist mehr als nur ein gewöhnlicher Kalender. Es ist das zentrale Werkzeug für Simracing-Teams, um sich optimal auf anstehende Rennen vorzubereiten. Viele Teams verlieren schnell den Überblick in unzähligen Discord-Kanälen, Chat-Gruppen und unübersichtlichen Tabellen. Genau hier setzt Calapex an und bündelt alle wichtigen Informationen an einem zentralen Ort.</p>
+                <p>Verwalte dein Fahrer-Lineup, behalte den Überblick über alle Termine und teile wichtige Ressourcen wie Twitch-Stream-Links, Setups oder Strecken-Notizen mit wenigen Klicks.</p>
+            </div>
+
+            <div class="landing-section reveal">
+                <h2>Deine Vorteile</h2>
+                <div class="feature-grid">
+                    <div class="feature-card"><h3>👥 Team Management</h3><p>Gründe ein Team, verteile Einladungscodes und vergebe individuelle Rollen.</p></div>
+                    <div class="feature-card"><h3>📅 Interaktiver Kalender</h3><p>Plane Trainings, Qualifyings und Liga-Rennen kinderleicht.</p></div>
+                    <div class="feature-card"><h3>📺 Streams & Medien</h3><p>Hinterlege Links zu Twitch, YouTube oder Kick direkt im Event.</p></div>
+                    <div class="feature-card"><h3>⚡ Echtzeit-Updates</h3><p>Alle Änderungen im Kalender oder im Team-Roster werden in Echtzeit synchronisiert.</p></div>
+                </div>
+            </div>
+            
+            <div class="landing-section reveal" style="text-align: center; margin-bottom: 80px;">
+                <h2 style="border: none;">Bereit für die Pole Position?</h2>
+                <p style="margin-bottom: 30px;">Registriere dich noch heute kostenlos und bring die Organisation deines Rennteams auf das nächste Level!</p>
+                <button class="btn-submit" style="width: auto; padding: 15px 50px; font-size: 1.4rem;" onclick="openAuthView('register')">Jetzt kostenlos durchstarten</button>
+            </div>
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-bottom: 10px;">Calapex Beta | v0.7.0</div>
+        </main>
+
+        <main id="view-auth" class="view">
+            <div style="max-width: 500px; margin: 60px auto;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <button class="back-btn" onclick="openView('view-landing')" style="font-size: 0.9rem; padding: 8px 15px;">◄ Zurück zur Info-Seite</button>
+                </div>
+                <div id="login-box" class="panel">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
+                        <p style="color: var(--text-muted); margin-top: 5px;">Bitte melde dich an, um fortzufahren.</p>
+                    </div>
+                    <div class="form-group"><input type="text" id="login-firstname" placeholder="Vorname"></div>
+                    <div class="form-group"><input type="text" id="login-lastname" placeholder="Nachname"></div>
+                    <div class="form-group"><input type="password" id="login-password" placeholder="Passwort"></div>
+                    <button class="btn-submit" onclick="loginUser()">Einloggen</button>
+                    <p style="text-align: center; margin-top: 20px; color: #aaa;">Noch kein Account? <a href="#" onclick="toggleAuth('register')" style="color: var(--primary);">Registrieren</a></p>
+                </div>
+                <div id="register-box" class="panel" style="display: none;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <img src="https://upbxznmaviomljfejlyw.supabase.co/storage/v1/object/public/avatars/Calapex_Logo.oh.png" alt="Calapex Logo" style="max-width: 100%; height: 80px; object-fit: contain; margin-bottom: 10px;">
+                        <p style="color: var(--text-muted); margin-top: 5px;">Neues Konto erstellen</p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group"><input type="text" id="reg-firstname" placeholder="Vorname"></div>
+                        <div class="form-group"><input type="text" id="reg-lastname" placeholder="Nachname"></div>
+                    </div>
+                    <div class="form-group"><input type="email" id="reg-email" placeholder="E-Mail Adresse"></div>
+                    <div class="form-group"><input type="password" id="reg-password" placeholder="Passwort"></div>
+                    <button class="btn-submit" onclick="registerUser()">Konto erstellen</button>
+                    <p style="text-align: center; margin-top: 20px; color: #aaa;">Bereits registriert? <a href="#" onclick="toggleAuth('login')" style="color: var(--primary);">Zur Anmeldung</a></p>
+                </div>
+            </div>
+        </main>
+        
+        <main id="view-home" class="view" style="position: relative;">
+            <div class="menu-grid">
+                <button class="menu-btn disabled" onclick="return false;">Ligen <span style="color: #ffcc00; font-weight: bold;">⏳ Coming Soon</span></button>
+                <button class="menu-btn" onclick="openView('view-teams-main')">Teams <span>Teams suchen, erstellen & verwalten</span></button>
+                <button id="btn-dev-fahrer" class="menu-btn" style="display: none; border-left-color: #a970ff;" onclick="loadAllUsers()">
+                    Fahrer <span style="color: #a970ff; margin-top: 5px; font-size: 0.95rem;">System-Datenbank (Nur für Developer)</span>
+                </button>
+            </div>
+
+            <div style="max-width: 800px; margin: 50px auto 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 30px; display: flex; gap: 20px; flex-wrap: wrap;">
+                <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadNews()">📰 News <span style="margin-top: 5px; font-size: 0.95rem;">Updates & Ankündigungen</span></button>
+                <button class="menu-btn" style="flex: 1; min-width: 250px; padding: 20px 25px; font-size: 1.5rem;" onclick="loadPatchlog()">🛠️ Patchlog <span style="margin-top: 5px; font-size: 0.95rem;">System-Updates & Fixes</span></button>
+            </div>
+
+            <div style="max-width: 800px; margin: 50px auto 0;">
+                <h2 class="panel-header" style="margin-bottom: 15px; border-bottom-color: #17a2b8; font-size: 1.8rem;">Globaler Chat <span style="color: #17a2b8; font-size: 1rem; vertical-align: middle; margin-left: 10px;">💬 Pre-Release</span></h2>
+                <div class="panel" style="padding: 0;">
+                    <div class="chat-container">
+                        <div id="global-chat-messages" class="chat-messages"></div>
+                        <div class="chat-input-area">
+                            <input type="text" id="global-chat-input" class="form-group" style="margin:0; padding: 12px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1.1rem; width: 100%;" placeholder="Nachricht eingeben..." onkeypress="if(event.key==='Enter') sendGlobalChatMessage()">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; background: #17a2b8;" onclick="sendGlobalChatMessage()">Senden</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; padding-right: 20px; color: rgba(255, 255, 255, 0.4); font-size: 1rem; font-weight: bold; margin-top: 60px; margin-bottom: 10px;">Calapex Beta | v0.7.0</div>
+        </main>
+
+        <main id="view-news" class="view">
+            <div class="top-nav"><h2 class="panel-header" style="margin-bottom: 0;">News & Updates</h2><button class="back-btn" onclick="openView('view-home')">◄ Zurück</button></div>
+            <div id="dev-news-controls" style="display: none; margin-bottom: 20px; text-align: right;"><button class="btn-submit" style="width: auto;" onclick="showNewsModal()">+ Neuer Post</button></div>
+            <div class="panel"><div id="news-list" style="display: flex; flex-direction: column; gap: 20px;"></div></div>
+        </main>
+
+        <main id="view-patchlog" class="view">
+            <div class="top-nav"><h2 class="panel-header" style="margin-bottom: 0;">Patchlog</h2><button class="back-btn" onclick="openView('view-home')">◄ Zurück</button></div>
+            <div id="dev-patchlog-controls" style="display: none; margin-bottom: 20px; text-align: right;"><button class="btn-submit" style="width: auto;" onclick="showPatchlogModal()">+ Neuer Eintrag</button></div>
+            <div class="panel"><div id="patchlog-list" style="display: flex; flex-direction: column;"></div></div>
+        </main>
+
+        <main id="view-fahrer" class="view">
+            <div class="top-nav"><h2 class="panel-header" style="margin-bottom: 0; border-bottom-color: #a970ff;">Fahrer-Datenbank (Dev)</h2><button class="back-btn" onclick="openView('view-home')">◄ Zurück</button></div>
+            <div class="panel"><div id="all-users-list" style="display: flex; flex-direction: column; gap: 15px;"></div></div>
+        </main>
+
+        <main id="view-teams-main" class="view">
+            <div class="top-nav"><h2 class="panel-header" style="margin-bottom: 0;">Team Center</h2><button class="back-btn" onclick="openView('view-home')">◄ Zurück</button></div>
+            <div class="team-tabs">
+                <button class="tab-btn active" onclick="switchTab('tab-my-teams', this)">Deine Teams</button>
+                <button class="tab-btn" onclick="switchTab('tab-create-team', this)">Team Gründen</button>
+                <button class="tab-btn" onclick="switchTab('tab-search-team', this)">Team Suchen</button>
+            </div>
+            <div class="panel">
+                <div id="tab-my-teams" class="tab-content active"><div class="event-grid" id="grid-my-teams"></div></div>
+                <div id="tab-create-team" class="tab-content">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <div class="form-group"><label>Team Name</label><input type="text" id="create-team-name" placeholder="z.B. Calapex Motorsport"></div>
+                        <div class="form-group"><label>Allgemeininformationen (optional)</label><textarea id="create-team-desc" placeholder="Beschreibe dein Team kurz für zukünftige Bewerber..."></textarea></div>
+                        <div class="form-group"><label>Teamlogo (vom PC auswählen)</label><input type="file" id="create-team-logo" accept="image/*"></div>
+                        <div class="form-group">
+                            <label>Haupt-Simulator</label>
+                            <select id="create-team-sim"><option>iRacing</option><option>Assetto Corsa Competizione</option><option>rFactor 2</option><option>Multi-Sim</option></select>
+                        </div>
+                        <button class="btn-submit" onclick="createTeam()">Team gründen & Admin werden</button>
+                    </div>
+                </div>
+                <div id="tab-search-team" class="tab-content">
+                    <div style="max-width: 600px; margin: 0 auto;">
+                        <p style="color: #ccc; margin-bottom: 20px;">Gib die 5-stellige Team-ID ein, um ein Team zu finden und eine Beitrittsanfrage zu senden.</p>
+                        <div class="form-group"><label>Team ID</label><input type="text" id="search-team-code" placeholder="z.B. A1B2C" style="text-transform: uppercase; letter-spacing: 2px; font-weight: bold;"></div>
+                        <button class="btn-submit" onclick="searchTeam()">Team Suchen</button>
+                        <div id="search-result-box" style="display:none; margin-top: 30px; padding: 20px; border: 1px solid var(--primary); border-radius: 8px; background: rgba(209,18,18,0.1);"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <main id="view-team-calendar" class="view">
+            <div class="top-nav" style="margin-bottom: 15px;">
+                <button class="back-btn" onclick="openView('view-teams-main')">◄ Zurück</button>
+                <h2 class="panel-header" id="calendar-team-name" style="margin-bottom: 0; border: none; padding: 0;">Team Name</h2>
+                <button class="hamburger-btn" onclick="toggleMemberSidebar()">☰ Fahrerliste</button>
+            </div>
+
+            <div id="admin-controls" style="display: none; margin-bottom: 25px; background: rgba(0,0,0,0.5); padding: 15px 25px; border-radius: 8px; border: 1px dashed var(--primary); justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                <div id="team-id-container">
+                    <span style="color: #aaa; font-size: 0.9rem; text-transform: uppercase;">Team-ID (Einladungscode)</span><br>
+                    <span id="calendar-team-id" style="font-family: monospace; color: var(--primary); font-size: 1.5rem; font-weight: bold; letter-spacing: 2px;"></span>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; background: #17a2b8; border: 1px solid #117a8b;" onclick="openSyncModal()">🔄 Kalender Sync</button>
+                    <button id="btn-edit-team" class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; background: #555; border: 1px solid #777;" onclick="openEditTeamModal()">⚙️ Team bearbeiten</button>
+                    <button id="btn-manage-requests" class="btn-submit" style="width: auto; padding: 10px 20px; font-size: 1.1rem; margin-top: 0; position: relative;" onclick="openRequestsModal()">Anfragen Verwalten <span id="request-count-badge" style="position: absolute; top: -10px; right: -10px; background: white; color: var(--primary); border-radius: 50%; width: 25px; height: 25px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; border: 2px solid var(--primary);">0</span></button>
+                </div>
+            </div>
+
+            <div class="team-tabs" style="margin-bottom: 20px;">
+                <button class="tab-btn active" id="tab-btn-calendar" onclick="switchTeamSubTab('calendar')">📅 Kalender & Chat</button>
+                <button class="tab-btn" id="tab-btn-stint" onclick="switchTeamSubTab('stint')">⏱️ Stintplaner</button>
+                <button class="tab-btn" id="tab-btn-setups" onclick="switchTeamSubTab('setups')">⚙️ Setups</button>
+                <button class="tab-btn" id="tab-btn-gallery" onclick="switchTeamSubTab('gallery')">🖼️ Galerie</button>
+            </div>
+
+            <div id="team-calendar-section">
+                <div id="team-calendar-layout" style="display: grid; grid-template-columns: 350px 1fr; gap: 20px;">
+                    
+                    <div class="panel" style="display: flex; flex-direction: column; height: 700px; padding: 20px;">
+                        <h3 style="color: white; font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 10px;">💬 Team Chat</h3>
+                        <div class="chat-container" style="flex: 1; height: auto; border: none; background: transparent;">
+                            <div id="team-chat-messages" class="chat-messages" style="padding: 0 5px 0 0; gap: 10px;"></div>
+                            <div class="chat-input-area" style="padding: 15px 0 0 0; background: transparent; border-top: 1px solid rgba(255,255,255,0.1); gap: 10px; margin-top: 10px;">
+                                <input type="text" id="team-chat-input" class="form-group" style="margin:0; padding: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 8px; outline: none; font-size: 1rem; width: 100%;" placeholder="Nachricht..." onkeypress="if(event.key==='Enter') sendTeamChatMessage()">
+                                <button class="btn-submit" style="width: auto; margin-top: 0; padding: 10px 15px; background: var(--primary);" onclick="sendTeamChatMessage()">➤</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                            <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">📅 Team Kalender</h3>
+                            <button id="btn-new-event" class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="showEventModal()">+ Neuer Termin</button>
+                        </div>
+                        <div id="team-events-list" class="team-events-grid"></div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div id="team-stint-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; text-transform: uppercase; font-size: 1.5rem; margin: 0;">⏱️ Stintplaner</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="stint-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="createNewStintPlan()">+ Neue Tabelle</button>
+                        </div>
+                    </div>
+                    <div id="team-stint-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;"></div>
+                    <div id="team-stint-editor" style="display: none;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px dashed var(--primary); flex-wrap: wrap; gap: 15px;">
+                            <h4 id="stint-editor-title" style="color: white; margin: 0; font-size: 1.4rem;">Plan bearbeiten</h4>
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn-submit" style="background: transparent; border: 1px solid #555; color: #ccc; padding: 8px 15px; font-size: 1rem; margin-top: 0;" onclick="closeStintEditor()">Abbrechen / Schließen</button>
+                                <button class="btn-submit" id="stint-save-btn" style="padding: 8px 15px; font-size: 1rem; margin-top: 0;" onclick="saveStintPlan()">💾 Speichern</button>
+                            </div>
+                        </div>
+                        <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 15px;">Tippe ein <strong><code>=</code></strong> in eine Zelle, um eine Formel zu starten. Klicke dann auf andere Zellen, um sie in die Formel einzufügen. Drücke <strong>Enter</strong> zum Speichern.</p>
+                        <div class="spreadsheet-container"><div id="spreadsheet"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="team-setups-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; font-size: 1.5rem; margin: 0;" id="setup-breadcrumb">📂 Root</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="setup-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem; background: #555; border: 1px solid #777;" onclick="createSetupFolder()">+ Neuer Ordner</button>
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="document.getElementById('setup-file-input').click()">+ Setup (.sto)</button>
+                            <input type="file" id="setup-file-input" accept=".sto" multiple style="display: none;" onchange="uploadSetupFile(event)">
+                        </div>
+                    </div>
+                    <div id="team-setups-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;"></div>
+                </div>
+            </div>
+
+            <div id="team-gallery-section" style="display: none;">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <h3 style="color: white; font-size: 1.5rem; margin: 0;" id="gallery-breadcrumb">📂 Root</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="gallery-action-btns">
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem; background: #555; border: 1px solid #777;" onclick="createGalleryFolder()">+ Neuer Ordner</button>
+                            <button class="btn-submit" style="width: auto; margin-top: 0; padding: 8px 15px; font-size: 1rem;" onclick="document.getElementById('gallery-file-input').click()">+ Bild hochladen</button>
+                            <input type="file" id="gallery-file-input" accept="image/png, image/jpeg, image/jpg" multiple style="display: none;" onchange="uploadGalleryImage(event)">
+                        </div>
+                    </div>
+                    <div id="team-gallery-folders" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;"></div>
+                    <div id="team-gallery-images" class="masonry-grid"></div>
+                </div>
+            </div>
+        </main>
+
+        <main id="view-streams" class="view">
+            <div class="top-nav">
+                <h2 class="panel-header" id="stream-center-title" style="margin-bottom: 0;">Stream Center</h2>
+                <!-- Dynamischer Zurück-Button -->
+                <button class="back-btn" onclick="closeStreamCenter()">◄ Zurück</button>
+            </div>
+
+            <!-- Das Layout aus deiner test2.html -->
+            <div class="serien-container" style="display: flex; gap: 20px; flex-wrap: wrap;">
+                
+                <!-- Linke Seite: Der Video Player -->
+                <div class="player-bereich" style="flex: 2; min-width: 300px;">
+                    <div class="video-box" id="video-box-container" style="position: relative; width: 100%; aspect-ratio: 16/9; background-color: #1a1a1a; border-radius: 8px; overflow: hidden; border: 1px solid #333;">
+                        <div class="placeholder" style="display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; text-align: center; height: 100%;">
+                            <h3 id="placeholder-title" style="color: white; margin-bottom: 10px;">Wähle einen Stream</h3>
+                            <p id="placeholder-text" style="color: #aaa;">Klicke rechts auf ein Event, um die Übertragung zu starten.</p>
+                            <button class="btn-submit" id="activation-button" style="display:none; width: auto; background-color: #ff4500;" onclick="triggerVideoLoad()">Stream jetzt laden</button>
+                        </div>
+                    </div>
+                    <!-- Zusatzinfos unter dem Video -->
+                    <div id="stream-info-box" style="margin-top: 20px; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; display: none;"></div>
+                </div>
+
+                <!-- Rechte Seite: Die Playlist -->
+                <div class="renn-liste" style="flex: 1; min-width: 300px; background-color: #1a1a1a; border-radius: 8px; padding: 15px; max-height: 600px; overflow-y: auto; border: 1px solid #333;">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <select id="stream-filter-sim" style="width: 100%; padding: 8px; background: rgba(255,255,255,0.1); color: white; border-radius: 5px; outline: none; border: 1px solid #555;" onchange="applyStreamFilters()">
+                            <option value="all">Alle Simulatoren</option>
+                            <option value="iRacing">iRacing</option>
+                            <option value="Assetto Corsa Competizione">ACC</option>
+                            <option value="rFactor 2">rFactor 2</option>
+                        </select>
+                    </div>
+                    <h3 style="color: white; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;" id="playlist-title">Saison-Kalender</h3>
+                    <div id="playlist-container"></div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+    
+<!-- 1. Konfiguration zuerst laden! -->
+    <script src="config.js"></script>
+
+    <!-- 2. Werkzeuge und Basis-Skripte -->
+    <script src="ui.js"></script>
+    <script src="realtime.js"></script>
+    <script src="auth.js"></script>
+
+    <!-- 3. Features -->
+    <script src="chat.js"></script>
+    <script src="news.js"></script>
+    <script src="teams.js"></script>
+    <script src="files.js"></script>
+    <script src="stint.js"></script>
+    <script src="events.js"></script>
+    <script src="streams.js"></script>
+
+    <!-- 4. Der Start-Befehl, der ausgeführt wird, sobald die Seite geladen ist -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => { 
+            // Diese Funktionen liegen jetzt in events.js und ui.js
+            renderIRacingEvents(); 
+            reveal(); 
+            
+            // Datenbank-Initialisierung und Live-Status-Check
+            if(supabaseClient) {
+                checkSystemStatus(); 
+                
+                supabaseClient.channel('global-system-status')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'system_status' }, payload => { 
+                        applySystemStatus(payload.new); 
+                    }).subscribe();
+            }
+        });
+    </script>
+</body>
+</html>
